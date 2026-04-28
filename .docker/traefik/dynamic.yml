@@ -1,0 +1,22 @@
+http:
+  routers:
+    api:
+      rule: HostRegexp(`^traefik\..+$`)
+      service: api@internal
+      entryPoints:
+        - https
+      middlewares:
+        - auth
+      tls: { }
+  middlewares:
+    compress:
+      compress: { }
+    auth:
+      basicAuth:
+        users:
+          - "simo:$2y$05$O64l6GfQH0YtHWNbUdhjUe0vCW/4wTBneoT6NWYJQc6WNzi4j.OB6"
+tls:
+  certificates:
+    - certFile: /etc/traefik/certs/local.pem
+      keyFile: /etc/traefik/certs/local-key.pem
+

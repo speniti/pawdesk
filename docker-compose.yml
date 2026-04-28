@@ -1,0 +1,72 @@
+services:
+  traefik:
+    image: traefik:v3
+    container_name: peniti_traefik
+    networks:
+      - peniti
+    ports:
+      - '80:80'
+      - '443:443'
+    volumes:
+      - .docker/traefik/:/etc/traefik/
+      - /var/run/docker.sock:/var/run/docker.sock
+    depends_on:
+      - app
+
+  app:
+    image: serversideup/php:8.5-frankenphp
+    container_name: peniti_app
+    environment:
+    volumes:
+      - .:/var/www/html
+    ports:
+      - 80:8080
+      - 443:8443
+    networks:
+      - peniti
+    labels:
+      - traefik.enable=true
+      - traefik.constraint-label=public
+      - traefik.http.routers.app.rule=HostRegexp(`^.+$`)
+      - traefik.http.routers.app.entrypoints=https
+      - traefik.http.routers.app.service=app
+      - traefik.http.services.app.loadbalancer.server.port=8080
+      - traefik.http.routers.app.middlewares=compress@file
+      - traefik.http.routers.app.tls=true
+
+  mailpit:
+    image: axllent/mailpit
+    container_name: peniti_mailpit
+    networks:
+      - peniti
+    labels:
+      - traefik.enable=true
+      - traefik.constraint-label=public
+      - traefik.http.routers.mailhog.rule=HostRegexp(`^mailpit\..+$`)
+      - traefik.http.routers.mailhog.entrypoints=https
+      - traefik.http.routers.mailhog.service=mailhog
+      - traefik.http.services.mailhog.loadbalancer.server.port=8025
+      - traefik.http.routers.mailhog.middlewares=compress@file
+      - traefik.http.routers.mailhog.tls=true
+
+  node:
+    image: node:lts-alpine
+    container_name: peniti_node
+    volumes:
+      - .:/app
+    working_dir: /app
+    command: sleep infinity
+    networks:
+      - peniti
+    labels:
+      - traefik.enable=true
+      - traefik.constraint-label=public
+      - traefik.http.routers.node.rule=HostRegexp(`^assets\..+$`)
+      - traefik.http.routers.node.entrypoints=https
+      - traefik.http.routers.node.service=node
+      - traefik.http.services.node.loadbalancer.server.port=5173
+      - traefik.http.routers.node.tls=true
+
+networks:
+  peniti:
+    name: peniti
