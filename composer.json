@@ -1,15 +1,17 @@
 {
     "$schema": "https://getcomposer.org/schema.json",
-    "name": "laravel/laravel",
+    "name": "speniti/pawdesk",
     "type": "project",
-    "description": "The skeleton application for the Laravel framework.",
+    "description": "Pet grooming salon management system",
     "keywords": [
-        "laravel",
-        "framework"
+        "pet",
+        "grooming",
+        "management"
     ],
     "license": "MIT",
     "require": {
-        "php": "^8.4",
+        "php": "^8.5",
+        "filament/filament": "^5.6",
         "laravel/framework": "^13",
         "laravel/tinker": "^3"
     },
@@ -50,7 +52,8 @@
         ],
         "post-autoload-dump": [
             "Illuminate\\Foundation\\ComposerScripts::postAutoloadDump",
-            "@php artisan package:discover --ansi"
+            "@php artisan package:discover --ansi",
+            "@php artisan filament:upgrade"
         ],
         "post-update-cmd": [
             "@php artisan vendor:publish --tag=laravel-assets --ansi --force",

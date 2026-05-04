@@ -14,14 +14,10 @@ services:
       - app
 
   app:
-    image: serversideup/php:8.5-frankenphp
+    build: .
     container_name: peniti_app
-    environment:
     volumes:
       - .:/var/www/html
-    ports:
-      - 80:8080
-      - 443:8443
     networks:
       - peniti
     labels:
