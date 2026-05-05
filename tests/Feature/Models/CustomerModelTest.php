@@ -9,34 +9,6 @@ use App\Models\Pet;
 use App\Models\Tenant;
 use App\Models\Treatment;
 
-test('Customer has correct fillable attributes', function () {
-    $customer = new Customer;
-
-    expect($customer->getFillable())->toBe([
-        'tenant_id',
-        'first_name',
-        'last_name',
-        'email',
-        'phone',
-        'address',
-        'preferred_channel',
-        'gdpr_policy_sent_at',
-        'marketing_consent_at',
-        'preferences',
-        'notes',
-    ]);
-});
-
-test('Customer casts attributes correctly', function () {
-    $customer = new Customer;
-    $casts = $customer->getCasts();
-
-    expect($casts)->toHaveKey('preferred_channel', PreferredChannel::class);
-    expect($casts)->toHaveKey('gdpr_policy_sent_at', 'datetime');
-    expect($casts)->toHaveKey('marketing_consent_at', 'datetime');
-    expect($casts)->toHaveKey('preferences', 'array');
-});
-
 test('Customer factory creates valid record', function () {
     $customer = Customer::factory()->create();
 

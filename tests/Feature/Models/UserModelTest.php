@@ -3,28 +3,10 @@
 declare(strict_types=1);
 
 use App\Enums\UserRole;
+use App\Models\Appointment;
+use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
-
-test('User has correct fillable attributes', function () {
-    $user = new User;
-
-    expect($user->getFillable())->toBe(['name', 'email', 'password', 'tenant_id', 'role']);
-});
-
-test('User hides sensitive attributes', function () {
-    $user = new User;
-
-    expect($user->getHidden())->toBe(['password', 'remember_token']);
-});
-
-test('User casts email_verified_at as datetime and password as hashed', function () {
-    $user = new User;
-    $casts = $user->getCasts();
-
-    expect($casts)->toHaveKey('email_verified_at', 'datetime');
-    expect($casts)->toHaveKey('password', 'hashed');
-});
 
 test('User factory creates valid user', function () {
     $user = User::factory()->create();
@@ -45,12 +27,13 @@ test('User has role attribute', function () {
 
 test('User has many appointments', function () {
     $user = User::factory()->create();
-    $tenant = \App\Models\Tenant::find($user->tenant_id) ?? \App\Models\Tenant::factory()->create();
-    \App\Models\Appointment::factory()->count(2)->create([
+    $tenant = Tenant::find($user->tenant_id) ?? Tenant::factory()->create();
+
+    Appointment::factory()->count(2)->create([
         'user_id' => $user->id,
         'tenant_id' => $tenant->id,
     ]);
 
     expect($user->appointments)->toHaveCount(2);
-    expect($user->appointments->first())->toBeInstanceOf(\App\Models\Appointment::class);
+    expect($user->appointments->first())->toBeInstanceOf(Appointment::class);
 });

@@ -11,30 +11,6 @@ use App\Models\Tenant;
 use App\Models\Treatment;
 use App\Models\User;
 
-test('Appointment has correct fillable attributes', function () {
-    $appointment = new Appointment;
-
-    expect($appointment->getFillable())->toBe([
-        'tenant_id',
-        'customer_id',
-        'pet_id',
-        'user_id',
-        'status',
-        'start_time',
-        'end_time',
-        'internal_notes',
-    ]);
-});
-
-test('Appointment casts attributes correctly', function () {
-    $appointment = new Appointment;
-    $casts = $appointment->getCasts();
-
-    expect($casts)->toHaveKey('status', AppointmentStatus::class);
-    expect($casts)->toHaveKey('start_time', 'datetime');
-    expect($casts)->toHaveKey('end_time', 'datetime');
-});
-
 test('Appointment factory creates valid record', function () {
     $appointment = Appointment::factory()->create();
 

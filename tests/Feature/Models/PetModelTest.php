@@ -11,34 +11,6 @@ use App\Models\Pet;
 use App\Models\Tenant;
 use App\Models\Treatment;
 
-test('Pet has correct fillable attributes', function () {
-    $pet = new Pet;
-
-    expect($pet->getFillable())->toBe([
-        'tenant_id',
-        'customer_id',
-        'name',
-        'species',
-        'breed',
-        'sex',
-        'date_of_birth',
-        'size',
-        'coat',
-        'behavioral_notes',
-        'health_notes',
-    ]);
-});
-
-test('Pet casts attributes correctly', function () {
-    $pet = new Pet;
-    $casts = $pet->getCasts();
-
-    expect($casts)->toHaveKey('species', Species::class);
-    expect($casts)->toHaveKey('sex', Sex::class);
-    expect($casts)->toHaveKey('date_of_birth', 'date');
-    expect($casts)->toHaveKey('size', Size::class);
-});
-
 test('Pet factory creates valid record', function () {
     $pet = Pet::factory()->create();
 

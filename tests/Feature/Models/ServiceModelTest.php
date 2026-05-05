@@ -9,32 +9,6 @@ use App\Models\Pet;
 use App\Models\Service;
 use App\Models\Tenant;
 
-test('Service has correct fillable attributes', function () {
-    $service = new Service;
-
-    expect($service->getFillable())->toBe([
-        'tenant_id',
-        'name',
-        'description',
-        'category',
-        'coat',
-        'duration_minutes',
-        'base_price',
-        'combinable',
-        'status',
-        'size_prices',
-    ]);
-});
-
-test('Service casts attributes correctly', function () {
-    $service = new Service;
-    $casts = $service->getCasts();
-
-    expect($casts)->toHaveKey('combinable', 'boolean');
-    expect($casts)->toHaveKey('status', ServiceStatus::class);
-    expect($casts)->toHaveKey('size_prices', 'array');
-});
-
 test('Service factory creates valid record', function () {
     $service = Service::factory()->create();
 

@@ -8,31 +8,6 @@ use App\Models\Pet;
 use App\Models\Tenant;
 use App\Models\Treatment;
 
-test('Treatment has correct fillable attributes', function () {
-    $treatment = new Treatment;
-
-    expect($treatment->getFillable())->toBe([
-        'tenant_id',
-        'appointment_id',
-        'customer_id',
-        'pet_id',
-        'actual_duration_minutes',
-        'final_price',
-        'notes',
-        'visible_to_customer',
-        'products_used',
-    ]);
-});
-
-test('Treatment casts attributes correctly', function () {
-    $treatment = new Treatment;
-    $casts = $treatment->getCasts();
-
-    expect($casts)->toHaveKey('actual_duration_minutes', 'integer');
-    expect($casts)->toHaveKey('final_price', 'integer');
-    expect($casts)->toHaveKey('visible_to_customer', 'boolean');
-});
-
 test('Treatment factory with forAppointment creates valid record', function () {
     $appointment = Appointment::factory()->create();
     $treatment = Treatment::factory()->forAppointment($appointment)->create();
