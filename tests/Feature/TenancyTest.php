@@ -70,10 +70,3 @@ test('Filament admin panel tenant slug attribute is slug', function () {
 
     expect($slugAttribute)->toBe('slug');
 });
-
-test('ApplyTenantScopes middleware is registered on tenant routes', function () {
-    $panel = Filament::getPanel('admin');
-    $middleware = $panel->getTenantMiddleware();
-
-    expect($middleware)->toContain(App\Http\Middleware\ApplyTenantScopes::class);
-});
