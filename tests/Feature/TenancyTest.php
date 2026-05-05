@@ -54,3 +54,18 @@ test('Tenant has many users', function () {
 
     expect($tenant->users()->count())->toBe(2);
 });
+
+test('Filament admin panel has tenancy configured', function () {
+    $panel = Filament::getPanel('admin');
+    $tenantModel = $panel->getTenantModel();
+
+    expect($tenantModel)->not->toBeNull();
+    expect($tenantModel)->toBe(\App\Models\Tenant::class);
+});
+
+test('Filament admin panel tenant slug attribute is slug', function () {
+    $panel = Filament::getPanel('admin');
+    $slugAttribute = $panel->getTenantSlugAttribute();
+
+    expect($slugAttribute)->toBe('slug');
+});
