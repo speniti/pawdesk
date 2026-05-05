@@ -41,6 +41,7 @@ test('User canAccessTenant returns true for associated tenant', function () {
 test('User canAccessTenant returns false for non-associated tenant', function () {
     $tenant1 = Tenant::factory()->create();
     $tenant2 = Tenant::factory()->create();
+
     $user = User::factory()->create(['tenant_id' => $tenant1->id]);
     $user->tenants()->attach($tenant1);
 
@@ -49,8 +50,10 @@ test('User canAccessTenant returns false for non-associated tenant', function ()
 
 test('Tenant has many users', function () {
     $tenant = Tenant::factory()->create();
+
     $user1 = User::factory()->create(['tenant_id' => $tenant->id]);
     $user2 = User::factory()->create(['tenant_id' => $tenant->id]);
+
     $tenant->users()->attach([$user1->id, $user2->id]);
 
     expect($tenant->users()->count())->toBe(2);

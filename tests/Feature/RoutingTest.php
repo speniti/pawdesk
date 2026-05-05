@@ -23,5 +23,5 @@ test('/admin dashboard responds 200 when authenticated with tenant', function ()
 
     $this->actingAs($user);
 
-    $this->get("/admin/{$tenant->slug}")->assertSuccessful();
+    $this->get("/admin/$tenant->slug")->assertSuccessful();
 });
