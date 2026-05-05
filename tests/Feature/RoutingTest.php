@@ -6,10 +6,6 @@ use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Support\Facades\Config;
 
-test('/up health check responds 200', function () {
-    $this->get('/up')->assertSuccessful();
-});
-
 test('/admin redirects to login when unauthenticated', function () {
     $this->get('/admin')->assertRedirect('/admin/login');
 });

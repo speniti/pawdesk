@@ -1,0 +1,52 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Models;
+
+use App\Enums\Coat;
+use App\Enums\ServiceStatus;
+use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+
+#[Fillable([
+    'tenant_id',
+    'name',
+    'description',
+    'category',
+    'coat',
+    'duration_minutes',
+    'base_price',
+    'combinable',
+    'status',
+    'size_prices',
+])]
+class Service extends Model
+{
+    /** @use HasFactory<\Database\Factories\ServiceFactory> */
+    use HasFactory;
+
+    public function appointments(): BelongsToMany
+    {
+        return $this->belongsToMany(Appointment::class, 'appointment_service')
+            ->withPivot(['applied_price', 'duration_minutes']);
+    }
+
+    public function tenant(): BelongsTo
+    {
+        return $this->belongsTo(Tenant::class);
+    }
+
+    protected function casts(): array
+    {
+        return [
+            'coat' => Coat::class,
+            'combinable' => 'boolean',
+            'status' => ServiceStatus::class,
+            'size_prices' => 'array',
+        ];
+    }
+}
