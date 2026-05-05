@@ -42,3 +42,15 @@ test('User has role attribute', function () {
 
     expect($user->role)->toBe(UserRole::Admin);
 });
+
+test('User has many appointments', function () {
+    $user = User::factory()->create();
+    $tenant = \App\Models\Tenant::find($user->tenant_id) ?? \App\Models\Tenant::factory()->create();
+    \App\Models\Appointment::factory()->count(2)->create([
+        'user_id' => $user->id,
+        'tenant_id' => $tenant->id,
+    ]);
+
+    expect($user->appointments)->toHaveCount(2);
+    expect($user->appointments->first())->toBeInstanceOf(\App\Models\Appointment::class);
+});
