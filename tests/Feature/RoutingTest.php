@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Support\Facades\Config;
 
@@ -11,11 +12,14 @@ test('/admin redirects to login when unauthenticated', function () {
     $this->get('/admin')->assertRedirect('/admin/login');
 });
 
-test('/admin dashboard responds 200 when authenticated', function () {
-    // Filament allows access without FilamentUser only in local env
+test('/admin dashboard responds 200 when authenticated with tenant', function () {
     Config::set('app.env', 'local');
 
-    $this->actingAs(User::factory()->create());
+    $tenant = Tenant::factory()->create();
+    $user = User::factory()->create(['tenant_id' => $tenant->id]);
+    $user->tenants()->attach($tenant);
 
-    $this->get('/admin')->assertSuccessful();
+    $this->actingAs($user);
+
+    $this->get("/admin/{$tenant->slug}")->assertSuccessful();
 });
