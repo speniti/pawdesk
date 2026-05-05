@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Database\Seeders;
 
+use App\Enums\UserRole;
 use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Database\Seeder;
@@ -25,7 +26,7 @@ class DatabaseSeeder extends Seeder
             'name' => 'Simone Peniti',
             'email' => 'simone@peniti.it',
             'password' => Hash::make('password'),
-            'role' => 'admin',
+            'role' => UserRole::Admin,
             'tenant_id' => $tenant->id,
         ]);
 

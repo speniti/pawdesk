@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Enums\UserRole;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 
@@ -34,7 +35,7 @@ test('User factory creates valid user', function () {
     expect(Hash::check('password', $user->password))->toBeTrue();
     expect($user->email_verified_at)->not->toBeNull();
     expect($user->tenant)->not->toBeNull();
-    expect($user->role)->toBe('staff');
+    expect($user->role)->toBe(UserRole::Staff);
 });
 
 test('User belongs to tenant', function () {
@@ -46,7 +47,7 @@ test('User belongs to tenant', function () {
 });
 
 test('User has role attribute', function () {
-    $user = User::factory()->create(['role' => 'admin']);
+    $user = User::factory()->create(['role' => UserRole::Admin]);
 
-    expect($user->role)->toBe('admin');
+    expect($user->role)->toBe(UserRole::Admin);
 });
