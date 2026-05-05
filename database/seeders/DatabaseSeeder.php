@@ -21,12 +21,14 @@ class DatabaseSeeder extends Seeder
             'slug' => 'pawdesk-demo',
         ]);
 
-        User::factory()->create([
+        $user = User::factory()->create([
             'name' => 'Simone Peniti',
             'email' => 'simone@peniti.it',
             'password' => Hash::make('password'),
             'role' => 'admin',
             'tenant_id' => $tenant->id,
         ]);
+
+        $user->tenants()->attach($tenant);
     }
 }

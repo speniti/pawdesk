@@ -4,26 +4,17 @@ declare(strict_types=1);
 
 namespace App\Http\Middleware;
 
-use App\Models\User;
 use Closure;
 use Filament\Facades\Filament;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 
 class ApplyTenantScopes
 {
     public function handle(Request $request, Closure $next)
     {
-        $tenant = Filament::getTenant();
-
-        if ($tenant === null) {
-            return $next($request);
-        }
-
-        User::addGlobalScope(
-            'tenant',
-            fn (Builder $query) => $query->whereBelongsTo($tenant),
-        );
+        // The BelongsToTenant trait handles scoping for models that use it.
+        // Add additional global scopes here for models that do NOT use the trait
+        // but still need tenant isolation during Filament panel requests.
 
         return $next($request);
     }
