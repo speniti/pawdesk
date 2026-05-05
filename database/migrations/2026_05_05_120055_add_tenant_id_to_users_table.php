@@ -19,7 +19,7 @@ return new class extends Migration
 
     public function up(): void
     {
-        Schema::table('users', function (Blueprint $table) {
+        Schema::table('users', static function (Blueprint $table) {
             $table->foreignId('tenant_id')->nullable()->after('id')->constrained()->cascadeOnDelete();
             $table->string('role')->default(UserRole::Staff->value)->after('password');
 
