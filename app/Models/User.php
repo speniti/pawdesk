@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Models;
 
-use App\Models\Concerns\BelongsToTenant;
 use Database\Factories\UserFactory;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Models\Contracts\HasTenants;
@@ -23,7 +22,7 @@ use Illuminate\Support\Collection;
 class User extends Authenticatable implements FilamentUser, HasTenants
 {
     /** @use HasFactory<UserFactory> */
-    use BelongsToTenant, HasFactory, Notifiable;
+    use HasFactory, Notifiable;
 
     public function canAccessPanel(Panel $panel): bool
     {
