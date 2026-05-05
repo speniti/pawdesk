@@ -1,20 +1,35 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Database\Seeders;
 
+use App\Enums\UserRole;
+use App\Models\Tenant;
 use App\Models\User;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Hash;
 
 class DatabaseSeeder extends Seeder
 {
-    use WithoutModelEvents;
-
+    /**
+     * Seed the application's database.
+     */
     public function run(): void
     {
-        User::factory()->create([
+        $tenant = Tenant::factory()->create([
+            'name' => 'PawDesk Demo',
+            'slug' => 'pawdesk-demo',
+        ]);
+
+        $user = User::factory()->create([
             'name' => 'Simone Peniti',
             'email' => 'simone@peniti.it',
+            'password' => Hash::make('password'),
+            'role' => UserRole::Admin,
+            'tenant_id' => $tenant->id,
         ]);
+
+        $user->tenants()->attach($tenant);
     }
 }
