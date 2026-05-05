@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use App\Models\Tenant;
 
 test('Tenant has correct fillable attributes', function () {
@@ -35,7 +37,7 @@ test('Tenant factory creates valid tenant', function () {
 
     expect($tenant->name)->not->toBeEmpty();
     expect($tenant->slug)->not->toBeEmpty();
-    expect($tenant->slug)->toBe(\Illuminate\Support\Str::slug($tenant->name));
+    expect($tenant->slug)->toBe(Illuminate\Support\Str::slug($tenant->name));
     expect($tenant->opening_hours)->toBeArray();
     expect($tenant->settings)->toBeArray();
 });

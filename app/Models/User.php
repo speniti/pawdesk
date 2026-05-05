@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models;
 
 use App\Models\Concerns\BelongsToTenant;
@@ -23,12 +25,19 @@ class User extends Authenticatable implements FilamentUser, HasTenants
     /** @use HasFactory<UserFactory> */
     use BelongsToTenant, HasFactory, Notifiable;
 
-    protected function casts(): array
+    public function canAccessPanel(Panel $panel): bool
     {
-        return [
-            'email_verified_at' => 'datetime',
-            'password' => 'hashed',
-        ];
+        return true;
+    }
+
+    public function canAccessTenant(Model $tenant): bool
+    {
+        return $this->tenants()->whereKey($tenant)->exists();
+    }
+
+    public function getTenants(Panel $panel): Collection
+    {
+        return $this->tenants()->get();
     }
 
     public function tenant()
@@ -41,18 +50,11 @@ class User extends Authenticatable implements FilamentUser, HasTenants
         return $this->belongsToMany(Tenant::class);
     }
 
-    public function canAccessPanel(Panel $panel): bool
+    protected function casts(): array
     {
-        return true;
-    }
-
-    public function getTenants(Panel $panel): Collection
-    {
-        return $this->tenants()->get();
-    }
-
-    public function canAccessTenant(Model $tenant): bool
-    {
-        return $this->tenants()->whereKey($tenant)->exists();
+        return [
+            'email_verified_at' => 'datetime',
+            'password' => 'hashed',
+        ];
     }
 }

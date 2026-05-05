@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Database\Factories;
 
 use App\Models\Tenant;
@@ -12,6 +14,13 @@ use Illuminate\Support\Str;
 class UserFactory extends Factory
 {
     protected static ?string $password;
+
+    public function admin(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'role' => 'admin',
+        ]);
+    }
 
     /** @return array<string, mixed> */
     public function definition(): array
@@ -29,15 +38,8 @@ class UserFactory extends Factory
 
     public function unverified(): static
     {
-        return $this->state(fn(array $attributes) => [
+        return $this->state(fn (array $attributes) => [
             'email_verified_at' => null,
-        ]);
-    }
-
-    public function admin(): static
-    {
-        return $this->state(fn(array $attributes) => [
-            'role' => 'admin',
         ]);
     }
 }

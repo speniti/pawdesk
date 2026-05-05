@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models;
 
 use Database\Factories\TenantFactory;
@@ -14,6 +16,11 @@ class Tenant extends Model
     /** @use HasFactory<TenantFactory> */
     use HasFactory;
 
+    public function users(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class);
+    }
+
     protected function casts(): array
     {
         return [
@@ -21,10 +28,5 @@ class Tenant extends Model
             'notification_settings' => 'encrypted:array',
             'settings' => 'array',
         ];
-    }
-
-    public function users(): BelongsToMany
-    {
-        return $this->belongsToMany(User::class);
     }
 }

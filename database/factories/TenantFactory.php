@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Database\Factories;
 
 use App\Models\Tenant;
@@ -17,7 +19,7 @@ class TenantFactory extends Factory
         return [
             'name' => $name,
             'slug' => Str::slug($name),
-            'primary_color' => '#' . str_pad(dechex(fake()->numberBetween(0, 16777215)), 6, '0', STR_PAD_LEFT),
+            'primary_color' => '#'.mb_str_pad(dechex(fake()->numberBetween(0, 16777215)), 6, '0', STR_PAD_LEFT),
             'opening_hours' => [],
             'notification_settings' => [],
             'settings' => [],

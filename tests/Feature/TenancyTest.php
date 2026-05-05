@@ -1,9 +1,10 @@
 <?php
 
+declare(strict_types=1);
+
 use App\Models\Tenant;
 use App\Models\User;
 use Filament\Facades\Filament;
-use Filament\Panel;
 
 test('User implements HasTenants interface', function () {
     $user = new User;
@@ -60,7 +61,7 @@ test('Filament admin panel has tenancy configured', function () {
     $tenantModel = $panel->getTenantModel();
 
     expect($tenantModel)->not->toBeNull();
-    expect($tenantModel)->toBe(\App\Models\Tenant::class);
+    expect($tenantModel)->toBe(Tenant::class);
 });
 
 test('Filament admin panel tenant slug attribute is slug', function () {
@@ -74,5 +75,5 @@ test('ApplyTenantScopes middleware is registered on tenant routes', function () 
     $panel = Filament::getPanel('admin');
     $middleware = $panel->getTenantMiddleware();
 
-    expect($middleware)->toContain(\App\Http\Middleware\ApplyTenantScopes::class);
+    expect($middleware)->toContain(App\Http\Middleware\ApplyTenantScopes::class);
 });

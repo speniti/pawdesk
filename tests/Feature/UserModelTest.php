@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 
@@ -36,10 +38,10 @@ test('User factory creates valid user', function () {
 });
 
 test('User belongs to tenant', function () {
-    $tenant = \App\Models\Tenant::factory()->create();
+    $tenant = App\Models\Tenant::factory()->create();
     $user = User::factory()->create(['tenant_id' => $tenant->id]);
 
-    expect($user->tenant)->toBeInstanceOf(\App\Models\Tenant::class);
+    expect($user->tenant)->toBeInstanceOf(App\Models\Tenant::class);
     expect($user->tenant->id)->toBe($tenant->id);
 });
 
