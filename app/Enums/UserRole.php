@@ -12,7 +12,7 @@ enum UserRole: string implements HasColor, HasLabel
     case Admin = 'admin';
     case Staff = 'staff';
 
-    public function getColor(): string|array|null
+    public function getColor(): string
     {
         return match ($this) {
             self::Admin => 'warning',
@@ -20,7 +20,7 @@ enum UserRole: string implements HasColor, HasLabel
         };
     }
 
-    public function getLabel(): string|null
+    public function getLabel(): string
     {
         return match ($this) {
             self::Admin => 'Amministratore',

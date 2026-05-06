@@ -6,9 +6,9 @@ namespace App\Enums;
 
 enum Size: string
 {
-    case Toy = 'toy';
-    case Small = 'small';
-    case Medium = 'medium';
-    case Large = 'large';
     case Giant = 'giant';
+    case Large = 'large';
+    case Medium = 'medium';
+    case Small = 'small';
+    case Toy = 'toy';
 }

@@ -4,13 +4,16 @@
   "type": "module",
   "scripts": {
     "build": "vite build",
-    "dev": "vite"
+    "dev": "vite",
+    "lint:scripts": "eslint --no-error-on-unmatched-pattern resources/**/*.ts *.config.ts",
+    "lint:styles": "stylelint \"resources/**/*.css\" --allow-empty-input"
   },
   "devDependencies": {
     "@eslint/js": "^10",
     "@shufo/prettier-plugin-blade": "^1",
     "@tailwindcss/vite": "^4",
     "eslint": "^10",
+    "eslint-config-prettier": "^10",
     "globals": "^17",
     "laravel-vite-plugin": "^3",
     "prettier": "^3",

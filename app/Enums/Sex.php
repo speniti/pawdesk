@@ -6,7 +6,7 @@ namespace App\Enums;
 
 enum Sex: string
 {
-    case M = 'm';
     case F = 'f';
+    case M = 'm';
     case Unknown = 'unknown';
 }
