@@ -11,13 +11,6 @@ class AppServiceProvider extends ServiceProvider
 {
     public function boot(): void
     {
-        URL::forceHttps(true);
-    }
-
-    public function register(): void
-    {
-        if ($this->app->environment('testing')) {
-            URL::forceHttps(false);
-        }
+        URL::forceHttps(! $this->app->environment('testing'));
     }
 }
