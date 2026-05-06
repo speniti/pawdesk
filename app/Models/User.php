@@ -19,12 +19,20 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Collection;
 
+/**
+ * @property UserRole $role
+ */
 #[Fillable(['name', 'email', 'password', 'role'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable implements FilamentUser, HasTenants
 {
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable;
+
+    public function appointments(): HasMany
+    {
+        return $this->hasMany(Appointment::class);
+    }
 
     public function canAccessPanel(Panel $panel): bool
     {
@@ -39,11 +47,6 @@ class User extends Authenticatable implements FilamentUser, HasTenants
     public function getTenants(Panel $panel): Collection
     {
         return $this->tenants()->get();
-    }
-
-    public function appointments(): HasMany
-    {
-        return $this->hasMany(Appointment::class);
     }
 
     public function tenants(): BelongsToMany

@@ -1,0 +1,25 @@
+name: Test
+
+description: Run the Pest test suite
+
+runs:
+  using: composite
+  steps:
+    - name: Setup PHP
+      uses: ./.github/actions/setup
+      with:
+        php-version: '8.5'
+
+    - name: Composer Install
+      run: composer install -q --no-interaction --optimize-autoloader --no-progress
+      shell: bash
+
+    - name: Setup Environment
+      run: |
+        cp .env.example .env
+        php artisan key:generate
+      shell: bash
+
+    - name: Run Pest
+      run: vendor/bin/pest --ci
+      shell: bash

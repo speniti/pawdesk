@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Filament\Resources\Users\Pages;
 
 use App\Filament\Resources\Users\UserResource;
+use App\Models\User;
 use Filament\Actions\Action;
 use Filament\Actions\DeleteAction;
 use Filament\Notifications\Notification;
@@ -27,6 +28,8 @@ class EditUser extends EditRecord
                 ->modalHeading('Reset password')
                 ->modalDescription("Verrà inviato un link di reset password all'indirizzo email dell'utente.")
                 ->action(function (): void {
+                    assert($this->record instanceof User);
+
                     Password::sendResetLink(['email' => $this->record->email]);
 
                     Notification::make()

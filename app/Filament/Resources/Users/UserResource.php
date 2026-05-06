@@ -17,44 +17,33 @@ use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use UnitEnum;
 
 class UserResource extends Resource
 {
+    protected static bool $isScopedToTenant = false;
+
     protected static ?string $model = User::class;
-
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedUsers;
-
-    protected static \UnitEnum|string|null $navigationGroup = 'Gestione';
-
-    protected static ?int $navigationSort = 10;
 
     protected static ?string $modelLabel = 'Utente';
 
+    protected static UnitEnum|string|null $navigationGroup = 'Gestione';
+
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedUsers;
+
+    protected static ?int $navigationSort = 10;
+
     protected static ?string $pluralModelLabel = 'Utenti';
-
-    protected static bool $isScopedToTenant = false;
-
-    public static function getEloquentQuery(): Builder
-    {
-        return parent::getEloquentQuery()
-            ->whereHas('tenants', fn (Builder $query) => $query->where('tenants.id', Filament::getTenant()->id));
-    }
 
     public static function form(Schema $schema): Schema
     {
         return UserForm::configure($schema);
     }
 
-    public static function table(Table $table): Table
+    public static function getEloquentQuery(): Builder
     {
-        return UsersTable::configure($table);
-    }
-
-    public static function getRelations(): array
-    {
-        return [
-            //
-        ];
+        return parent::getEloquentQuery()
+            ->whereHas('tenants', fn (Builder $query) => $query->where('tenants.id', Filament::getTenant()->getKey()));
     }
 
     public static function getPages(): array
@@ -64,5 +53,17 @@ class UserResource extends Resource
             'create' => CreateUser::route('/create'),
             'edit' => EditUser::route('/{record}/edit'),
         ];
+    }
+
+    public static function getRelations(): array
+    {
+        return [
+            //
+        ];
+    }
+
+    public static function table(Table $table): Table
+    {
+        return UsersTable::configure($table);
     }
 }
