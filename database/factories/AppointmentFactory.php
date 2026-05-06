@@ -27,4 +27,13 @@ class AppointmentFactory extends Factory
             'internal_notes' => fake()->optional()->sentence(),
         ];
     }
+
+    public function forTenant(Tenant $tenant): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'tenant_id' => $tenant->id,
+            'customer_id' => Customer::factory()->for($tenant),
+            'pet_id' => Pet::factory()->for($tenant)->for(Customer::factory()->for($tenant)),
+        ]);
+    }
 }
