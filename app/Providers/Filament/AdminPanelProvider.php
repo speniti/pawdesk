@@ -30,6 +30,8 @@ class AdminPanelProvider extends PanelProvider
             ->id('admin')
             ->path('admin')
             ->login()
+            ->profile()
+            ->passwordReset()
             ->colors(['primary' => Color::Amber])
             ->tenant(Tenant::class, slugAttribute: 'slug')
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')

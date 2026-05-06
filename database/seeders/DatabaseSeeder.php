@@ -27,7 +27,6 @@ class DatabaseSeeder extends Seeder
             'email' => 'simone@peniti.it',
             'password' => Hash::make('password'),
             'role' => UserRole::Admin,
-            'tenant_id' => $tenant->id,
         ]);
 
         $user->tenants()->attach($tenant);
