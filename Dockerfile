@@ -38,12 +38,6 @@ COPY --from=node /app/public/build public/build
 
 RUN composer dump-autoload --optimize
 
-RUN php artisan config:cache \
-    && php artisan route:cache \
-    && php artisan view:cache \
-    && php artisan event:cache \
-    && php artisan filament:optimize
-
 RUN chown -R www-data:www-data /var/www/html/storage \
     && chown -R www-data:www-data /var/www/html/bootstrap/cache \
     && chown www-data:www-data /var/www/html/public
