@@ -45,6 +45,7 @@ RUN php artisan config:cache \
     && php artisan filament:optimize
 
 RUN chown -R www-data:www-data /var/www/html/storage \
-    && chown -R www-data:www-data /var/www/html/bootstrap/cache
+    && chown -R www-data:www-data /var/www/html/bootstrap/cache \
+    && mkdir -p /var/www/html/storage/database
 
 USER www-data
