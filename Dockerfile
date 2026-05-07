@@ -46,7 +46,6 @@ RUN php artisan config:cache \
 
 RUN chown -R www-data:www-data /var/www/html/storage \
     && chown -R www-data:www-data /var/www/html/bootstrap/cache \
-    && chown www-data:www-data /var/www/html/public \
-    && mkdir -p /var/www/html/storage/database
+    && chown www-data:www-data /var/www/html/public
 
 USER www-data
