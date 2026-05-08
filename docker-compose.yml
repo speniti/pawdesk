@@ -14,7 +14,9 @@ services:
       - app
 
   app:
-    build: .
+    build:
+      context: .
+      target: dev
     container_name: peniti_app
     volumes:
       - .:/var/www/html
