@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "e9a5f15f9dea437ac32ea42d52261dd9",
+    "content-hash": "8b6936d6e207169f4c12a858366ffc58",
     "packages": [
         {
             "name": "blade-ui-kit/blade-heroicons",
@@ -2845,6 +2845,73 @@
             "time": "2026-01-23T15:30:45+00:00"
         },
         {
+            "name": "league/iso3166",
+            "version": "4.4.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/alcohol/iso3166.git",
+                "reference": "928ac7ecc569db9123a83ef5b1c6efc279e7cb49"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/alcohol/iso3166/zipball/928ac7ecc569db9123a83ef5b1c6efc279e7cb49",
+                "reference": "928ac7ecc569db9123a83ef5b1c6efc279e7cb49",
+                "shasum": ""
+            },
+            "require": {
+                "ext-mbstring": "*",
+                "php": "^7.4 || ^8.0"
+            },
+            "require-dev": {
+                "phpstan/phpstan": "^1.12.6",
+                "phpstan/phpstan-deprecation-rules": "^1.2.1",
+                "phpstan/phpstan-strict-rules": "^1.6.1",
+                "phpunit/phpunit": "^9.6.21"
+            },
+            "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-master": "4.x-dev"
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "League\\ISO3166\\": "src"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Rob Bast",
+                    "email": "rob.bast@gmail.com"
+                }
+            ],
+            "description": "ISO 3166-1 PHP Library",
+            "homepage": "https://github.com/alcohol/iso3166",
+            "keywords": [
+                "3166",
+                "3166-1",
+                "ISO 3166",
+                "countries",
+                "iso",
+                "library"
+            ],
+            "support": {
+                "issues": "https://github.com/alcohol/iso3166/issues",
+                "source": "https://github.com/alcohol/iso3166"
+            },
+            "funding": [
+                {
+                    "url": "https://github.com/alcohol",
+                    "type": "github"
+                }
+            ],
+            "time": "2026-01-02T09:49:36+00:00"
+        },
+        {
             "name": "league/mime-type-detection",
             "version": "1.16.0",
             "source": {
@@ -5212,6 +5279,63 @@
                 }
             ],
             "time": "2026-04-27T14:27:52+00:00"
+        },
+        {
+            "name": "speniti/filament-mapbox",
+            "version": "v3.0.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/speniti/filament-mapbox.git",
+                "reference": "5deed9fea4d0fe60e77a86a212616328d5fec20f"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/speniti/filament-mapbox/zipball/5deed9fea4d0fe60e77a86a212616328d5fec20f",
+                "reference": "5deed9fea4d0fe60e77a86a212616328d5fec20f",
+                "shasum": ""
+            },
+            "require": {
+                "filament/support": "^5",
+                "league/iso3166": "^4",
+                "php": "^8.4"
+            },
+            "require-dev": {
+                "filament/filament": "^5",
+                "larastan/larastan": "^3",
+                "laravel/pint": "^1",
+                "orchestra/testbench": "11",
+                "pestphp/pest": "^4",
+                "pestphp/pest-plugin-livewire": "^4"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "Peniti\\FilamentMapbox\\FilamentMapboxServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Peniti\\FilamentMapbox\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Simone Peniti",
+                    "email": "simone@peniti.it"
+                }
+            ],
+            "description": "A set of tools for integrating Mapbox within the Filament ecosystem.",
+            "support": {
+                "issues": "https://github.com/speniti/filament-mapbox/issues",
+                "source": "https://github.com/speniti/filament-mapbox/tree/v3.0.0"
+            },
+            "time": "2026-05-11T13:11:01+00:00"
         },
         {
             "name": "symfony/clock",
