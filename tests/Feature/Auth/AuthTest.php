@@ -34,9 +34,7 @@ test('login with wrong credentials shows validation error', function () {
 });
 
 test('logout destroys session', function () {
-    $tenant = Tenant::factory()->create();
     $user = User::factory()->create();
-    $user->tenants()->attach($tenant);
 
     $this->actingAs($user);
 
