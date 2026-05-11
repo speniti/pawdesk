@@ -40,7 +40,7 @@ class CustomerForm
                             ->email()
                             ->required()
                             ->maxLength(255)
-                            ->unique(ignoreRecord: true, modifyRuleUsing: fn (\Illuminate\Validation\Rules\Unique $rule) => $rule->where('tenant_id', Filament::getTenant()->id)),
+                            ->unique(ignoreRecord: true, modifyRuleUsing: fn (\Illuminate\Validation\Rules\Unique $rule) => $rule->where('tenant_id', Filament::getTenant()->getKey())),
 
                         TextInput::make('phone')
                             ->label('Telefono')
@@ -68,7 +68,16 @@ class CustomerForm
                     ->schema([
                         Placeholder::make('gdpr_policy_sent_at')
                             ->label('Informativa privacy inviata il')
-                            ->content(fn (?Customer $record): string => $record?->gdpr_policy_sent_at?->format('d/m/Y H:i') ?? 'Non ancora inviata')
+                            ->content(function (?Customer $record): string {
+                                if ($record?->gdpr_policy_sent_at === null) {
+                                    return 'Non ancora inviata';
+                                }
+
+                                /** @var \Carbon\Carbon $gdprDate */
+                                $gdprDate = $record->gdpr_policy_sent_at;
+
+                                return $gdprDate->format('d/m/Y H:i');
+                            })
                             ->hiddenOn('create'),
 
                         Toggle::make('marketing_consent')
