@@ -26,7 +26,6 @@ return new class extends Migration
             $table->timestamp('created_at', precision: 0)->useCurrent();
             $table->timestamp('updated_at', precision: 0)->useCurrent();
 
-            $table->index('slug');
             $table->index('created_at');
         });
     }

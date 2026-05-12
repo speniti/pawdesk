@@ -68,16 +68,7 @@ class CustomerForm
                     ->schema([
                         Placeholder::make('gdpr_policy_sent_at')
                             ->label('Informativa privacy inviata il')
-                            ->content(function (?Customer $record): string {
-                                if ($record?->gdpr_policy_sent_at === null) {
-                                    return 'Non ancora inviata';
-                                }
-
-                                /** @var \Carbon\Carbon $gdprDate */
-                                $gdprDate = $record->gdpr_policy_sent_at;
-
-                                return $gdprDate->format('d/m/Y H:i');
-                            })
+                            ->content(fn (?Customer $record): string => $record?->gdpr_policy_sent_at?->format('d/m/Y H:i') ?? 'Non ancora inviata')
                             ->hiddenOn('create'),
 
                         Toggle::make('marketing_consent')

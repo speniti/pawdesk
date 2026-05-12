@@ -14,7 +14,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-#[Fillable(['tenant_id', 'customer_id', 'name', 'species', 'breed', 'sex', 'date_of_birth', 'size', 'coat', 'behavioral_notes', 'health_notes'])]
+#[Fillable(['customer_id', 'name', 'species', 'breed', 'sex', 'date_of_birth', 'size', 'coat', 'behavioral_notes', 'health_notes'])]
 class Pet extends Model
 {
     /** @use HasFactory<\Database\Factories\PetFactory> */

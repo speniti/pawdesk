@@ -26,7 +26,7 @@ class PetForm
                     ->schema([
                         Select::make('customer_id')
                             ->label('Proprietario')
-                            ->relationship(name: 'customer', titleAttribute: 'first_name')
+                            ->relationship(name: 'customer')
                             ->searchable(['first_name', 'last_name'])
                             ->getOptionLabelFromRecordUsing(fn (Customer $record) => "{$record->first_name} {$record->last_name}")
                             ->preload()
