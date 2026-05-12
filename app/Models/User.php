@@ -36,7 +36,7 @@ class User extends Authenticatable implements FilamentUser, HasTenants
 
     public function canAccessPanel(Panel $panel): bool
     {
-        return true;
+        return in_array($this->role, [UserRole::Admin, UserRole::Staff], true);
     }
 
     public function canAccessTenant(Model $tenant): bool

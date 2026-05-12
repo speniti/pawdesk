@@ -19,6 +19,8 @@ use UnitEnum;
 
 class PetResource extends Resource
 {
+    protected static bool $isScopedToTenant = true;
+
     protected static ?string $model = Pet::class;
 
     protected static ?string $modelLabel = 'Pet';

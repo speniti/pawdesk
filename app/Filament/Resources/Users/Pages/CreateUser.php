@@ -18,8 +18,7 @@ class CreateUser extends CreateRecord
 
     protected function afterCreate(): void
     {
-        assert($this->record instanceof User);
-
+        /** @var User $this->record */
         $this->record->tenants()->attach(Filament::getTenant());
 
         Password::sendResetLink(['email' => $this->record->email]);
