@@ -9,13 +9,17 @@ use App\Models\User;
 use Filament\Facades\Filament;
 use Illuminate\Database\Eloquent\Model;
 
+/** @phpstan-type TenantScopedModel Model&object{tenant_id: int} */
 trait InteractsWithRoles
 {
+    /** @param  TenantScopedModel $model */
     protected function belongsToCurrentTenant(Model $model): bool
     {
-        $tenant = Filament::getTenant();
+        if (! $tenant = Filament::getTenant()) {
+            return false;
+        }
 
-        return $tenant !== null && $model->tenant_id === $tenant->getKey();
+        return $model->tenant_id === $tenant->getKey();
     }
 
     protected function isAdmin(User $user): bool

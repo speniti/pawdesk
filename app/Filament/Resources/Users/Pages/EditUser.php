@@ -28,13 +28,15 @@ class EditUser extends EditRecord
                 ->modalHeading('Reset password')
                 ->modalDescription("Verrà inviato un link di reset password all'indirizzo email dell'utente.")
                 ->action(function (): void {
-                    /** @var User $this->record */
-                    Password::sendResetLink(['email' => $this->record->email]);
+                    /** @var User $record */
+                    $record = $this->getRecord();
+
+                    Password::sendResetLink(['email' => $record->email]);
 
                     Notification::make()
                         ->success()
                         ->title('Link inviato')
-                        ->body("Link di reset password inviato a {$this->record->email}")
+                        ->body("Link di reset password inviato a {$record->email}")
                         ->send();
                 }),
 

@@ -6,6 +6,7 @@ namespace App\Filament\Resources\Customers\Schemas;
 
 use App\Enums\PreferredChannel;
 use App\Models\Customer;
+use Carbon\Carbon;
 use Filament\Facades\Filament;
 use Filament\Forms\Components\KeyValue;
 use Filament\Forms\Components\Placeholder;
@@ -61,37 +62,43 @@ class CustomerForm
 
                 Section::make('Comunicazione')
                     ->schema([
-                                                    Select::make('preferred_channel')
-                                                        ->label('Canale preferito')
-                                                        ->options(PreferredChannel::class)
-                                                        ->default(PreferredChannel::Email)
-                                                        ->required(),
-                                                ]),
+                        Select::make('preferred_channel')
+                            ->label('Canale preferito')
+                            ->options(PreferredChannel::class)
+                            ->default(PreferredChannel::Email)
+                            ->required(),
+                    ]),
 
                 Section::make('Privacy e consensi')
                     ->schema([
-                                                    Placeholder::make('gdpr_policy_sent_at')
-                                                        ->label('Informativa privacy inviata il')
-                                                        ->content(fn (?Customer $record): string => $record?->gdpr_policy_sent_at?->format('d/m/Y H:i') ?? 'Non ancora inviata')
-                                                        ->hiddenOn('create'),
+                        Placeholder::make('gdpr_policy_sent_at')
+                            ->label('Informativa privacy inviata il')
+                            ->content(function (?Customer $record): string {
+                                if (! $sentAt = $record?->gdpr_policy_sent_at) {
+                                    return 'Non ancora inviata';
+                                }
 
-                                                    Toggle::make('marketing_consent')
-                                                        ->label('Consenso marketing')
-                                                        ->formatStateUsing(fn (?Customer $record): bool => $record?->marketing_consent_at !== null),
-                                                ]),
+                                return Carbon::parse($sentAt)->format('d/m/Y H:i');
+                            })
+                            ->hiddenOn('create'),
+
+                        Toggle::make('marketing_consent')
+                            ->label('Consenso marketing')
+                            ->formatStateUsing(fn (?Customer $record): bool => $record?->marketing_consent_at !== null),
+                    ]),
 
                 Section::make('Preferenze e note')
                     ->schema([
-                                                    KeyValue::make('preferences')
-                                                        ->label('Preferenze')
-                                                        ->keyLabel('Chiave')
-                                                        ->valueLabel('Valore'),
+                        KeyValue::make('preferences')
+                            ->label('Preferenze')
+                            ->keyLabel('Chiave')
+                            ->valueLabel('Valore'),
 
-                                                    Textarea::make('notes')
-                                                        ->label('Note')
-                                                        ->maxLength(1000)
-                                                        ->columnSpanFull(),
-                                                ]),
+                        Textarea::make('notes')
+                            ->label('Note')
+                            ->maxLength(1000)
+                            ->columnSpanFull(),
+                    ]),
             ]);
     }
 }

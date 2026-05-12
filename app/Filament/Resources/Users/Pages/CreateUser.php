@@ -18,22 +18,22 @@ class CreateUser extends CreateRecord
 
     protected function afterCreate(): void
     {
-        /** @var User $this->record */
-        $this->record->tenants()->attach(Filament::getTenant());
+        /** @var User $record */
+        $record = $this->getRecord();
 
-        Password::sendResetLink(['email' => $this->record->email]);
+        $record->tenants()->attach(Filament::getTenant());
+
+        Password::sendResetLink(['email' => $record->email]);
 
         Notification::make()
             ->success()
             ->title('Utente creato')
-            ->body("Inviato link di reset password a {$this->record->email}")
+            ->body("Inviato link di reset password a {$record->email}")
             ->send();
     }
 
     protected function mutateFormDataBeforeCreate(array $data): array
     {
-        $data['password'] = Str::password();
-
-        return $data;
+        return [...$data, 'password' => Str::password()];
     }
 }
