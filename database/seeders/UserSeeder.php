@@ -12,10 +12,8 @@ use Illuminate\Support\Facades\Hash;
 
 class UserSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
-    public function run(Tenant $tenant): void
+    /** @return array{admin: User, staff: User} */
+    public function run(Tenant $tenant): array
     {
         $admin = User::firstOrCreate(
             ['email' => 'simone@peniti.it'],
@@ -36,5 +34,7 @@ class UserSeeder extends Seeder
         );
 
         $tenant->users()->syncWithoutDetaching([$admin->id, $staff->id]);
+
+        return ['admin' => $admin, 'staff' => $staff];
     }
 }

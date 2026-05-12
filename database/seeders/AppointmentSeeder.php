@@ -20,9 +20,9 @@ class AppointmentSeeder extends Seeder
     /**
      * @param  Collection<int, Customer>  $customers
      * @param  Collection<int, Pet>  $pets
-     * @param  Collection<string, Service>  $services
+     * @param  array<string, Service>  $services
      */
-    public function run(Tenant $tenant, User $staff, Collection $customers, Collection $pets, Collection $services): void
+    public function run(Tenant $tenant, User $staff, Collection $customers, Collection $pets, array $services): void
     {
         if (Appointment::where('tenant_id', $tenant->id)->exists()) {
             return;
@@ -38,12 +38,12 @@ class AppointmentSeeder extends Seeder
         ];
 
         $serviceMap = [
-            ['Bagnetto Completo'],
-            ['Toelettatura Completa'],
-            ['Bagnetto Completo', 'Taglio Unghie'],
-            ['Toelettatura Completa'],
-            ['Trattamento Antiparassitario'],
-            ['De-shedding'],
+            ['bagnetto'],
+            ['toelettatura'],
+            ['bagnetto', 'taglio_unghie'],
+            ['toelettatura'],
+            ['antiparassitario'],
+            ['deshedding'],
         ];
 
         foreach ($schedule as $i => [$status, $start, $end]) {
@@ -63,8 +63,8 @@ class AppointmentSeeder extends Seeder
             $totalPrice = 0;
             $totalDuration = 0;
 
-            foreach ($serviceMap[$i] as $serviceName) {
-                $service = $services[$serviceName];
+            foreach ($serviceMap[$i] as $serviceKey) {
+                $service = $services[$serviceKey];
                 $price = $service->size_prices[$pet->size->value] ?? $service->base_price;
 
                 $appointment->services()->attach($service->id, [
