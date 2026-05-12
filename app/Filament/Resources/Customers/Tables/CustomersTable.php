@@ -23,7 +23,7 @@ class CustomersTable
             ->columns([
                 TextColumn::make('full_name')
                     ->label('Nome completo')
-                    ->state(fn (Customer $record): string => "{$record->first_name} {$record->last_name}")
+                    ->state(fn (Customer $record): string => "$record->first_name $record->last_name")
                     ->searchable(['first_name', 'last_name'])
                     ->sortable(query: fn (Builder $query, string $direction): Builder => $query->orderBy('first_name', $direction)),
 

@@ -8,13 +8,13 @@ use App\Enums\Coat;
 use App\Enums\Sex;
 use App\Enums\Size;
 use App\Enums\Species;
+use App\Models\Customer;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
-use Illuminate\Database\Eloquent\Model;
 
 class PetForm
 {
@@ -28,7 +28,7 @@ class PetForm
                             ->label('Proprietario')
                             ->relationship(name: 'customer', titleAttribute: 'first_name')
                             ->searchable(['first_name', 'last_name'])
-                            ->getOptionLabelFromRecordUsing(fn (Model $record) => "{$record->first_name} {$record->last_name}")
+                            ->getOptionLabelFromRecordUsing(fn (Customer $record) => "{$record->first_name} {$record->last_name}")
                             ->preload()
                             ->required(),
 
