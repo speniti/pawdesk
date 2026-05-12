@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Models\Tenant;
 use App\Models\User;
 use Filament\Facades\Filament;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
@@ -12,15 +13,20 @@ use function Pest\Laravel\actingAs;
 pest()->extend(TestCase::class)->use(LazilyRefreshDatabase::class)->in('Feature');
 
 /**
- * Boot Filament admin panel for the given user and the current test's $tenant property.
- *
- * Requires $this->tenant to be set in the test's beforeEach() hook.
+ * Boot a Filament panel context for the given tenant.
  */
-function bootFilamentTenantAs(User $user): void
+function bootFilamentPanel(Tenant $tenant, string $panel = 'admin'): void
+{
+    Filament::setCurrentPanel($panel);
+    Filament::setTenant($tenant);
+    Filament::bootCurrentPanel();
+}
+
+/**
+ * Authenticate as the given user and boot the Filament admin panel for the given tenant.
+ */
+function bootFilamentPanelAs(User $user, Tenant $tenant, string $panel = 'admin'): void
 {
     actingAs($user);
-
-    Filament::setCurrentPanel('admin');
-    Filament::setTenant(test()->tenant);
-    Filament::bootCurrentPanel();
+    bootFilamentPanel($tenant, $panel);
 }

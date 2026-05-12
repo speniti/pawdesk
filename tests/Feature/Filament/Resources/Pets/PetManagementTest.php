@@ -19,7 +19,7 @@ beforeEach(function () {
 
 test('admin can create a pet', function () {
     $customer = Customer::factory()->create(['tenant_id' => $this->tenant->id]);
-    bootFilamentTenantAs($this->admin);
+    bootFilamentPanelAs($this->admin, $this->tenant);
 
     Livewire::test(CreatePet::class)
         ->fillForm([
@@ -50,7 +50,7 @@ test('admin can update a pet', function () {
         'tenant_id' => $this->tenant->id,
     ]);
 
-    bootFilamentTenantAs($this->admin);
+    bootFilamentPanelAs($this->admin, $this->tenant);
 
     Livewire::test(EditPet::class, ['record' => $pet->id])
         ->fillForm([
@@ -73,7 +73,7 @@ test('admin can delete a pet', function () {
         'tenant_id' => $this->tenant->id,
     ]);
 
-    bootFilamentTenantAs($this->admin);
+    bootFilamentPanelAs($this->admin, $this->tenant);
 
     Livewire::test(EditPet::class, ['record' => $pet->id])
         ->callAction('delete')
@@ -84,7 +84,7 @@ test('admin can delete a pet', function () {
 
 test('pet form requires field', function (string $field) {
     $customer = Customer::factory()->create(['tenant_id' => $this->tenant->id]);
-    bootFilamentTenantAs($this->admin);
+    bootFilamentPanelAs($this->admin, $this->tenant);
 
     $validData = [
         'customer_id' => $customer->id,

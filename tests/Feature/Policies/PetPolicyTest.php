@@ -11,6 +11,8 @@ use App\Models\Tenant;
 use App\Models\User;
 use Livewire\Livewire;
 
+use function Pest\Laravel\actingAs;
+
 beforeEach(function () {
     $this->tenant = Tenant::factory()->create();
 
@@ -28,7 +30,8 @@ beforeEach(function () {
 });
 
 test('user with access can view pet list', function (User $user) {
-    bootFilamentTenantAs($user);
+    actingAs($user);
+    bootFilamentPanel($this->tenant);
 
     Livewire::test(ListPets::class)->assertOk();
 })->with([
@@ -37,7 +40,8 @@ test('user with access can view pet list', function (User $user) {
 ]);
 
 test('user with access can view create pet page', function (User $user) {
-    bootFilamentTenantAs($user);
+    actingAs($user);
+    bootFilamentPanel($this->tenant);
 
     Livewire::test(CreatePet::class)->assertOk();
 })->with([
@@ -46,7 +50,8 @@ test('user with access can view create pet page', function (User $user) {
 ]);
 
 test('user with access can view edit pet page', function (User $user) {
-    bootFilamentTenantAs($user);
+    actingAs($user);
+    bootFilamentPanel($this->tenant);
 
     Livewire::test(EditPet::class, ['record' => $this->pet->id])->assertOk();
 })->with([

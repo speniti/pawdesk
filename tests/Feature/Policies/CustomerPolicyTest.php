@@ -10,6 +10,8 @@ use App\Models\Tenant;
 use App\Models\User;
 use Livewire\Livewire;
 
+use function Pest\Laravel\actingAs;
+
 beforeEach(function () {
     $this->tenant = Tenant::factory()->create();
 
@@ -23,7 +25,8 @@ beforeEach(function () {
 });
 
 test('user with access can view customer list', function (User $user) {
-    bootFilamentTenantAs($user);
+    actingAs($user);
+    bootFilamentPanel($this->tenant);
 
     Livewire::test(ListCustomers::class)->assertOk();
 })->with([
@@ -32,7 +35,8 @@ test('user with access can view customer list', function (User $user) {
 ]);
 
 test('user with access can view create customer page', function (User $user) {
-    bootFilamentTenantAs($user);
+    actingAs($user);
+    bootFilamentPanel($this->tenant);
 
     Livewire::test(CreateCustomer::class)->assertOk();
 })->with([
@@ -41,7 +45,8 @@ test('user with access can view create customer page', function (User $user) {
 ]);
 
 test('user with access can view edit customer page', function (User $user) {
-    bootFilamentTenantAs($user);
+    actingAs($user);
+    bootFilamentPanel($this->tenant);
 
     Livewire::test(EditCustomer::class, ['record' => $this->customer->id])->assertOk();
 })->with([

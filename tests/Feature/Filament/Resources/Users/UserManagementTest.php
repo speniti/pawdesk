@@ -18,7 +18,7 @@ beforeEach(function () {
 });
 
 test('password is auto-generated and hashed on user creation', function () {
-    bootFilamentTenantAs($this->admin);
+    bootFilamentPanelAs($this->admin, $this->tenant);
 
     Password::shouldReceive('sendResetLink')->once();
 
@@ -43,7 +43,7 @@ test('password is auto-generated and hashed on user creation', function () {
 test('reset password action sends reset link email', function () {
     $targetUser = User::factory()->create();
     $targetUser->tenants()->attach($this->tenant);
-    bootFilamentTenantAs($this->admin);
+    bootFilamentPanelAs($this->admin, $this->tenant);
 
     Password::shouldReceive('sendResetLink')
         ->once()
@@ -59,7 +59,7 @@ test('email must be unique', function () {
         'email' => 'duplicate@example.com',
     ]);
 
-    bootFilamentTenantAs($this->admin);
+    bootFilamentPanelAs($this->admin, $this->tenant);
 
     Livewire::test(CreateUser::class)
         ->fillForm([

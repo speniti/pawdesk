@@ -17,7 +17,7 @@ beforeEach(function () {
 });
 
 test('admin can create a customer', function () {
-    bootFilamentTenantAs($this->admin);
+    bootFilamentPanelAs($this->admin, $this->tenant);
 
     Livewire::test(CreateCustomer::class)
         ->fillForm([
@@ -40,7 +40,7 @@ test('admin can create a customer', function () {
 
 test('admin can update a customer', function () {
     $customer = Customer::factory()->create(['tenant_id' => $this->tenant->id]);
-    bootFilamentTenantAs($this->admin);
+    bootFilamentPanelAs($this->admin, $this->tenant);
 
     Livewire::test(EditCustomer::class, ['record' => $customer->id])
         ->fillForm([
@@ -58,7 +58,7 @@ test('admin can update a customer', function () {
 
 test('admin can delete a customer', function () {
     $customer = Customer::factory()->create(['tenant_id' => $this->tenant->id]);
-    bootFilamentTenantAs($this->admin);
+    bootFilamentPanelAs($this->admin, $this->tenant);
 
     Livewire::test(EditCustomer::class, ['record' => $customer->id])
         ->callAction('delete')
@@ -73,7 +73,7 @@ test('duplicate email for same tenant fails validation', function () {
         'email' => 'shared@example.com',
     ]);
 
-    bootFilamentTenantAs($this->admin);
+    bootFilamentPanelAs($this->admin, $this->tenant);
 
     Livewire::test(CreateCustomer::class)
         ->fillForm([
@@ -94,7 +94,7 @@ test('duplicate email for different tenant is allowed', function () {
         'email' => 'shared@example.com',
     ]);
 
-    bootFilamentTenantAs($this->admin);
+    bootFilamentPanelAs($this->admin, $this->tenant);
 
     Livewire::test(CreateCustomer::class)
         ->fillForm([
@@ -111,7 +111,7 @@ test('duplicate email for different tenant is allowed', function () {
 });
 
 test('marketing consent on creation sets timestamp', function (bool $consent, bool $expectTimestamp) {
-    bootFilamentTenantAs($this->admin);
+    bootFilamentPanelAs($this->admin, $this->tenant);
 
     Livewire::test(CreateCustomer::class)
         ->fillForm([
@@ -143,7 +143,7 @@ test('unsetting marketing consent clears timestamp', function () {
         'marketing_consent_at' => now(),
     ]);
 
-    bootFilamentTenantAs($this->admin);
+    bootFilamentPanelAs($this->admin, $this->tenant);
 
     Livewire::test(EditCustomer::class, ['record' => $customer->id])
         ->fillForm([

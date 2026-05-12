@@ -9,6 +9,8 @@ use App\Models\Tenant;
 use App\Models\User;
 use Livewire\Livewire;
 
+use function Pest\Laravel\actingAs;
+
 beforeEach(function () {
     $this->tenant = Tenant::factory()->create();
 
@@ -24,7 +26,8 @@ beforeEach(function () {
 });
 
 test('user role determines access to user list', function (User $user, int $expectedStatus) {
-    bootFilamentTenantAs($user);
+    actingAs($user);
+    bootFilamentPanel($this->tenant);
 
     Livewire::test(ListUsers::class)->assertStatus($expectedStatus);
 })->with([
@@ -33,7 +36,8 @@ test('user role determines access to user list', function (User $user, int $expe
 ]);
 
 test('user role determines access to create user page', function (User $user, int $expectedStatus) {
-    bootFilamentTenantAs($user);
+    actingAs($user);
+    bootFilamentPanel($this->tenant);
 
     Livewire::test(CreateUser::class)->assertStatus($expectedStatus);
 })->with([
@@ -42,7 +46,8 @@ test('user role determines access to create user page', function (User $user, in
 ]);
 
 test('user role determines access to edit user page', function (User $user, int $expectedStatus) {
-    bootFilamentTenantAs($user);
+    actingAs($user);
+    bootFilamentPanel($this->tenant);
 
     Livewire::test(EditUser::class, ['record' => $this->targetUser->id])->assertStatus($expectedStatus);
 })->with([
