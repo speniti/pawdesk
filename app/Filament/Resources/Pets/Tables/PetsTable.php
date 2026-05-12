@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Filament\Resources\Pets\Tables;
 
-use App\Models\Pet;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
@@ -39,7 +38,6 @@ class PetsTable
 
                 TextColumn::make('customer.full_name')
                     ->label('Proprietario')
-                    ->state(fn (Pet $record): string => "$record->customer->first_name $record->customer->last_name")
                     ->searchable(['customers.first_name', 'customers.last_name']),
 
                 TextColumn::make('created_at')

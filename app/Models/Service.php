@@ -34,6 +34,9 @@ class Service extends Model
             ->withPivot(['applied_price', 'duration_minutes']);
     }
 
+    /**
+     * @return BelongsTo<Tenant, $this>
+     */
     public function tenant(): BelongsTo
     {
         return $this->belongsTo(Tenant::class);

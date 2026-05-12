@@ -19,27 +19,27 @@ class PetPolicy
 
     public function delete(User $user, Pet $pet): bool
     {
-        return $this->isStaffOrAdmin($user);
+        return $this->isStaffOrAdmin($user) && $this->belongsToCurrentTenant($pet);
     }
 
     public function forceDelete(User $user, Pet $pet): bool
     {
-        return $this->isStaffOrAdmin($user);
+        return $this->isStaffOrAdmin($user) && $this->belongsToCurrentTenant($pet);
     }
 
     public function restore(User $user, Pet $pet): bool
     {
-        return $this->isStaffOrAdmin($user);
+        return $this->isStaffOrAdmin($user) && $this->belongsToCurrentTenant($pet);
     }
 
     public function update(User $user, Pet $pet): bool
     {
-        return $this->isStaffOrAdmin($user);
+        return $this->isStaffOrAdmin($user) && $this->belongsToCurrentTenant($pet);
     }
 
     public function view(User $user, Pet $pet): bool
     {
-        return $this->isStaffOrAdmin($user);
+        return $this->isStaffOrAdmin($user) && $this->belongsToCurrentTenant($pet);
     }
 
     public function viewAny(User $user): bool

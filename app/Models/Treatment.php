@@ -25,21 +25,33 @@ class Treatment extends Model
     /** @use HasFactory<\Database\Factories\TreatmentFactory> */
     use HasFactory;
 
+    /**
+     * @return BelongsTo<Appointment, $this>
+     */
     public function appointment(): BelongsTo
     {
         return $this->belongsTo(Appointment::class);
     }
 
+    /**
+     * @return BelongsTo<Customer, $this>
+     */
     public function customer(): BelongsTo
     {
         return $this->belongsTo(Customer::class);
     }
 
+    /**
+     * @return BelongsTo<Pet, $this>
+     */
     public function pet(): BelongsTo
     {
         return $this->belongsTo(Pet::class);
     }
 
+    /**
+     * @return BelongsTo<Tenant, $this>
+     */
     public function tenant(): BelongsTo
     {
         return $this->belongsTo(Tenant::class);

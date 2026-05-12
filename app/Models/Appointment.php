@@ -18,11 +18,17 @@ class Appointment extends Model
     /** @use HasFactory<\Database\Factories\AppointmentFactory> */
     use HasFactory;
 
+    /**
+     * @return BelongsTo<Customer, $this>
+     */
     public function customer(): BelongsTo
     {
         return $this->belongsTo(Customer::class);
     }
 
+    /**
+     * @return BelongsTo<Pet, $this>
+     */
     public function pet(): BelongsTo
     {
         return $this->belongsTo(Pet::class);
@@ -34,6 +40,9 @@ class Appointment extends Model
             ->withPivot(['applied_price', 'duration_minutes']);
     }
 
+    /**
+     * @return BelongsTo<Tenant, $this>
+     */
     public function tenant(): BelongsTo
     {
         return $this->belongsTo(Tenant::class);
@@ -44,6 +53,9 @@ class Appointment extends Model
         return $this->hasOne(Treatment::class);
     }
 
+    /**
+     * @return BelongsTo<User, $this>
+     */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);

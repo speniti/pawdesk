@@ -25,14 +25,13 @@ class Pet extends Model
         return $this->hasMany(Appointment::class);
     }
 
-    /**
-     * @return BelongsTo<Customer, $this>
-     */
+    /** @return BelongsTo<Customer, $this> */
     public function customer(): BelongsTo
     {
         return $this->belongsTo(Customer::class);
     }
 
+    /** @return BelongsTo<Tenant, $this> */
     public function tenant(): BelongsTo
     {
         return $this->belongsTo(Tenant::class);

@@ -19,27 +19,27 @@ class CustomerPolicy
 
     public function delete(User $user, Customer $customer): bool
     {
-        return $this->isStaffOrAdmin($user);
+        return $this->isStaffOrAdmin($user) && $this->belongsToCurrentTenant($customer);
     }
 
     public function forceDelete(User $user, Customer $customer): bool
     {
-        return $this->isStaffOrAdmin($user);
+        return $this->isStaffOrAdmin($user) && $this->belongsToCurrentTenant($customer);
     }
 
     public function restore(User $user, Customer $customer): bool
     {
-        return $this->isStaffOrAdmin($user);
+        return $this->isStaffOrAdmin($user) && $this->belongsToCurrentTenant($customer);
     }
 
     public function update(User $user, Customer $customer): bool
     {
-        return $this->isStaffOrAdmin($user);
+        return $this->isStaffOrAdmin($user) && $this->belongsToCurrentTenant($customer);
     }
 
     public function view(User $user, Customer $customer): bool
     {
-        return $this->isStaffOrAdmin($user);
+        return $this->isStaffOrAdmin($user) && $this->belongsToCurrentTenant($customer);
     }
 
     public function viewAny(User $user): bool

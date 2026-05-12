@@ -11,6 +11,11 @@ use function Pest\Laravel\actingAs;
 
 pest()->extend(TestCase::class)->use(LazilyRefreshDatabase::class)->in('Feature');
 
+/**
+ * Boot Filament admin panel for the given user and the current test's $tenant property.
+ *
+ * Requires $this->tenant to be set in the test's beforeEach() hook.
+ */
 function bootFilamentTenantAs(User $user): void
 {
     actingAs($user);
