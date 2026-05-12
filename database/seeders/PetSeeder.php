@@ -10,14 +10,19 @@ use App\Enums\Species;
 use App\Models\Customer;
 use App\Models\Pet;
 use App\Models\Tenant;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Seeder;
 
 class PetSeeder extends Seeder
 {
-    public function run(Tenant $tenant): void
+    /** @return array{customers: Collection<int, Customer>, pets: Collection<int, Pet>} */
+    public function run(Tenant $tenant): array
     {
         if (Customer::where('tenant_id', $tenant->id)->exists()) {
-            return;
+            return [
+                'customers' => Customer::where('tenant_id', $tenant->id)->get(),
+                'pets' => Pet::where('tenant_id', $tenant->id)->get(),
+            ];
         }
 
         $customers = Customer::factory(8)->for($tenant)->create();
@@ -37,10 +42,10 @@ class PetSeeder extends Seeder
             [Species::Other, Size::Small, Coat::Long],
         ];
 
-        collect($profiles)->each(function (array $profile, int $i) use ($tenant, $customers): void {
+        $pets = collect($profiles)->map(function (array $profile, int $i) use ($tenant, $customers): Pet {
             [$species, $size, $coat] = $profile;
 
-            Pet::factory()
+            return Pet::factory()
                 ->for($tenant)
                 ->for($customers[$i % $customers->count()])
                 ->create([
@@ -49,5 +54,7 @@ class PetSeeder extends Seeder
                     'coat' => $coat->value,
                 ]);
         });
+
+        return ['customers' => $customers, 'pets' => $pets];
     }
 }

@@ -1,0 +1,34 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Policies\Concerns;
+
+use App\Enums\UserRole;
+use App\Models\User;
+use Filament\Facades\Filament;
+use Illuminate\Database\Eloquent\Model;
+
+/** @phpstan-type TenantScopedModel Model&object{tenant_id: int} */
+trait InteractsWithRoles
+{
+    /** @param  TenantScopedModel $model */
+    protected function belongsToCurrentTenant(Model $model): bool
+    {
+        if (! $tenant = Filament::getTenant()) {
+            return false;
+        }
+
+        return $model->tenant_id === $tenant->getKey();
+    }
+
+    protected function isAdmin(User $user): bool
+    {
+        return $user->role === UserRole::Admin;
+    }
+
+    protected function isStaffOrAdmin(User $user): bool
+    {
+        return in_array($user->role, [UserRole::Admin, UserRole::Staff], true);
+    }
+}

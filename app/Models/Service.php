@@ -13,7 +13,6 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 #[Fillable([
-    'tenant_id',
     'name',
     'description',
     'category',
@@ -35,6 +34,9 @@ class Service extends Model
             ->withPivot(['applied_price', 'duration_minutes']);
     }
 
+    /**
+     * @return BelongsTo<Tenant, $this>
+     */
     public function tenant(): BelongsTo
     {
         return $this->belongsTo(Tenant::class);
@@ -43,6 +45,7 @@ class Service extends Model
     protected function casts(): array
     {
         return [
+            'base_price' => 'integer',
             'coat' => Coat::class,
             'combinable' => 'boolean',
             'status' => ServiceStatus::class,

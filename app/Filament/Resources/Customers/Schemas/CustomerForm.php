@@ -6,6 +6,7 @@ namespace App\Filament\Resources\Customers\Schemas;
 
 use App\Enums\PreferredChannel;
 use App\Models\Customer;
+use Carbon\Carbon;
 use Filament\Facades\Filament;
 use Filament\Forms\Components\KeyValue;
 use Filament\Forms\Components\Placeholder;
@@ -15,6 +16,7 @@ use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
+use Illuminate\Validation\Rules\Unique;
 use Peniti\FilamentMapbox\Forms\Fields\Geocoder;
 
 class CustomerForm
@@ -40,7 +42,10 @@ class CustomerForm
                             ->email()
                             ->required()
                             ->maxLength(255)
-                            ->unique(ignoreRecord: true, modifyRuleUsing: fn (\Illuminate\Validation\Rules\Unique $rule) => $rule->where('tenant_id', Filament::getTenant()->getKey())),
+                            ->unique(
+                                ignoreRecord: true,
+                                modifyRuleUsing: fn (Unique $rule) => $rule->where('tenant_id', Filament::getTenant()->getKey())
+                            ),
 
                         TextInput::make('phone')
                             ->label('Telefono')
@@ -69,21 +74,17 @@ class CustomerForm
                         Placeholder::make('gdpr_policy_sent_at')
                             ->label('Informativa privacy inviata il')
                             ->content(function (?Customer $record): string {
-                                if ($record?->gdpr_policy_sent_at === null) {
+                                if (! $sentAt = $record?->gdpr_policy_sent_at) {
                                     return 'Non ancora inviata';
                                 }
 
-                                /** @var \Carbon\Carbon $gdprDate */
-                                $gdprDate = $record->gdpr_policy_sent_at;
-
-                                return $gdprDate->format('d/m/Y H:i');
+                                return Carbon::parse($sentAt)->format('d/m/Y H:i');
                             })
                             ->hiddenOn('create'),
 
                         Toggle::make('marketing_consent')
                             ->label('Consenso marketing')
-                            ->formatStateUsing(fn (?Customer $record): bool => $record?->marketing_consent_at !== null)
-                            ->dehydrated(true),
+                            ->formatStateUsing(fn (?Customer $record): bool => $record?->marketing_consent_at !== null),
                     ]),
 
                 Section::make('Preferenze e note')

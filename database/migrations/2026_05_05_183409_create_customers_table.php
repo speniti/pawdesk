@@ -32,7 +32,6 @@ return new class extends Migration
             $table->timestamp('updated_at', precision: 0)->useCurrent();
 
             $table->unique(['tenant_id', 'email']);
-            $table->index(['tenant_id', 'email']);
             $table->index(['tenant_id', 'first_name']);
             $table->index(['tenant_id', 'last_name']);
             $table->index(['tenant_id', 'created_at']);

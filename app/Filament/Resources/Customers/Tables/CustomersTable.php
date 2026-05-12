@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Filament\Resources\Customers\Tables;
 
-use App\Models\Customer;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
@@ -23,7 +22,6 @@ class CustomersTable
             ->columns([
                 TextColumn::make('full_name')
                     ->label('Nome completo')
-                    ->state(fn (Customer $record): string => "{$record->first_name} {$record->last_name}")
                     ->searchable(['first_name', 'last_name'])
                     ->sortable(query: fn (Builder $query, string $direction): Builder => $query->orderBy('first_name', $direction)),
 

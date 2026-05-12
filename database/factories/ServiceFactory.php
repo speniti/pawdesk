@@ -25,6 +25,7 @@ class ServiceFactory extends Factory
             'name' => fake()->randomElement($services),
             'description' => fake()->optional()->sentence(),
             'category' => fake()->randomElement(['grooming', 'bath', 'trimming', 'wellness', 'specialty']),
+            'coat' => null,
             'duration_minutes' => fake()->numberBetween(15, 120),
             'base_price' => fake()->numberBetween(1500, 8000),
             'combinable' => true,

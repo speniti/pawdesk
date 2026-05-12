@@ -26,6 +26,7 @@ class UserForm
                     ->email()
                     ->required()
                     ->maxLength(255)
+                    // Global uniqueness is intentional: users authenticate once and may belong to multiple tenants
                     ->unique(ignoreRecord: true),
 
                 Select::make('role')

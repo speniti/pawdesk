@@ -20,9 +20,11 @@ class EditCustomer extends EditRecord
 
     protected function mutateFormDataBeforeSave(array $data): array
     {
-        assert($this->record instanceof Customer);
+        /** @var Customer $record */
+        $record = $this->getRecord();
 
-        $marketingConsentAt = $this->record->marketing_consent_at ?? now();
+        $marketingConsentAt = $record->marketing_consent_at ?? now();
+
         $data['marketing_consent_at'] = data_get($data, 'marketing_consent', false) ? $marketingConsentAt : null;
 
         unset($data['marketing_consent']);

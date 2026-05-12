@@ -14,7 +14,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-#[Fillable(['tenant_id', 'customer_id', 'name', 'species', 'breed', 'sex', 'date_of_birth', 'size', 'coat', 'behavioral_notes', 'health_notes'])]
+#[Fillable(['customer_id', 'name', 'species', 'breed', 'sex', 'date_of_birth', 'size', 'coat', 'behavioral_notes', 'health_notes'])]
 class Pet extends Model
 {
     /** @use HasFactory<\Database\Factories\PetFactory> */
@@ -25,11 +25,13 @@ class Pet extends Model
         return $this->hasMany(Appointment::class);
     }
 
+    /** @return BelongsTo<Customer, $this> */
     public function customer(): BelongsTo
     {
         return $this->belongsTo(Customer::class);
     }
 
+    /** @return BelongsTo<Tenant, $this> */
     public function tenant(): BelongsTo
     {
         return $this->belongsTo(Tenant::class);

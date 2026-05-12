@@ -2,10 +2,11 @@
 
 declare(strict_types=1);
 
-use App\Filament\Resources\Customers\Pages\CreateCustomer;
-use App\Filament\Resources\Customers\Pages\EditCustomer;
-use App\Filament\Resources\Customers\Pages\ListCustomers;
+use App\Filament\Resources\Pets\Pages\CreatePet;
+use App\Filament\Resources\Pets\Pages\EditPet;
+use App\Filament\Resources\Pets\Pages\ListPets;
 use App\Models\Customer;
+use App\Models\Pet;
 use App\Models\Tenant;
 use App\Models\User;
 use Livewire\Livewire;
@@ -21,34 +22,38 @@ beforeEach(function () {
     $this->staff = User::factory()->create();
     $this->staff->tenants()->attach($this->tenant);
 
-    $this->customer = Customer::factory()->create(['tenant_id' => $this->tenant->id]);
+    $customer = Customer::factory()->create(['tenant_id' => $this->tenant->id]);
+    $this->pet = Pet::factory()->create([
+        'customer_id' => $customer->id,
+        'tenant_id' => $this->tenant->id,
+    ]);
 });
 
-test('user with access can view customer list', function (User $user) {
+test('user with access can view pet list', function (User $user) {
     actingAs($user);
     bootFilamentPanel($this->tenant);
 
-    Livewire::test(ListCustomers::class)->assertOk();
+    Livewire::test(ListPets::class)->assertOk();
 })->with([
     'admin' => fn () => test()->admin,
     'staff' => fn () => test()->staff,
 ]);
 
-test('user with access can view create customer page', function (User $user) {
+test('user with access can view create pet page', function (User $user) {
     actingAs($user);
     bootFilamentPanel($this->tenant);
 
-    Livewire::test(CreateCustomer::class)->assertOk();
+    Livewire::test(CreatePet::class)->assertOk();
 })->with([
     'admin' => fn () => test()->admin,
     'staff' => fn () => test()->staff,
 ]);
 
-test('user with access can view edit customer page', function (User $user) {
+test('user with access can view edit pet page', function (User $user) {
     actingAs($user);
     bootFilamentPanel($this->tenant);
 
-    Livewire::test(EditCustomer::class, ['record' => $this->customer->id])->assertOk();
+    Livewire::test(EditPet::class, ['record' => $this->pet->id])->assertOk();
 })->with([
     'admin' => fn () => test()->admin,
     'staff' => fn () => test()->staff,

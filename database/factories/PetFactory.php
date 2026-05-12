@@ -9,17 +9,28 @@ use App\Enums\Sex;
 use App\Enums\Size;
 use App\Enums\Species;
 use App\Models\Customer;
+use App\Models\Pet;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
-/** @extends Factory<\App\Models\Pet> */
+/** @extends Factory<Pet> */
 class PetFactory extends Factory
 {
+    public function configure(): static
+    {
+        return $this->afterMaking(function (Pet $pet) {
+            if ($pet->tenant_id !== null || $pet->customer_id === null) {
+                return;
+            }
+
+            $pet->tenant_id = $pet->customer->tenant_id;
+        });
+    }
+
     /** @return array<string, mixed> */
     public function definition(): array
     {
         return [
             'customer_id' => Customer::factory(),
-            'tenant_id' => fn (array $attributes) => Customer::find($attributes['customer_id'])?->tenant_id ?? Customer::factory()->create()->tenant_id,
             'name' => fake()->firstName(),
             'species' => Species::Dog->value,
             'breed' => 'Meticcio',

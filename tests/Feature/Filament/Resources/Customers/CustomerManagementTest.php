@@ -17,7 +17,7 @@ beforeEach(function () {
 });
 
 test('admin can create a customer', function () {
-    bootFilamentTenantAs($this->admin);
+    bootFilamentPanelAs($this->admin, $this->tenant);
 
     Livewire::test(CreateCustomer::class)
         ->fillForm([
@@ -34,12 +34,13 @@ test('admin can create a customer', function () {
 
     expect($customer)->not->toBeNull()
         ->and($customer->first_name)->toBe('Mario')
-        ->and($customer->last_name)->toBe('Rossi');
+        ->and($customer->last_name)->toBe('Rossi')
+        ->and($customer->gdpr_policy_sent_at)->not->toBeNull();
 });
 
 test('admin can update a customer', function () {
     $customer = Customer::factory()->create(['tenant_id' => $this->tenant->id]);
-    bootFilamentTenantAs($this->admin);
+    bootFilamentPanelAs($this->admin, $this->tenant);
 
     Livewire::test(EditCustomer::class, ['record' => $customer->id])
         ->fillForm([
@@ -57,7 +58,7 @@ test('admin can update a customer', function () {
 
 test('admin can delete a customer', function () {
     $customer = Customer::factory()->create(['tenant_id' => $this->tenant->id]);
-    bootFilamentTenantAs($this->admin);
+    bootFilamentPanelAs($this->admin, $this->tenant);
 
     Livewire::test(EditCustomer::class, ['record' => $customer->id])
         ->callAction('delete')
@@ -72,7 +73,7 @@ test('duplicate email for same tenant fails validation', function () {
         'email' => 'shared@example.com',
     ]);
 
-    bootFilamentTenantAs($this->admin);
+    bootFilamentPanelAs($this->admin, $this->tenant);
 
     Livewire::test(CreateCustomer::class)
         ->fillForm([
@@ -88,12 +89,12 @@ test('duplicate email for same tenant fails validation', function () {
 
 test('duplicate email for different tenant is allowed', function () {
     $otherTenant = Tenant::factory()->create();
-    $otherCustomer = Customer::factory()->create([
+    Customer::factory()->create([
         'tenant_id' => $otherTenant->id,
         'email' => 'shared@example.com',
     ]);
 
-    bootFilamentTenantAs($this->admin);
+    bootFilamentPanelAs($this->admin, $this->tenant);
 
     Livewire::test(CreateCustomer::class)
         ->fillForm([
@@ -106,12 +107,11 @@ test('duplicate email for different tenant is allowed', function () {
         ->call('create')
         ->assertNotified();
 
-    // Both customers with same email exist in different tenants
     expect(Customer::withoutGlobalScopes()->where('email', 'shared@example.com')->count())->toBe(2);
 });
 
-test('gdpr policy sent at is auto set on creation', function () {
-    bootFilamentTenantAs($this->admin);
+test('marketing consent on creation sets timestamp', function (bool $consent, bool $expectTimestamp) {
+    bootFilamentPanelAs($this->admin, $this->tenant);
 
     Livewire::test(CreateCustomer::class)
         ->fillForm([
@@ -120,34 +120,22 @@ test('gdpr policy sent at is auto set on creation', function () {
             'email' => 'mario@example.com',
             'phone' => '+39 02 1234567',
             'preferred_channel' => 'email',
+            'marketing_consent' => $consent,
         ])
         ->call('create')
         ->assertNotified();
 
     $customer = Customer::where('email', 'mario@example.com')->first();
 
-    expect($customer->gdpr_policy_sent_at)->not->toBeNull();
-});
-
-test('marketing consent sets timestamp', function () {
-    bootFilamentTenantAs($this->admin);
-
-    Livewire::test(CreateCustomer::class)
-        ->fillForm([
-            'first_name' => 'Mario',
-            'last_name' => 'Rossi',
-            'email' => 'mario@example.com',
-            'phone' => '+39 02 1234567',
-            'preferred_channel' => 'email',
-            'marketing_consent' => true,
-        ])
-        ->call('create')
-        ->assertNotified();
-
-    $customer = Customer::where('email', 'mario@example.com')->first();
-
-    expect($customer->marketing_consent_at)->not->toBeNull();
-});
+    if ($expectTimestamp) {
+        expect($customer->marketing_consent_at)->not->toBeNull();
+    } else {
+        expect($customer->marketing_consent_at)->toBeNull();
+    }
+})->with([
+    'granted' => [true, true],
+    'not granted' => [false, false],
+]);
 
 test('unsetting marketing consent clears timestamp', function () {
     $customer = Customer::factory()->create([
@@ -155,7 +143,7 @@ test('unsetting marketing consent clears timestamp', function () {
         'marketing_consent_at' => now(),
     ]);
 
-    bootFilamentTenantAs($this->admin);
+    bootFilamentPanelAs($this->admin, $this->tenant);
 
     Livewire::test(EditCustomer::class, ['record' => $customer->id])
         ->fillForm([

@@ -4,18 +4,11 @@ declare(strict_types=1);
 
 namespace Database\Seeders;
 
-use App\Models\Customer;
-use App\Models\Pet;
-use App\Models\Service;
 use App\Models\Tenant;
-use App\Models\User;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
 {
-    /**
-     * Seed the application's database.
-     */
     public function run(): void
     {
         $tenant = Tenant::firstOrCreate(
@@ -37,18 +30,16 @@ class DatabaseSeeder extends Seeder
             ],
         );
 
-        $this->call([
-            UserSeeder::class,
-            ServiceSeeder::class,
-            PetSeeder::class,
-        ], false, ['tenant' => $tenant]);
+        $users = resolve(UserSeeder::class)->run($tenant);
+        $services = resolve(ServiceSeeder::class)->run($tenant);
+        $pets = resolve(PetSeeder::class)->run($tenant);
 
-        $this->call(AppointmentSeeder::class, false, [
-            'tenant' => $tenant,
-            'staff' => User::where('email', 'marco@pawdesk-demo.it')->firstOrFail(),
-            'customers' => Customer::where('tenant_id', $tenant->id)->get(),
-            'pets' => Pet::where('tenant_id', $tenant->id)->get(),
-            'services' => Service::where('tenant_id', $tenant->id)->get()->keyBy('name'),
-        ]);
+        resolve(AppointmentSeeder::class)->run(
+            tenant: $tenant,
+            staff: $users['staff'],
+            customers: $pets['customers'],
+            pets: $pets['pets'],
+            services: $services,
+        );
     }
 }

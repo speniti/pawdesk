@@ -5,20 +5,31 @@ declare(strict_types=1);
 namespace Database\Factories;
 
 use App\Enums\AppointmentStatus;
+use App\Models\Appointment;
 use App\Models\Customer;
 use App\Models\Pet;
 use App\Models\Tenant;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
-/** @extends Factory<\App\Models\Appointment> */
+/** @extends Factory<Appointment> */
 class AppointmentFactory extends Factory
 {
+    public function configure(): static
+    {
+        return $this->afterMaking(function (Appointment $appointment) {
+            if ($appointment->tenant_id !== null || $appointment->customer_id === null) {
+                return;
+            }
+
+            $appointment->tenant_id = $appointment->customer->tenant_id;
+        });
+    }
+
     /** @return array<string, mixed> */
     public function definition(): array
     {
         return [
-            'tenant_id' => Tenant::factory(),
             'customer_id' => Customer::factory(),
             'pet_id' => Pet::factory(),
             'status' => AppointmentStatus::Requested->value,

@@ -12,9 +12,7 @@ use Illuminate\Database\Seeder;
 
 class ServiceSeeder extends Seeder
 {
-    /**
-     * @return array<string, Service>
-     */
+    /** @return array<string, Service> */
     public function run(Tenant $tenant): array
     {
         $services = [];
