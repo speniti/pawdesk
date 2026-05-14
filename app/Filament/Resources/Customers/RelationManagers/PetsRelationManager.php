@@ -14,12 +14,6 @@ class PetsRelationManager extends RelationManager
 {
     protected static string $relationship = 'pets';
 
-    protected static ?string $title = 'Animali';
-
-    protected static ?string $modelLabel = 'Animale';
-
-    protected static ?string $pluralModelLabel = 'Animali';
-
     public function table(Table $table): Table
     {
         return $table

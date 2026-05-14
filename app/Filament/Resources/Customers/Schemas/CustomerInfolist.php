@@ -18,7 +18,7 @@ class CustomerInfolist
                 Section::make('Dati anagrafici')
                     ->schema([
                         TextEntry::make('full_name')
-                            ->label('Nome completo'),
+                            ->label('Nome'),
 
                         TextEntry::make('email')
                             ->label('Email')

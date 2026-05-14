@@ -24,7 +24,7 @@ class CustomerStats extends BaseWidget
         $totalSpendEur = $customer->treatments()->sum('final_price') / 100;
 
         return [
-            Stat::make('Totale speso', number_format($totalSpendEur, 2, ',', '.') . ' €')
+            Stat::make('Totale speso', number_format($totalSpendEur, 2, ',', '.').' €')
                 ->description('Importo totale trattamenti')
                 ->descriptionIcon(Heroicon::OutlinedBanknotes)
                 ->color('success'),
