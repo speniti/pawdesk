@@ -7,10 +7,15 @@ namespace App\Filament\Resources\Customers;
 use App\Filament\Resources\Customers\Pages\CreateCustomer;
 use App\Filament\Resources\Customers\Pages\EditCustomer;
 use App\Filament\Resources\Customers\Pages\ListCustomers;
+use App\Filament\Resources\Customers\Pages\ViewCustomer;
+use App\Filament\Resources\Customers\RelationManagers\PetsRelationManager;
 use App\Filament\Resources\Customers\Schemas\CustomerForm;
+use App\Filament\Resources\Customers\Schemas\CustomerInfolist;
 use App\Filament\Resources\Customers\Tables\CustomersTable;
+use App\Filament\Resources\Customers\Widgets\CustomerStats;
 use App\Models\Customer;
 use BackedEnum;
+use Filament\Resources\Pages\Page;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
@@ -41,8 +46,36 @@ class CustomerResource extends Resource
         return [
             'index' => ListCustomers::route('/'),
             'create' => CreateCustomer::route('/create'),
+            'view' => ViewCustomer::route('/{record}'),
             'edit' => EditCustomer::route('/{record}/edit'),
         ];
+    }
+
+    public static function getRecordSubNavigation(Page $page): array
+    {
+        return $page->generateNavigationItems([
+            ViewCustomer::class,
+            EditCustomer::class,
+        ]);
+    }
+
+    public static function getRelations(): array
+    {
+        return [
+            PetsRelationManager::class,
+        ];
+    }
+
+    public static function getWidgets(): array
+    {
+        return [
+            CustomerStats::class,
+        ];
+    }
+
+    public static function infolist(Schema $schema): Schema
+    {
+        return CustomerInfolist::configure($schema);
     }
 
     public static function table(Table $table): Table
