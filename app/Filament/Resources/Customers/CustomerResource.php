@@ -12,15 +12,14 @@ use App\Filament\Resources\Customers\RelationManagers\PetsRelationManager;
 use App\Filament\Resources\Customers\Schemas\CustomerForm;
 use App\Filament\Resources\Customers\Schemas\CustomerInfolist;
 use App\Filament\Resources\Customers\Tables\CustomersTable;
-use App\Filament\Resources\Customers\Widgets\CustomerStats;
 use App\Models\Customer;
 use BackedEnum;
+use Filament\Pages\Enums\SubNavigationPosition;
 use Filament\Resources\Pages\Page;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
-use UnitEnum;
 
 class CustomerResource extends Resource
 {
@@ -28,13 +27,15 @@ class CustomerResource extends Resource
 
     protected static ?string $modelLabel = 'Cliente';
 
-    protected static UnitEnum|string|null $navigationGroup = 'Gestione';
-
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedUserGroup;
 
-    protected static ?int $navigationSort = 20;
+    protected static ?int $navigationSort = 10;
 
     protected static ?string $pluralModelLabel = 'Clienti';
+
+    protected static ?string $recordTitleAttribute = 'full_name';
+
+    protected static ?SubNavigationPosition $subNavigationPosition = SubNavigationPosition::Top;
 
     public static function form(Schema $schema): Schema
     {
@@ -63,13 +64,6 @@ class CustomerResource extends Resource
     {
         return [
             PetsRelationManager::class,
-        ];
-    }
-
-    public static function getWidgets(): array
-    {
-        return [
-            CustomerStats::class,
         ];
     }
 

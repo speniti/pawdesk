@@ -4,62 +4,82 @@ declare(strict_types=1);
 
 namespace App\Filament\Resources\Customers\Schemas;
 
+use App\Models\Customer;
 use Filament\Infolists\Components\IconEntry;
 use Filament\Infolists\Components\TextEntry;
+use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
+use Filament\Support\Enums\TextSize;
+use Filament\Support\Icons\Heroicon;
 
 class CustomerInfolist
 {
     public static function configure(Schema $schema): Schema
     {
         return $schema
+            ->columns(3)
             ->components([
-                Section::make('Dati anagrafici')
+                Grid::make(1)
+                    ->columnSpan(2)
                     ->schema([
-                        TextEntry::make('full_name')
-                            ->label('Nome'),
+                        Section::make('Recapiti')
+                            ->columns(2)
+                            ->icon(Heroicon::OutlinedIdentification)
+                            ->schema([
+                                TextEntry::make('email')
+                                    ->label('Email')
+                                    ->size(TextSize::Large)
+                                    ->copyable(),
 
-                        TextEntry::make('email')
-                            ->label('Email')
-                            ->copyable(),
+                                TextEntry::make('phone')
+                                    ->size(TextSize::Large)
+                                    ->label('Telefono'),
 
-                        TextEntry::make('phone')
-                            ->label('Telefono')
-                            ->copyable(),
+                                TextEntry::make('address')
+                                    ->label('Indirizzo')
+                                    ->size(TextSize::Large)
+                                    ->columnSpanFull(),
+                            ]),
 
-                        TextEntry::make('address')
-                            ->label('Indirizzo')
-                            ->placeholder('Non specificato'),
-                    ])
-                    ->columns(2),
-
-                Section::make('Comunicazione')
-                    ->schema([
-                        TextEntry::make('preferred_channel')
-                            ->label('Canale preferito')
-                            ->badge(),
+                        Section::make('Note')
+                            ->collapsed()
+                            ->icon(Heroicon::OutlinedClipboardDocumentList)
+                            ->schema([
+                                TextEntry::make('notes')
+                                    ->hiddenLabel()
+                                    ->columnSpanFull(),
+                            ]),
                     ]),
 
-                Section::make('Privacy e consensi')
+                Grid::make(1)
                     ->schema([
-                        TextEntry::make('gdpr_policy_sent_at')
-                            ->label('Informativa privacy inviata il')
-                            ->dateTime('d/m/Y H:i')
-                            ->placeholder('Non ancora inviata'),
+                        Section::make('Comunicazione')
+                            ->icon(Heroicon::OutlinedChatBubbleLeftRight)
+                            ->schema([
+                                TextEntry::make('preferred_channel')
+                                    ->label('Canale preferito')
+                                    ->inlineLabel()
+                                    ->alignEnd()
+                                    ->badge(),
+                            ]),
 
-                        IconEntry::make('marketing_consent_at')
-                            ->label('Consenso marketing')
-                            ->boolean(),
-                    ])
-                    ->columns(2),
+                        Section::make('Privacy e consensi')
+                            ->icon(Heroicon::OutlinedShieldCheck)
+                            ->inlineLabel()
+                            ->schema([
+                                IconEntry::make('gdpr_policy_sent_at')
+                                    ->label('Informativa privacy')
+                                    ->state(static fn (Customer $record) => ! is_null($record->gdpr_policy_sent_at))
+                                    ->alignEnd()
+                                    ->boolean(),
 
-                Section::make('Preferenze e note')
-                    ->schema([
-                        TextEntry::make('notes')
-                            ->label('Note')
-                            ->placeholder('Nessuna nota')
-                            ->columnSpanFull(),
+                                IconEntry::make('marketing_consent_at')
+                                    ->label('Consenso marketing')
+                                    ->state(static fn (Customer $record) => ! is_null($record->marketing_consent_at))
+                                    ->alignEnd()
+                                    ->boolean(),
+                            ]),
                     ]),
             ]);
     }

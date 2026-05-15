@@ -18,7 +18,7 @@ test('login with correct credentials redirects to tenant dashboard', function ()
             'password' => 'password',
         ])
         ->call('authenticate')
-        ->assertRedirect("/admin/{$tenant->slug}");
+        ->assertRedirect("/{$tenant->slug}");
 });
 
 test('login with wrong credentials shows validation error', function () {
@@ -38,7 +38,7 @@ test('logout destroys session', function () {
 
     $this->actingAs($user);
 
-    $this->post('/admin/logout')->assertRedirect('/admin/login');
+    $this->post('/logout')->assertRedirect('/login');
 
     $this->assertGuest();
 });
