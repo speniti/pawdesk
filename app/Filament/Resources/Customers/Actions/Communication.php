@@ -43,10 +43,12 @@ class Communication extends Action
                 $record->preferred_channel = $data['preferred_channel'];
                 $record->save();
 
+                $channel = PreferredChannel::from($data['preferred_channel']);
+
                 Notification::make()
                     ->success()
                     ->title('Canale di comunicazione aggiornato')
-                    ->body("Il canale di comunicazione preferito è stato impostato a {$record->preferred_channel->getLabel()}")
+                    ->body("Il canale di comunicazione preferito è stato impostato a {$channel->getLabel()}")
                     ->send();
             });
     }

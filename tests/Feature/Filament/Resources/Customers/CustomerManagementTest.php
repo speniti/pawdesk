@@ -109,4 +109,3 @@ test('duplicate email for different tenant is allowed', function () {
 
     expect(Customer::withoutGlobalScopes()->where('email', 'shared@example.com')->count())->toBe(2);
 });
-
