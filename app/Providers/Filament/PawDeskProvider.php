@@ -21,18 +21,20 @@ use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 
-class AdminPanelProvider extends PanelProvider
+class PawDeskProvider extends PanelProvider
 {
     public function panel(Panel $panel): Panel
     {
         return $panel
+            ->id('pawdesk')
             ->default()
-            ->id('admin')
-            ->path('admin')
             ->login()
             ->profile()
             ->passwordReset()
-            ->colors(['primary' => Color::Amber])
+            ->colors([
+                'primary' => Color::Amber,
+                'pink' => Color::Pink,
+            ])
             ->tenant(Tenant::class, slugAttribute: 'slug')
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\Filament\Pages')

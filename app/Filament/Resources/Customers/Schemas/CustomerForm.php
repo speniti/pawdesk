@@ -4,18 +4,12 @@ declare(strict_types=1);
 
 namespace App\Filament\Resources\Customers\Schemas;
 
-use App\Enums\PreferredChannel;
-use App\Models\Customer;
-use Carbon\Carbon;
 use Filament\Facades\Filament;
-use Filament\Forms\Components\KeyValue;
-use Filament\Forms\Components\Placeholder;
-use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
-use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
+use Filament\Support\Icons\Heroicon;
 use Illuminate\Validation\Rules\Unique;
 use Peniti\FilamentMapbox\Forms\Fields\Geocoder;
 
@@ -24,8 +18,11 @@ class CustomerForm
     public static function configure(Schema $schema): Schema
     {
         return $schema
+            ->columns(1)
             ->components([
                 Section::make('Dati anagrafici')
+                    ->columns(2)
+                    ->icon(Heroicon::OutlinedUserCircle)
                     ->schema([
                         TextInput::make('first_name')
                             ->label('Nome')
@@ -36,7 +33,11 @@ class CustomerForm
                             ->label('Cognome')
                             ->required()
                             ->maxLength(255),
+                    ]),
 
+                Section::make('Recapiti')
+                    ->icon(Heroicon::OutlinedIdentification)
+                    ->schema([
                         TextInput::make('email')
                             ->label('Email')
                             ->email()
@@ -56,48 +57,17 @@ class CustomerForm
                         Geocoder::make('address')
                             ->label('Indirizzo')
                             ->country('it')
+                            ->prefixIcon(Heroicon::OutlinedMap)
                             ->columnSpanFull(),
                     ])
                     ->columns(2),
 
-                Section::make('Comunicazione')
+                Section::make('Note')
+                    ->collapsed()
+                    ->icon(Heroicon::OutlinedClipboardDocumentList)
                     ->schema([
-                        Select::make('preferred_channel')
-                            ->label('Canale preferito')
-                            ->options(PreferredChannel::class)
-                            ->default(PreferredChannel::Email)
-                            ->required(),
-                    ]),
-
-                Section::make('Privacy e consensi')
-                    ->schema([
-                        Placeholder::make('gdpr_policy_sent_at')
-                            ->label('Informativa privacy inviata il')
-                            ->content(function (?Customer $record): string {
-                                if (! $sentAt = $record?->gdpr_policy_sent_at) {
-                                    return 'Non ancora inviata';
-                                }
-
-                                return Carbon::parse($sentAt)->format('d/m/Y H:i');
-                            })
-                            ->hiddenOn('create'),
-
-                        Toggle::make('marketing_consent')
-                            ->label('Consenso marketing')
-                            ->formatStateUsing(fn (?Customer $record): bool => $record?->marketing_consent_at !== null),
-                    ]),
-
-                Section::make('Preferenze e note')
-                    ->schema([
-                        KeyValue::make('preferences')
-                            ->label('Preferenze')
-                            ->keyLabel('Chiave')
-                            ->valueLabel('Valore'),
-
                         Textarea::make('notes')
-                            ->label('Note')
-                            ->maxLength(1000)
-                            ->columnSpanFull(),
+                            ->hiddenLabel(),
                     ]),
             ]);
     }

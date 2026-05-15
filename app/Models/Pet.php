@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Models;
 
 use App\Enums\Coat;
-use App\Enums\Sex;
+use App\Enums\Gender;
 use App\Enums\Size;
 use App\Enums\Species;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -46,7 +46,7 @@ class Pet extends Model
     {
         return [
             'species' => Species::class,
-            'sex' => Sex::class,
+            'sex' => Gender::class,
             'date_of_birth' => 'date',
             'size' => Size::class,
             'coat' => Coat::class,

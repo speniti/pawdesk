@@ -2,30 +2,32 @@
 
 declare(strict_types=1);
 
-namespace App\Filament\Resources\Customers\Widgets;
+namespace App\Filament\Resources\Pets\Widgets;
 
-use App\Models\Customer;
+use App\Models\Pet;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
 use Illuminate\Database\Eloquent\Model;
 
-class CustomerStats extends BaseWidget
+class PetStats extends BaseWidget
 {
     public ?Model $record = null;
+
+    /** @var int | array<string, ?int> | null */
+    protected int|array|null $columns = 2;
 
     protected ?string $pollingInterval = null;
 
     protected function getStats(): array
     {
-        /** @var Customer $customer */
-        $customer = $this->record;
+        /** @var Pet $pet */
+        $pet = $this->record;
 
-        $totalSpendEur = $customer->treatments()->sum('final_price') / 100;
+        $totalSpendEur = $pet->treatments()->sum('final_price') / 100;
 
         return [
             Stat::make('Spesa totale', number_format($totalSpendEur, 2, ',', '.').' €'),
-            Stat::make('Appuntamenti', (string) $customer->appointments()->count()),
-            Stat::make('Pets', (string) $customer->pets()->count()),
+            Stat::make('Appuntamenti', (string) $pet->appointments()->count()),
         ];
     }
 }
