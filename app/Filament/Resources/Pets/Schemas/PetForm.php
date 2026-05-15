@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Filament\Resources\Pets\Schemas;
 
 use App\Enums\Coat;
-use App\Enums\Sex;
+use App\Enums\Gender;
 use App\Enums\Size;
 use App\Enums\Species;
 use App\Models\Customer;
@@ -48,8 +48,8 @@ class PetForm
 
                         Select::make('sex')
                             ->label('Sesso')
-                            ->options(Sex::class)
-                            ->default(Sex::Unknown)
+                            ->options(Gender::class)
+                            ->default(Gender::Unknown)
                             ->required(),
 
                         DatePicker::make('date_of_birth')

@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Database\Factories;
 
 use App\Enums\Coat;
-use App\Enums\Sex;
+use App\Enums\Gender;
 use App\Enums\Size;
 use App\Enums\Species;
 use App\Models\Customer;
@@ -34,7 +34,7 @@ class PetFactory extends Factory
             'name' => fake()->firstName(),
             'species' => Species::Dog->value,
             'breed' => 'Meticcio',
-            'sex' => fake()->randomElement([Sex::M, Sex::F])->value,
+            'sex' => fake()->randomElement([Gender::M, Gender::F])->value,
             'date_of_birth' => fake()->dateTimeBetween('-15 years', '-6 months'),
             'size' => Size::Medium->value,
             'coat' => Coat::Short->value,
