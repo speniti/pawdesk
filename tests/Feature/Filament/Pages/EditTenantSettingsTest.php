@@ -99,6 +99,25 @@ describe('saving opening hours', function () {
             ->and($this->tenant->opening_hours['monday'][1])->toBe(['open' => '14:30', 'close' => '19:00']);
     });
 
+    test('close time must be after open time', function () {
+        bootFilamentPanelAs($this->admin, $this->tenant);
+
+        $openingHours = [
+            'monday' => [['open' => '18:00', 'close' => '09:00']],
+            'tuesday' => [],
+            'wednesday' => [],
+            'thursday' => [],
+            'friday' => [],
+            'saturday' => [],
+            'sunday' => [],
+        ];
+
+        Livewire::test(EditTenantSettings::class)
+            ->fillForm(['opening_hours' => $openingHours])
+            ->call('save')
+            ->assertHasFormErrors();
+    });
+
     test('empty day means closed', function () {
         bootFilamentPanelAs($this->admin, $this->tenant);
 
