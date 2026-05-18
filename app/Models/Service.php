@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Models;
 
 use App\Enums\Coat;
+use App\Enums\ServiceCategory;
 use App\Enums\ServiceStatus;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -46,6 +47,7 @@ class Service extends Model
     {
         return [
             'base_price' => 'integer',
+            'category' => ServiceCategory::class,
             'coat' => Coat::class,
             'combinable' => 'boolean',
             'status' => ServiceStatus::class,

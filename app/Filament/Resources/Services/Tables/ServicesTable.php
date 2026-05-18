@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Filament\Resources\Services\Tables;
 
+use App\Enums\Coat;
+use App\Enums\ServiceCategory;
 use App\Enums\ServiceStatus;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
@@ -12,6 +14,7 @@ use Filament\Actions\ViewAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
+use Illuminate\Support\Number;
 
 class ServicesTable
 {
@@ -29,13 +32,12 @@ class ServicesTable
                 TextColumn::make('category')
                     ->label('Categoria')
                     ->badge()
-                    ->color(fn (string $state): string => match ($state) {
-                        'bath' => 'info',
-                        'grooming' => 'primary',
-                        'specialty' => 'danger',
-                        'trimming' => 'warning',
-                        'wellness' => 'success',
-                        default => 'gray',
+                    ->color(fn (ServiceCategory $state): string => match ($state) {
+                        ServiceCategory::Grooming => 'primary',
+                        ServiceCategory::Bath => 'info',
+                        ServiceCategory::Trimming => 'warning',
+                        ServiceCategory::Wellness => 'success',
+                        ServiceCategory::Specialty => 'danger',
                     })
                     ->searchable()
                     ->sortable(),
@@ -47,35 +49,44 @@ class ServicesTable
 
                 TextColumn::make('base_price')
                     ->label('Prezzo base')
-                    ->formatStateUsing(fn ($state): string => number_format($state / 100, 2, ',', '.').' €')
-                    ->sortable(),
+                    ->sortable()
+                    ->formatStateUsing(fn ($state): string => Number::currency($state / 100, in: 'EUR', locale: 'it'))
+                    ->alignment('right'),
 
                 TextColumn::make('coat')
                     ->label('Manto')
+                    ->sortable()
+                    ->searchable()
                     ->badge()
                     ->color('gray')
-                    ->sortable(),
+                    ->formatStateUsing(fn (?Coat $state): ?string => $state?->getLabel())
+                    ->placeholder('-'),
 
                 TextColumn::make('status')
                     ->label('Stato')
-                    ->badge(),
+                    ->badge()
+                    ->color(fn (ServiceStatus $state): string => $state->getColor()),
 
                 TextColumn::make('created_at')
                     ->label('Creato il')
-                    ->dateTime()
+                    ->dateTime('d/m/Y H:i')
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->defaultSort('category', 'asc')
             ->filters([
                 SelectFilter::make('category')
-                    ->label('Categoria'),
+                    ->label('Categoria')
+                    ->options(ServiceCategory::class),
 
                 SelectFilter::make('coat')
-                    ->label('Manto'),
+                    ->label('Manto')
+                    ->options(Coat::class)
+                    ->placeholder('Tutti'),
 
                 SelectFilter::make('status')
                     ->label('Stato')
+                    ->options(ServiceStatus::class)
                     ->default(ServiceStatus::Active),
             ])
             ->recordActions([
