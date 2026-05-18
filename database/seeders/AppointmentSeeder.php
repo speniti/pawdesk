@@ -65,7 +65,9 @@ class AppointmentSeeder extends Seeder
 
             foreach ($serviceMap[$i] as $serviceKey) {
                 $service = $services[$serviceKey];
-                $price = $service->size_prices[$pet->size->value] ?? $service->base_price;
+                $price = collect($service->size_prices)
+                    ->first(fn (array $sp): bool => $sp['size'] === $pet->size->value)['price']
+                    ?? $service->base_price;
 
                 $appointment->services()->attach($service->id, [
                     'applied_price' => $price,
