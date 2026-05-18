@@ -202,3 +202,32 @@ describe('saving slot settings', function () {
             ->assertHasFormErrors(['settings.buffer_minutes']);
     });
 });
+
+describe('saving notification credentials', function () {
+    test('can save notification credentials', function () {
+        bootFilamentPanelAs($this->admin, $this->tenant);
+
+        Livewire::test(EditTenantSettings::class)
+            ->fillForm([
+                'notification_settings' => [
+                    'mailgun_api_key' => 'key-test-mailgun-123',
+                    'mailgun_domain' => 'mg.example.com',
+                    'vonage_api_key' => 'key-test-vonage-456',
+                    'vonage_api_secret' => 'secret-test-vonage-789',
+                    'vonage_sms_sender_id' => '+39123456789',
+                ],
+            ])
+            ->call('save')
+            ->assertNotified();
+
+        $this->tenant->refresh();
+
+        expect($this->tenant->notification_settings)->toBe([
+            'mailgun_api_key' => 'key-test-mailgun-123',
+            'mailgun_domain' => 'mg.example.com',
+            'vonage_api_key' => 'key-test-vonage-456',
+            'vonage_api_secret' => 'secret-test-vonage-789',
+            'vonage_sms_sender_id' => '+39123456789',
+        ]);
+    });
+});

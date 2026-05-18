@@ -50,7 +50,47 @@ class EditTenantSettings extends EditTenantProfile
                             ->suffix('min'),
                     ])
                     ->columns(2),
+
+                Section::make('Credenziali notifiche')
+                    ->description('Configura le credenziali per l\'invio di email tramite Mailgun e SMS tramite Vonage.')
+                    ->schema([
+                        TextInput::make('notification_settings.mailgun_api_key')
+                            ->label('Mailgun - API Key')
+                            ->password()
+                            ->revealable()
+                            ->maxLength(255),
+
+                        TextInput::make('notification_settings.mailgun_domain')
+                            ->label('Mailgun - Dominio')
+                            ->maxLength(255),
+
+                        TextInput::make('notification_settings.vonage_api_key')
+                            ->label('Vonage - API Key')
+                            ->password()
+                            ->revealable()
+                            ->maxLength(255),
+
+                        TextInput::make('notification_settings.vonage_api_secret')
+                            ->label('Vonage - API Secret')
+                            ->password()
+                            ->revealable()
+                            ->maxLength(255),
+
+                        TextInput::make('notification_settings.vonage_sms_sender_id')
+                            ->label('Vonage - Mittente SMS')
+                            ->maxLength(255),
+                    ])
+                    ->columns(2)
+                    ->collapsible()
+                    ->collapsed(),
             ]);
+    }
+
+    protected function mutateFormDataBeforeFill(array $data): array
+    {
+        $data['notification_settings'] ??= [];
+
+        return $data;
     }
 
     protected function getSavedNotificationTitle(): ?string
