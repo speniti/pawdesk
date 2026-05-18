@@ -101,7 +101,7 @@ class ServiceForm
                             ])
                             ->columns(2)
                             ->collapsed()
-                            ->itemLabel(fn (array $state): ?string => $state['size'] ?? null),
+                            ->itemLabel(fn (array $state): ?string => isset($state['size']) && $state['size'] instanceof Size ? $state['size']->getLabel() : ($state['size'] ?? null)),
                     ])
                     ->columns(1),
             ]);
