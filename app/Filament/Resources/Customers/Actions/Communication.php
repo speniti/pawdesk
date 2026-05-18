@@ -40,8 +40,7 @@ class Communication extends Action
                     ->required(),
             ])
             ->action(function (array $data, Customer $record): void {
-                $record->preferred_channel = $data['preferred_channel'];
-                $record->save();
+                $record->update(['preferred_channel' => $data['preferred_channel']]);
 
                 $channel = PreferredChannel::from($data['preferred_channel']);
 

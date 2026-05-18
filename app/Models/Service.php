@@ -29,6 +29,12 @@ class Service extends Model
     /** @use HasFactory<\Database\Factories\ServiceFactory> */
     use HasFactory;
 
+    protected $attributes = [
+        'combinable' => true,
+        'status' => 'active',
+        'size_prices' => '{}',
+    ];
+
     public function appointments(): BelongsToMany
     {
         return $this->belongsToMany(Appointment::class, 'appointment_service')

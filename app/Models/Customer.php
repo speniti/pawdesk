@@ -29,6 +29,11 @@ class Customer extends Model
     /** @use HasFactory<\Database\Factories\CustomerFactory> */
     use HasFactory;
 
+    protected $attributes = [
+        'preferred_channel' => 'email',
+        'preferences' => '{}',
+    ];
+
     public function appointments(): HasMany
     {
         return $this->hasMany(Appointment::class);

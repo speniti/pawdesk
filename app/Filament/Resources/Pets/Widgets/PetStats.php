@@ -8,6 +8,7 @@ use App\Models\Pet;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Number;
 
 class PetStats extends BaseWidget
 {
@@ -21,13 +22,13 @@ class PetStats extends BaseWidget
     protected function getStats(): array
     {
         /** @var Pet $pet */
-        $pet = $this->record;
+        $pet = $this->record->loadCount('appointments')->loadSum('treatments', 'final_price');
 
-        $totalSpendEur = $pet->treatments()->sum('final_price') / 100;
+        $totalSpendEur = ($pet->treatments_sum_final_price ?? 0) / 100;
 
         return [
-            Stat::make('Spesa totale', number_format($totalSpendEur, 2, ',', '.').' €'),
-            Stat::make('Appuntamenti', (string) $pet->appointments()->count()),
+            Stat::make('Spesa totale', Number::currency($totalSpendEur, in: 'EUR', locale: 'it')),
+            Stat::make('Appuntamenti', (string) $pet->appointments_count),
         ];
     }
 }

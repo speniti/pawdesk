@@ -18,6 +18,10 @@ class Appointment extends Model
     /** @use HasFactory<\Database\Factories\AppointmentFactory> */
     use HasFactory;
 
+    protected $attributes = [
+        'status' => 'requested',
+    ];
+
     /**
      * @return BelongsTo<Customer, $this>
      */

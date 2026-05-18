@@ -8,6 +8,7 @@ use App\Filament\Resources\Pets\PetResource;
 use App\Filament\Resources\Pets\Widgets\PetStats;
 use Filament\Resources\Pages\ViewRecord;
 use Illuminate\Contracts\Support\Htmlable;
+use Illuminate\Database\Eloquent\Model;
 
 class ViewPet extends ViewRecord
 {
@@ -21,5 +22,10 @@ class ViewPet extends ViewRecord
     protected function getHeaderWidgets(): array
     {
         return [PetStats::class];
+    }
+
+    protected function resolveRecord(int|string $key): Model
+    {
+        return parent::resolveRecord($key)->load('customer');
     }
 }

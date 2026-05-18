@@ -17,6 +17,11 @@ class Tenant extends Model
     /** @use HasFactory<TenantFactory> */
     use HasFactory;
 
+    protected $attributes = [
+        'opening_hours' => '{}',
+        'settings' => '{}',
+    ];
+
     public function appointments(): HasMany
     {
         return $this->hasMany(Appointment::class);

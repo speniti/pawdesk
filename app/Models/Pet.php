@@ -20,6 +20,10 @@ class Pet extends Model
     /** @use HasFactory<\Database\Factories\PetFactory> */
     use HasFactory;
 
+    protected $attributes = [
+        'sex' => 'unknown',
+    ];
+
     public function appointments(): HasMany
     {
         return $this->hasMany(Appointment::class);
