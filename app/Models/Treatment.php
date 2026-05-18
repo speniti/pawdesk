@@ -25,6 +25,10 @@ class Treatment extends Model
     /** @use HasFactory<\Database\Factories\TreatmentFactory> */
     use HasFactory;
 
+    protected $attributes = [
+        'visible_to_customer' => true,
+    ];
+
     /**
      * @return BelongsTo<Appointment, $this>
      */

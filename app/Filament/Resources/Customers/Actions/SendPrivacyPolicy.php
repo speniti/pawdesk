@@ -23,8 +23,7 @@ class SendPrivacyPolicy extends Action
             ->action(function (Customer $record): void {
                 // TODO: Implementare invio email quando il sistema di notifiche sarà disponibile (Sprint 5)
 
-                $record->gdpr_policy_sent_at = now()->toDateTimeString();
-                $record->save();
+                $record->update(['gdpr_policy_sent_at' => now()]);
 
                 Notification::make()
                     ->success()

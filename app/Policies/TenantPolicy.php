@@ -15,6 +15,6 @@ class TenantPolicy
     public function update(User $user, Tenant $tenant): bool
     {
         return $this->isAdmin($user)
-            && $user->tenants()->where('tenants.id', $tenant->id)->exists();
+            && $user->tenants()->whereKey($tenant)->exists();
     }
 }

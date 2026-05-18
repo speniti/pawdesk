@@ -42,8 +42,10 @@ class UserResource extends Resource
 
     public static function getEloquentQuery(): Builder
     {
+        $tenant = Filament::getTenant();
+
         return parent::getEloquentQuery()
-            ->whereHas('tenants', fn (Builder $query) => $query->where('tenants.id', Filament::getTenant()->getKey()));
+            ->when($tenant, fn (Builder $query) => $query->whereHas('tenants', fn (Builder $q) => $q->whereKey($tenant)));
     }
 
     public static function getPages(): array
@@ -52,13 +54,6 @@ class UserResource extends Resource
             'index' => ListUsers::route('/'),
             'create' => CreateUser::route('/create'),
             'edit' => EditUser::route('/{record}/edit'),
-        ];
-    }
-
-    public static function getRelations(): array
-    {
-        return [
-            //
         ];
     }
 

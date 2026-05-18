@@ -8,6 +8,7 @@ use App\Models\Customer;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Number;
 
 class CustomerStats extends BaseWidget
 {
@@ -18,14 +19,14 @@ class CustomerStats extends BaseWidget
     protected function getStats(): array
     {
         /** @var Customer $customer */
-        $customer = $this->record;
+        $customer = $this->record->loadCount(['appointments', 'pets'])->loadSum('treatments', 'final_price');
 
-        $totalSpendEur = $customer->treatments()->sum('final_price') / 100;
+        $totalSpendEur = ($customer->treatments_sum_final_price ?? 0) / 100;
 
         return [
-            Stat::make('Spesa totale', number_format($totalSpendEur, 2, ',', '.').' €'),
-            Stat::make('Appuntamenti', (string) $customer->appointments()->count()),
-            Stat::make('Pets', (string) $customer->pets()->count()),
+            Stat::make('Spesa totale', Number::currency($totalSpendEur, in: 'EUR', locale: 'it')),
+            Stat::make('Appuntamenti', (string) $customer->appointments_count),
+            Stat::make('Pets', (string) $customer->pets_count),
         ];
     }
 }

@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Models\Tenant;
 use App\Models\User;
 use Filament\Facades\Filament;
+use Filament\Panel;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Tests\TestCase;
 
@@ -20,7 +21,7 @@ function bootFilamentPanel(Tenant $tenant, Panel|string|null $panel = null): voi
     Filament::bootCurrentPanel();
 }
 
-function bootFilamentPanelAs(User $user, Tenant $tenant, ?string $panel = null): void
+function bootFilamentPanelAs(User $user, Tenant $tenant, Panel|string|null $panel = null): void
 {
     actingAs($user);
 
