@@ -13,7 +13,6 @@ use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
-use Filament\Support\Icons\Heroicon;
 use Illuminate\Support\Number;
 
 class ServiceInfolist
@@ -21,14 +20,10 @@ class ServiceInfolist
     public static function configure(Schema $schema): Schema
     {
         return $schema
-            ->columns(3)
-            ->components([
-                Grid::make(2)
-                    ->columnSpan(2)
+            ->schema([
+                Grid::make(3)
                     ->schema([
                         Section::make('Informazioni generali')
-                            ->columns(2)
-                            ->icon(Heroicon::OutlinedInformationCircle)
                             ->schema([
                                 TextEntry::make('name')
                                     ->label('Nome')
@@ -52,10 +47,8 @@ class ServiceInfolist
 
                                 TextEntry::make('coat')
                                     ->label('Manto')
-                                    ->badge()
-                                    ->color('gray')
                                     ->formatStateUsing(fn (?Coat $state): ?string => $state?->getLabel())
-                                    ->placeholder('-'),
+                                    ->placeholder('Non specificato'),
 
                                 TextEntry::make('duration_minutes')
                                     ->label('Durata')
@@ -64,49 +57,39 @@ class ServiceInfolist
                                 TextEntry::make('combinable')
                                     ->label('Combinabile')
                                     ->boolean(),
-                            ]),
+                            ])
+                            ->columnSpan(2),
 
-                        Section::make('Prezzi per taglia')
-                            ->collapsed(false)
-                            ->icon(Heroicon::OutlinedCurrencyEuro)
-                            ->hidden(fn ($record): bool => empty($record->size_prices))
-                            ->schema([
-                                RepeatableEntry::make('size_prices')
-                                    ->hiddenLabel()
-                                    ->contained(false)
-                                    ->schema([
-                                        TextEntry::make('size')
-                                            ->label('Taglia')
-                                            ->badge()
-                                            ->formatStateUsing(fn ($state): string => Size::from($state)->getLabel()),
-
-                                        TextEntry::make('price')
-                                            ->label('Prezzo')
-                                            ->formatStateUsing(fn ($state): string => Number::format($state / 100, 2, ',', '.').' €')
-                                            ->alignEnd(),
-                                    ]),
-                            ]),
-                    ]),
-
-                Grid::make(1)
-                    ->schema([
                         Section::make('Prezzo e stato')
-                            ->icon(Heroicon::OutlineTag)
                             ->schema([
                                 TextEntry::make('base_price')
                                     ->label('Prezzo base')
-                                    ->inlineLabel()
-                                    ->alignEnd()
                                     ->formatStateUsing(fn ($state): string => Number::format($state / 100, 2, ',', '.').' €'),
 
                                 TextEntry::make('status')
                                     ->label('Stato')
-                                    ->inlineLabel()
-                                    ->alignEnd()
                                     ->badge()
                                     ->color(fn (ServiceStatus $state): string => $state->getColor()),
-                            ]),
+                            ])
+                            ->columnSpan(1),
                     ]),
+
+                Section::make('Prezzi per taglia')
+                    ->schema([
+                        RepeatableEntry::make('size_prices')
+                            ->hiddenLabel()
+                            ->hidden(fn ($record): bool => empty($record->size_prices))
+                            ->schema([
+                                TextEntry::make('size')
+                                    ->label('Taglia')
+                                    ->formatStateUsing(fn ($state): string => Size::from($state)->getLabel()),
+
+                                TextEntry::make('price')
+                                    ->label('Prezzo')
+                                    ->formatStateUsing(fn ($state): string => Number::format($state / 100, 2, ',', '.').' €'),
+                            ]),
+                    ])
+                    ->columns(1),
             ]);
     }
 }
