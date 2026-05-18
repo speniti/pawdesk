@@ -56,7 +56,7 @@ class ServiceInfolist
 
                                 TextEntry::make('combinable')
                                     ->label('Combinabile')
-                                    ->boolean(),
+                                    ->formatStateUsing(fn ($state): string => $state ? 'Sì' : 'No'),
                             ])
                             ->columnSpan(2),
 
@@ -64,7 +64,7 @@ class ServiceInfolist
                             ->schema([
                                 TextEntry::make('base_price')
                                     ->label('Prezzo base')
-                                    ->formatStateUsing(fn ($state): string => Number::format($state / 100, 2, ',', '.').' €'),
+                                    ->formatStateUsing(fn ($state): string => Number::format($state / 100, precision: 2, locale: 'it').' €'),
 
                                 TextEntry::make('status')
                                     ->label('Stato')
@@ -86,7 +86,7 @@ class ServiceInfolist
 
                                 TextEntry::make('price')
                                     ->label('Prezzo')
-                                    ->formatStateUsing(fn ($state): string => Number::format($state / 100, 2, ',', '.').' €'),
+                                    ->formatStateUsing(fn ($state): string => Number::format($state / 100, precision: 2, locale: 'it').' €'),
                             ]),
                     ])
                     ->columns(1),
