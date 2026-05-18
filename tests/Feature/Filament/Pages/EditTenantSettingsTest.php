@@ -30,6 +30,17 @@ describe('authorization', function () {
         Livewire::test(EditTenantSettings::class)
             ->assertStatus(404);
     });
+
+    test('admin from another tenant cannot access settings page', function () {
+        $otherTenant = Tenant::factory()->create();
+        $otherAdmin = User::factory()->admin()->create();
+        $otherAdmin->tenants()->attach($otherTenant);
+
+        bootFilamentPanelAs($otherAdmin, $this->tenant);
+
+        Livewire::test(EditTenantSettings::class)
+            ->assertStatus(404);
+    });
 });
 
 describe('form rendering', function () {
