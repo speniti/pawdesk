@@ -32,13 +32,7 @@ class ServicesTable
                 TextColumn::make('category')
                     ->label('Categoria')
                     ->badge()
-                    ->color(fn (ServiceCategory $state): string => match ($state) {
-                        ServiceCategory::Grooming => 'primary',
-                        ServiceCategory::Bath => 'info',
-                        ServiceCategory::Trimming => 'warning',
-                        ServiceCategory::Wellness => 'success',
-                        ServiceCategory::Specialty => 'danger',
-                    })
+                    ->color(fn (ServiceCategory $state): string => $state->getColor())
                     ->searchable()
                     ->sortable(),
 

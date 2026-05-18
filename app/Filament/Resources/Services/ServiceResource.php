@@ -13,11 +13,11 @@ use App\Filament\Resources\Services\Schemas\ServiceInfolist;
 use App\Filament\Resources\Services\Tables\ServicesTable;
 use App\Models\Service;
 use BackedEnum;
+use Filament\Pages\Enums\SubNavigationPosition;
+use Filament\Resources\Pages\Page;
 use Filament\Resources\Resource;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
-use UnitEnum;
 
 class ServiceResource extends Resource
 {
@@ -27,22 +27,19 @@ class ServiceResource extends Resource
 
     protected static ?string $modelLabel = 'Servizio';
 
-    protected static string|UnitEnum|null $navigationGroup = 'Gestionale';
-
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedScissors;
 
     protected static ?int $navigationSort = 30;
 
     protected static ?string $pluralModelLabel = 'Servizi';
 
+    protected static ?string $recordTitleAttribute = 'name';
+
+    protected static ?SubNavigationPosition $subNavigationPosition = SubNavigationPosition::Top;
+
     public static function form(\Filament\Schemas\Schema $schema): \Filament\Schemas\Schema
     {
         return ServiceForm::configure($schema);
-    }
-
-    public static function getEloquentQuery(): Builder
-    {
-        return parent::getEloquentQuery()->with(['appointments']);
     }
 
     public static function getPages(): array
@@ -55,11 +52,12 @@ class ServiceResource extends Resource
         ];
     }
 
-    public static function getRelations(): array
+    public static function getRecordSubNavigation(Page $page): array
     {
-        return [
-            //
-        ];
+        return $page->generateNavigationItems([
+            ViewService::class,
+            EditService::class,
+        ]);
     }
 
     public static function infolist(\Filament\Schemas\Schema $schema): \Filament\Schemas\Schema

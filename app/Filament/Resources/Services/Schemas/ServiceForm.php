@@ -12,6 +12,7 @@ use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 
@@ -71,7 +72,7 @@ class ServiceForm
 
                 Section::make('Opzioni')
                     ->schema([
-                        TextInput::make('combinable')
+                        Toggle::make('combinable')
                             ->label('Combinabile con altri servizi')
                             ->default(true),
                     ])

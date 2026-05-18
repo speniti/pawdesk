@@ -18,7 +18,7 @@ test('validates duration_minutes must be greater than zero', function () {
 
     $service = Service::factory()->make(['duration_minutes' => 0]);
 
-    Livewire::test(\App\Filament\Resources\Services\Pages\CreateService::class)
+    Livewire::test(App\Filament\Resources\Services\Pages\CreateService::class)
         ->fillForm([
             'name' => $service->name,
             'duration_minutes' => 0,
@@ -35,7 +35,7 @@ test('validates base_price must be zero or positive', function () {
 
     $service = Service::factory()->make(['base_price' => -100]);
 
-    Livewire::test(\App\Filament\Resources\Services\Pages\CreateService::class)
+    Livewire::test(App\Filament\Resources\Services\Pages\CreateService::class)
         ->fillForm([
             'name' => $service->name,
             'duration_minutes' => $service->duration_minutes,
@@ -52,7 +52,7 @@ test('validates duration_minutes cannot exceed 480 minutes', function () {
 
     $service = Service::factory()->make(['duration_minutes' => 481]);
 
-    Livewire::test(\App\Filament\Resources\Services\Pages\CreateService::class)
+    Livewire::test(App\Filament\Resources\Services\Pages\CreateService::class)
         ->fillForm([
             'name' => $service->name,
             'duration_minutes' => 481,
