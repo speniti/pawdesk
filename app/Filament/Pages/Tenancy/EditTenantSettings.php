@@ -20,15 +20,15 @@ class EditTenantSettings extends EditTenantProfile
         return TenantSettingsForm::configure($schema);
     }
 
+    protected function getSavedNotificationTitle(): ?string
+    {
+        return 'Impostazioni salvate';
+    }
+
     protected function mutateFormDataBeforeFill(array $data): array
     {
         $data['notification_settings'] ??= [];
 
         return $data;
-    }
-
-    protected function getSavedNotificationTitle(): ?string
-    {
-        return 'Impostazioni salvate';
     }
 }
