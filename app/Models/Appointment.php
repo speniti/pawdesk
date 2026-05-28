@@ -11,7 +11,18 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Support\Carbon;
 
+/**
+ * @property int $tenant_id
+ * @property int $customer_id
+ * @property int $pet_id
+ * @property int $user_id
+ * @property AppointmentStatus $status
+ * @property Carbon $start_time
+ * @property Carbon $end_time
+ * @property string|null $internal_notes
+ */
 #[Fillable(['tenant_id', 'customer_id', 'pet_id', 'user_id', 'status', 'start_time', 'end_time', 'internal_notes'])]
 class Appointment extends Model
 {

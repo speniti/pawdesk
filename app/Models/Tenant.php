@@ -11,6 +11,14 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
+/**
+ * @property string $name
+ * @property string $slug
+ * @property string|null $primary_color
+ * @property array<string, array<array{open: string, close: string}>> $opening_hours
+ * @property array $notification_settings
+ * @property array{slot_duration_minutes?: int} $settings
+ */
 #[Fillable(['name', 'slug', 'primary_color', 'opening_hours', 'notification_settings', 'settings'])]
 class Tenant extends Model
 {
