@@ -9,7 +9,6 @@ use App\Models\Customer;
 use App\Models\Pet;
 use App\Models\Tenant;
 use App\Models\User;
-use Carbon\Carbon;
 use Livewire\Livewire;
 
 beforeEach(function () {
@@ -65,7 +64,7 @@ test('appointments appear as events in calendar', function () {
     expect($events)->toHaveCount(1);
 
     $event = $events[0];
-    expect($event->title)->toBe('Fido - ' . $customer->fullName)
+    expect($event->title)->toBe('Fido - '.$customer->fullName)
         ->and($event->start->toDateString())->toBe($startTime->toDateString());
 });
 
