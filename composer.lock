@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "8b6936d6e207169f4c12a858366ffc58",
+    "content-hash": "2a624076522b5347b4556d23b49d301a",
     "packages": [
         {
             "name": "blade-ui-kit/blade-heroicons",
@@ -5217,6 +5217,72 @@
             "time": "2026-05-19T14:06:37+00:00"
         },
         {
+            "name": "spatie/opening-hours",
+            "version": "4.2.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/spatie/opening-hours.git",
+                "reference": "c89d2b15e51ed2bd9073025dc3b82551848bf87e"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/spatie/opening-hours/zipball/c89d2b15e51ed2bd9073025dc3b82551848bf87e",
+                "reference": "c89d2b15e51ed2bd9073025dc3b82551848bf87e",
+                "shasum": ""
+            },
+            "require": {
+                "php": "^8.2"
+            },
+            "require-dev": {
+                "kylekatarnls/multi-tester": "^2.5",
+                "phpunit/phpunit": "^11.2"
+            },
+            "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-2.x": "2.x-dev",
+                    "dev-3.x": "3.x-dev",
+                    "dev-master": "4.x-dev"
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Spatie\\OpeningHours\\": "src"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Sebastian De Deyne",
+                    "email": "sebastian@spatie.be",
+                    "homepage": "https://spatie.be",
+                    "role": "Developer"
+                },
+                {
+                    "name": "kylekatarnls",
+                    "homepage": "https://github.com/kylekatarnls",
+                    "role": "Developer"
+                }
+            ],
+            "description": "A helper to query and format a set of opening hours",
+            "homepage": "https://github.com/spatie/opening-hours",
+            "keywords": [
+                "hours",
+                "opening",
+                "opening-hours",
+                "schedule",
+                "spatie"
+            ],
+            "support": {
+                "issues": "https://github.com/spatie/opening-hours/issues",
+                "source": "https://github.com/spatie/opening-hours/tree/4.2.1"
+            },
+            "time": "2025-05-24T16:39:27+00:00"
+        },
+        {
             "name": "spatie/shiki-php",
             "version": "2.4.0",
             "source": {
@@ -5280,6 +5346,66 @@
                 }
             ],
             "time": "2026-04-27T14:27:52+00:00"
+        },
+        {
+            "name": "speniti/filament-calendar",
+            "version": "v2.0.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/speniti/filament-calendar.git",
+                "reference": "0f70064c8ee7c9528ee949af432a9fedce9aee74"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/speniti/filament-calendar/zipball/0f70064c8ee7c9528ee949af432a9fedce9aee74",
+                "reference": "0f70064c8ee7c9528ee949af432a9fedce9aee74",
+                "shasum": ""
+            },
+            "require": {
+                "filament/support": "^v5",
+                "php": "^8.4",
+                "spatie/opening-hours": "^4"
+            },
+            "require-dev": {
+                "awcodes/palette": "^v3",
+                "filament/filament": "^v5",
+                "larastan/larastan": "^v3",
+                "laravel/boost": "^v2",
+                "laravel/pint": "^v1",
+                "orchestra/testbench": "^v11",
+                "pestphp/pest": "^v4",
+                "pestphp/pest-plugin-laravel": "^v4",
+                "pestphp/pest-plugin-livewire": "^v4"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "Peniti\\FilamentCalendar\\FilamentCalendarServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Peniti\\FilamentCalendar\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "ISC"
+            ],
+            "authors": [
+                {
+                    "name": "Simone Peniti",
+                    "email": "simone@peniti.it"
+                }
+            ],
+            "description": "A set of tools for integrating FullCalendar.js within the Filament ecosystem",
+            "support": {
+                "issues": "https://github.com/speniti/filament-calendar/issues",
+                "source": "https://github.com/speniti/filament-calendar/tree/v2.0.0"
+            },
+            "time": "2026-04-28T21:08:21+00:00"
         },
         {
             "name": "speniti/filament-mapbox",
