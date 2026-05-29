@@ -211,3 +211,24 @@ test('pet options are filtered by selected customer', function () {
         return true;
     });
 });
+
+test('status field is disabled in edit form', function () {
+    $customer = Customer::factory()->create(['tenant_id' => $this->tenant->id]);
+    $pet = Pet::factory()->create(['customer_id' => $customer->id, 'tenant_id' => $this->tenant->id]);
+
+    $appointment = Appointment::factory()->create([
+        'customer_id' => $customer->id,
+        'pet_id' => $pet->id,
+        'tenant_id' => $this->tenant->id,
+        'start_time' => now()->addDay(),
+        'end_time' => now()->addDay()->addHours(2),
+        'status' => AppointmentStatus::Confirmed,
+    ]);
+
+    bootFilamentPanelAs($this->admin, $this->tenant);
+
+    Livewire::test(AppointmentCalendar::class)
+        ->call('select', $appointment->id)
+        ->mountAction('edit')
+        ->assertFormFieldIsDisabled('status');
+});
