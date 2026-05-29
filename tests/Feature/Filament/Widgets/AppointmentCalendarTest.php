@@ -76,7 +76,7 @@ test('completed and cancelled appointments are not editable', function () {
         'tenant_id' => $this->tenant->id,
     ]);
 
-    $startTime = now()->addDay()->setTime(10, 0);
+    $startTime = now()->startOfWeek()->addDay()->setTime(10, 0);
 
     $completedAppointment = Appointment::factory()->create([
         'customer_id' => $customer->id,
