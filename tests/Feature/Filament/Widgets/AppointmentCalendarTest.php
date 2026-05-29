@@ -232,3 +232,67 @@ test('status field is disabled in edit form', function () {
         ->mountAction('edit')
         ->assertFormFieldIsDisabled('status');
 });
+
+test('view action shows status transition buttons for valid transitions', function () {
+    $customer = Customer::factory()->create(['tenant_id' => $this->tenant->id]);
+    $pet = Pet::factory()->create(['customer_id' => $customer->id, 'tenant_id' => $this->tenant->id]);
+
+    $appointment = Appointment::factory()->create([
+        'customer_id' => $customer->id,
+        'pet_id' => $pet->id,
+        'tenant_id' => $this->tenant->id,
+        'start_time' => now()->addDay(),
+        'end_time' => now()->addDay()->addHours(2),
+        'status' => AppointmentStatus::Requested,
+    ]);
+
+    bootFilamentPanelAs($this->admin, $this->tenant);
+
+    Livewire::test(AppointmentCalendar::class)
+        ->call('select', $appointment->id)
+        ->assertActionExists('confirmed')
+        ->assertActionExists('cancelled');
+});
+
+test('status transition action updates appointment status', function () {
+    $customer = Customer::factory()->create(['tenant_id' => $this->tenant->id]);
+    $pet = Pet::factory()->create(['customer_id' => $customer->id, 'tenant_id' => $this->tenant->id]);
+
+    $appointment = Appointment::factory()->create([
+        'customer_id' => $customer->id,
+        'pet_id' => $pet->id,
+        'tenant_id' => $this->tenant->id,
+        'start_time' => now()->addDay(),
+        'end_time' => now()->addDay()->addHours(2),
+        'status' => AppointmentStatus::Requested,
+    ]);
+
+    bootFilamentPanelAs($this->admin, $this->tenant);
+
+    Livewire::test(AppointmentCalendar::class)
+        ->call('select', $appointment->id)
+        ->callAction('confirmed');
+
+    expect($appointment->refresh()->status)->toBe(AppointmentStatus::Confirmed);
+});
+
+test('completed appointment has no status transition actions', function () {
+    $customer = Customer::factory()->create(['tenant_id' => $this->tenant->id]);
+    $pet = Pet::factory()->create(['customer_id' => $customer->id, 'tenant_id' => $this->tenant->id]);
+
+    $appointment = Appointment::factory()->create([
+        'customer_id' => $customer->id,
+        'pet_id' => $pet->id,
+        'tenant_id' => $this->tenant->id,
+        'start_time' => now()->addDay(),
+        'end_time' => now()->addDay()->addHours(2),
+        'status' => AppointmentStatus::Completed,
+    ]);
+
+    bootFilamentPanelAs($this->admin, $this->tenant);
+
+    Livewire::test(AppointmentCalendar::class)
+        ->call('select', $appointment->id)
+        ->assertActionDoesNotExist('confirmed')
+        ->assertActionDoesNotExist('cancelled');
+});
