@@ -296,3 +296,23 @@ test('completed appointment has no status transition actions', function () {
         ->assertActionDoesNotExist('confirmed')
         ->assertActionDoesNotExist('cancelled');
 });
+
+test('appointment policy allows CRUD for staff', function () {
+    $customer = Customer::factory()->create(['tenant_id' => $this->tenant->id]);
+    $pet = Pet::factory()->create(['customer_id' => $customer->id, 'tenant_id' => $this->tenant->id]);
+
+    $appointment = Appointment::factory()->create([
+        'customer_id' => $customer->id,
+        'pet_id' => $pet->id,
+        'tenant_id' => $this->tenant->id,
+        'start_time' => now()->addDay(),
+        'end_time' => now()->addDay()->addHours(2),
+    ]);
+
+    bootFilamentPanelAs($this->admin, $this->tenant);
+
+    expect($this->admin->can('view', $appointment))->toBeTrue()
+        ->and($this->admin->can('update', $appointment))->toBeTrue()
+        ->and($this->admin->can('delete', $appointment))->toBeTrue()
+        ->and($this->admin->can('create', Appointment::class))->toBeTrue();
+});
