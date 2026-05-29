@@ -9,6 +9,7 @@ use App\Models\Customer;
 use App\Models\Pet;
 use App\Models\Tenant;
 use App\Models\User;
+use Filament\Forms\Components\Select;
 use Livewire\Livewire;
 
 beforeEach(function () {
@@ -186,4 +187,27 @@ test('drag and drop updates appointment times', function () {
     expect($appointment->refresh())
         ->start_time->toDateString()->toBe($newStart->toDateString())
         ->start_time->format('H:i')->toBe($newStart->format('H:i'));
+});
+
+test('pet options are filtered by selected customer', function () {
+    $customer1 = Customer::factory()->create(['tenant_id' => $this->tenant->id]);
+    $customer2 = Customer::factory()->create(['tenant_id' => $this->tenant->id]);
+    $pet1 = Pet::factory()->create(['customer_id' => $customer1->id, 'tenant_id' => $this->tenant->id, 'name' => 'Fido']);
+    $pet2 = Pet::factory()->create(['customer_id' => $customer2->id, 'tenant_id' => $this->tenant->id, 'name' => 'Rex']);
+
+    bootFilamentPanelAs($this->admin, $this->tenant);
+
+    $component = Livewire::test(AppointmentCalendar::class)
+        ->mountAction('create')
+        ->fillForm([
+            'customer_id' => (string) $customer1->id,
+        ]);
+
+    // Assert pet1 is available and pet2 is not by checking the form field
+    $component->assertFormFieldExists('pet_id', function (Select $field) use ($pet1, $pet2) {
+        $options = $field->getOptions();
+        expect($options)->toHaveKey((string) $pet1->id)
+            ->and($options)->not->toHaveKey((string) $pet2->id);
+        return true;
+    });
 });
