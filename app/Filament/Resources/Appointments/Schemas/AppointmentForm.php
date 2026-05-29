@@ -6,6 +6,7 @@ namespace App\Filament\Resources\Appointments\Schemas;
 
 use App\Enums\AppointmentStatus;
 use App\Models\Customer;
+use App\Models\Pet;
 use App\Models\Service;
 use App\Models\Tenant;
 use Filament\Facades\Filament;
@@ -37,11 +38,15 @@ class AppointmentForm
 
                         Select::make('pet_id')
                             ->label('Animale')
-                            ->relationship('pet', 'name')
+                            ->options(fn (callable $get) => Pet::where('customer_id', $get('customer_id'))
+                                ->where('tenant_id', $tenant->id)
+                                ->pluck('name', 'id'))
                             ->searchable()
                             ->required()
-                            ->preload()
-                            ->visible(fn (callable $get): bool => filled($get('customer_id'))),
+                            ->live()
+                            ->visible(fn (callable $get): bool => filled($get('customer_id')))
+                            ->disabled(fn (callable $get): bool => blank($get('customer_id')))
+                            ->saved(),
 
                         Select::make('user_id')
                             ->label('Toelettatore')
@@ -75,6 +80,8 @@ class AppointmentForm
                             ->label('Stato')
                             ->options(AppointmentStatus::class)
                             ->default(AppointmentStatus::Requested)
+                            ->disabled()
+                            ->saved()
                             ->required(),
 
                         Select::make('services')

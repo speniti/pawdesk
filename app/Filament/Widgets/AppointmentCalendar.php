@@ -18,6 +18,7 @@ use Filament\Facades\Filament;
 use Filament\Support\Enums\Width;
 use Filament\Support\Facades\FilamentColor;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Arr;
 use Peniti\FilamentCalendar\Calendar\Event;
 use Peniti\FilamentCalendar\Widgets\Calendar;
 use Spatie\OpeningHours\OpeningHours;
@@ -112,11 +113,27 @@ class AppointmentCalendar extends Calendar
 
             EditAction::make()
                 ->slideOver()
-                ->modalWidth(Width::ExtraLarge),
+                ->modalWidth(Width::ExtraLarge)
+                ->extraModalFooterActions(function () {
+                    $deleteAction = Arr::get($this->cachedActions, 'delete');
+
+                    return [
+                        $deleteAction?->extraAttributes(['class' => 'ml-auto order-last']),
+                        ...$this->getTransitionActions(),
+                    ];
+                }),
 
             ViewAction::make()
                 ->slideOver()
-                ->modalWidth(Width::ExtraLarge),
+                ->modalWidth(Width::ExtraLarge)
+                ->extraModalFooterActions(function () {
+                    $editAction = Arr::get($this->cachedActions, 'edit');
+
+                    return [
+                        $editAction,
+                        ...$this->getTransitionActions(),
+                    ];
+                }),
         ];
     }
 
@@ -144,6 +161,39 @@ class AppointmentCalendar extends Calendar
         $palette = FilamentColor::getColor($colorName);
 
         return $palette[500] ?? $palette[600] ?? '#6b7280';
+    }
+
+    /**
+     * @return array<int, Action>
+     */
+    private function getTransitionActions(): array
+    {
+        $record = $this->getRecord();
+        if (! $record instanceof Appointment) {
+            return [];
+        }
+
+        /** @var Appointment $record */
+        $status = $record->status;
+        $actions = [];
+
+        foreach ($status->nextStatuses() as $nextStatus) {
+            $actions[] = Action::make($nextStatus->value)
+                ->label($nextStatus->getLabel())
+                ->color($nextStatus->getColor())
+                ->requiresConfirmation()
+                ->modalHeading("Cambia stato in {$nextStatus->getLabel()}")
+                ->modalDescription("Sei sicuro di voler cambiare lo stato dell'appuntamento in {$nextStatus->getLabel()}?")
+                ->action(function () use ($record, $status, $nextStatus) {
+                    if (! $status->canTransitionTo($nextStatus)) {
+                        return;
+                    }
+                    $record->update(['status' => $nextStatus]);
+                    $this->refreshEvents();
+                });
+        }
+
+        return $actions;
     }
 
     private function isEditable(AppointmentStatus $status): bool
