@@ -208,6 +208,7 @@ test('pet options are filtered by selected customer', function () {
         $options = $field->getOptions();
         expect($options)->toHaveKey((string) $pet1->id)
             ->and($options)->not->toHaveKey((string) $pet2->id);
+
         return true;
     });
 });

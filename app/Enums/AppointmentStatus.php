@@ -16,6 +16,11 @@ enum AppointmentStatus: string implements HasColor, HasLabel
     case NoShow = 'no_show';
     case Requested = 'requested';
 
+    public function canTransitionTo(self $target): bool
+    {
+        return in_array($target, $this->nextStatuses(), true);
+    }
+
     public function getColor(): string
     {
         return match ($this) {
@@ -51,10 +56,5 @@ enum AppointmentStatus: string implements HasColor, HasLabel
             self::InProgress => [self::Completed, self::Cancelled, self::NoShow],
             default => [],
         };
-    }
-
-    public function canTransitionTo(self $target): bool
-    {
-        return in_array($target, $this->nextStatuses(), true);
     }
 }

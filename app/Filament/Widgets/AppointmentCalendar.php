@@ -163,11 +163,6 @@ class AppointmentCalendar extends Calendar
         return $palette[500] ?? $palette[600] ?? '#6b7280';
     }
 
-    private function isEditable(AppointmentStatus $status): bool
-    {
-        return ! in_array($status, [AppointmentStatus::Completed, AppointmentStatus::Cancelled, AppointmentStatus::NoShow], true);
-    }
-
     /**
      * @return array<int, Action>
      */
@@ -199,5 +194,10 @@ class AppointmentCalendar extends Calendar
         }
 
         return $actions;
+    }
+
+    private function isEditable(AppointmentStatus $status): bool
+    {
+        return ! in_array($status, [AppointmentStatus::Completed, AppointmentStatus::Cancelled, AppointmentStatus::NoShow], true);
     }
 }
