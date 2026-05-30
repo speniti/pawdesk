@@ -3,10 +3,12 @@
 declare(strict_types=1);
 
 use App\Enums\AppointmentStatus;
+use App\Enums\Size;
 use App\Filament\Widgets\AppointmentCalendar;
 use App\Models\Appointment;
 use App\Models\Customer;
 use App\Models\Pet;
+use App\Models\Service;
 use App\Models\Tenant;
 use App\Models\User;
 use Filament\Forms\Components\Select;
@@ -316,4 +318,94 @@ test('appointment policy allows CRUD for staff', function () {
         ->and($this->admin->can('update', $appointment))->toBeTrue()
         ->and($this->admin->can('delete', $appointment))->toBeTrue()
         ->and($this->admin->can('create', Appointment::class))->toBeTrue();
+});
+
+test('creating appointment syncs services with pivot data', function () {
+    $customer = Customer::factory()->create(['tenant_id' => $this->tenant->id]);
+    $pet = Pet::factory()->create(['customer_id' => $customer->id, 'tenant_id' => $this->tenant->id, 'size' => Size::Small]);
+    $service = Service::factory()->create([
+        'tenant_id' => $this->tenant->id,
+        'base_price' => 5000,
+        'duration_minutes' => 60,
+        'size_prices' => [
+            ['size' => 'small', 'price' => 3500],
+        ],
+    ]);
+
+    bootFilamentPanelAs($this->admin, $this->tenant);
+    $start = now()->addDay()->setTime(10, 0);
+
+    $component = Livewire::test(AppointmentCalendar::class)
+        ->mountAction('create')
+        ->fillForm([
+            'customer_id' => (string) $customer->id,
+            'pet_id' => (string) $pet->id,
+            'start_time' => $start->format('Y-m-d H:i'),
+            'services' => [(string) $service->id],
+            'status' => AppointmentStatus::Requested->value,
+        ])
+        ->callMountedAction();
+
+    $appointment = Appointment::latest()->first();
+    $pivot = $appointment->services()->first()->pivot;
+
+    expect($pivot->applied_price)->toBe(3500)
+        ->and($pivot->duration_minutes)->toBe(60);
+});
+
+test('pivot uses base_price when no size override', function () {
+    $customer = Customer::factory()->create(['tenant_id' => $this->tenant->id]);
+    $pet = Pet::factory()->create(['customer_id' => $customer->id, 'tenant_id' => $this->tenant->id, 'size' => Size::Large]);
+    $service = Service::factory()->create([
+        'tenant_id' => $this->tenant->id,
+        'base_price' => 5000,
+        'duration_minutes' => 45,
+        'size_prices' => [
+            ['size' => 'small', 'price' => 3500],
+        ],
+    ]);
+
+    bootFilamentPanelAs($this->admin, $this->tenant);
+    $start = now()->addDay()->setTime(10, 0);
+
+    Livewire::test(AppointmentCalendar::class)
+        ->mountAction('create')
+        ->fillForm([
+            'customer_id' => (string) $customer->id,
+            'pet_id' => (string) $pet->id,
+            'start_time' => $start->format('Y-m-d H:i'),
+            'services' => [(string) $service->id],
+            'status' => AppointmentStatus::Requested->value,
+        ])
+        ->callMountedAction();
+
+    $appointment = Appointment::latest()->first();
+    $pivot = $appointment->services()->first()->pivot;
+
+    expect($pivot->applied_price)->toBe(5000)
+        ->and($pivot->duration_minutes)->toBe(45);
+});
+
+test('end_time is auto-calculated from services duration on create', function () {
+    $customer = Customer::factory()->create(['tenant_id' => $this->tenant->id]);
+    $pet = Pet::factory()->create(['customer_id' => $customer->id, 'tenant_id' => $this->tenant->id]);
+    $service1 = Service::factory()->create(['tenant_id' => $this->tenant->id, 'duration_minutes' => 30]);
+    $service2 = Service::factory()->create(['tenant_id' => $this->tenant->id, 'duration_minutes' => 45]);
+
+    bootFilamentPanelAs($this->admin, $this->tenant);
+    $start = now()->addDay()->setTime(10, 0);
+
+    Livewire::test(AppointmentCalendar::class)
+        ->mountAction('create')
+        ->fillForm([
+            'customer_id' => (string) $customer->id,
+            'pet_id' => (string) $pet->id,
+            'start_time' => $start->format('Y-m-d H:i'),
+            'services' => [(string) $service1->id, (string) $service2->id],
+            'status' => AppointmentStatus::Requested->value,
+        ])
+        ->callMountedAction();
+
+    $appointment = Appointment::latest()->first();
+    expect($appointment->end_time->format('H:i'))->toBe('11:15');
 });
