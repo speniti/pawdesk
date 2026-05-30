@@ -7,7 +7,9 @@ namespace App\Filament\Widgets;
 use App\Enums\AppointmentStatus;
 use App\Filament\Resources\Appointments\AppointmentResource;
 use App\Models\Appointment;
+use App\Models\Service;
 use App\Models\Tenant;
+use App\Services\AppointmentPriceCalculator;
 use Carbon\Carbon;
 use Filament\Actions\Action;
 use Filament\Actions\CreateAction;
@@ -15,6 +17,7 @@ use Filament\Actions\DeleteAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
 use Filament\Facades\Filament;
+use Filament\Schemas\Schema;
 use Filament\Support\Enums\Width;
 use Filament\Support\Facades\FilamentColor;
 use Illuminate\Database\Eloquent\Model;
@@ -104,7 +107,7 @@ class AppointmentCalendar extends Calendar
             CreateAction::make()
                 ->slideOver()
                 ->modalWidth(Width::ExtraLarge)
-                ->mountUsing(fn (array $arguments, Action $action) => $action->fillForm([
+                ->mountUsing(fn (array $arguments, Schema $schema) => $schema->fill([
                     'start_time' => $arguments['start'] ?? null,
                     'end_time' => $arguments['end'] ?? null,
                 ])),
@@ -114,6 +117,20 @@ class AppointmentCalendar extends Calendar
             EditAction::make()
                 ->slideOver()
                 ->modalWidth(Width::ExtraLarge)
+                ->using(function (array $data, Model $record) {
+                    $serviceIds = $data['services'] ?? [];
+                    unset($data['services']);
+
+                    if (! empty($serviceIds) && isset($data['start_time'])) {
+                        $data['end_time'] = $this->calculateEndTime($data['start_time'], $serviceIds);
+                    }
+
+                    $record->update($data);
+
+                    if ($serviceIds && $record instanceof Appointment) {
+                        $this->syncServicesWithPivotData($record, $serviceIds);
+                    }
+                })
                 ->extraModalFooterActions(function () {
                     $deleteAction = Arr::get($this->cachedActions, 'delete');
 
@@ -147,12 +164,37 @@ class AppointmentCalendar extends Calendar
         ];
     }
 
+    protected function save(array $data, string $model): Model|false
+    {
+        $serviceIds = $data['services'] ?? [];
+        unset($data['services']);
+
+        if (! empty($serviceIds) && isset($data['start_time'])) {
+            $data['end_time'] = $this->calculateEndTime($data['start_time'], $serviceIds);
+        }
+
+        $record = parent::save($data, $model);
+
+        if ($record instanceof Appointment && $serviceIds) {
+            $this->syncServicesWithPivotData($record, $serviceIds);
+        }
+
+        return $record;
+    }
+
     protected function updateRecord(?Model $record, Carbon $start, ?Carbon $end, bool $allDay): void
     {
         $record?->update([
             'start_time' => $start,
             'end_time' => $end,
         ]);
+    }
+
+    private function calculateEndTime(string $startTime, array $serviceIds): Carbon
+    {
+        $totalMinutes = Service::whereIn('id', $serviceIds)->sum('duration_minutes');
+
+        return Carbon::parse($startTime)->addMinutes((int) $totalMinutes);
     }
 
     private function getStatusColor(AppointmentStatus $status): string
@@ -199,5 +241,14 @@ class AppointmentCalendar extends Calendar
     private function isEditable(AppointmentStatus $status): bool
     {
         return ! in_array($status, [AppointmentStatus::Completed, AppointmentStatus::Cancelled, AppointmentStatus::NoShow], true);
+    }
+
+    private function syncServicesWithPivotData(Appointment $appointment, array $serviceIds): void
+    {
+        $services = Service::whereIn('id', $serviceIds)->get();
+        $petSize = $appointment->pet?->size;
+
+        $pivotData = AppointmentPriceCalculator::buildPivotData($services, $petSize);
+        $appointment->services()->sync($pivotData);
     }
 }
