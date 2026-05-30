@@ -12,7 +12,6 @@ class AppointmentPriceCalculator
 {
     /**
      * @param  Collection<int, Service>  $services
-     * @param  Size|string|null  $petSize
      * @return array<int, array{applied_price: int, duration_minutes: int}>
      */
     public static function buildPivotData(Collection $services, Size|string|null $petSize): array
@@ -25,9 +24,6 @@ class AppointmentPriceCalculator
         ])->all();
     }
 
-    /**
-     * @param  Size|string|null  $petSize
-     */
     public static function resolvePrice(Service $service, Size|string|null $petSize): int
     {
         $petSizeValue = $petSize instanceof Size ? $petSize->value : $petSize;
