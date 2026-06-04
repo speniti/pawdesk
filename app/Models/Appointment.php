@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace App\Models;
 
 use App\Enums\AppointmentStatus;
+use App\Observers\AppointmentObserver;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -24,6 +26,7 @@ use Illuminate\Support\Carbon;
  * @property string|null $internal_notes
  */
 #[Fillable(['tenant_id', 'customer_id', 'pet_id', 'user_id', 'status', 'start_time', 'end_time', 'internal_notes'])]
+#[ObservedBy([AppointmentObserver::class])]
 class Appointment extends Model
 {
     /** @use HasFactory<\Database\Factories\AppointmentFactory> */
