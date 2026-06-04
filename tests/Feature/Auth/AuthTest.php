@@ -7,6 +7,10 @@ use App\Models\User;
 use Filament\Auth\Pages\Login;
 use Livewire\Livewire;
 
+use function Pest\Laravel\actingAs;
+use function Pest\Laravel\assertGuest;
+use function Pest\Laravel\post;
+
 test('login with correct credentials redirects to tenant dashboard', function () {
     $tenant = Tenant::factory()->create();
     $user = User::factory()->create();
@@ -18,7 +22,7 @@ test('login with correct credentials redirects to tenant dashboard', function ()
             'password' => 'password',
         ])
         ->call('authenticate')
-        ->assertRedirect("/{$tenant->slug}");
+        ->assertRedirect("/$tenant->slug");
 });
 
 test('login with wrong credentials shows validation error', function () {
@@ -34,11 +38,8 @@ test('login with wrong credentials shows validation error', function () {
 });
 
 test('logout destroys session', function () {
-    $user = User::factory()->create();
+    actingAs($user = User::factory()->create());
+    post('/logout')->assertRedirect('/login');
 
-    $this->actingAs($user);
-
-    $this->post('/logout')->assertRedirect('/login');
-
-    $this->assertGuest();
+    assertGuest();
 });
