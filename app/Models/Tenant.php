@@ -40,6 +40,39 @@ class Tenant extends Model
         return $this->hasMany(Customer::class);
     }
 
+    public function hasMailgunConfigured(): bool
+    {
+        $settings = $this->notification_settings ?? [];
+
+        return filled($settings['mailgun_api_key'] ?? null)
+            && filled($settings['mailgun_domain'] ?? null);
+    }
+
+    public function mailFromAddress(): ?string
+    {
+        return $this->notification_settings['mail_from_address'] ?? null;
+    }
+
+    public function mailFromName(): ?string
+    {
+        return $this->notification_settings['mail_from_name'] ?? null;
+    }
+
+    public function mailgunApiKey(): ?string
+    {
+        return $this->notification_settings['mailgun_api_key'] ?? null;
+    }
+
+    public function mailgunDomain(): ?string
+    {
+        return $this->notification_settings['mailgun_domain'] ?? null;
+    }
+
+    public function mailgunMailerName(): string
+    {
+        return "tenant-mailgun-{$this->id}";
+    }
+
     public function pets(): HasMany
     {
         return $this->hasMany(Pet::class);

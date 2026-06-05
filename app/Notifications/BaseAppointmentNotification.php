@@ -8,8 +8,10 @@ use App\Enums\NotificationStatus;
 use App\Models\Appointment;
 use App\Models\Customer;
 use App\Models\NotificationLog;
+use App\Notifications\Channels\TenantMailChannel;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 use Throwable;
 
@@ -17,12 +19,18 @@ abstract class BaseAppointmentNotification extends Notification implements Shoul
 {
     use Queueable;
 
+    public int $backoff = 60;
+
+    public int $tries = 3;
+
     public function __construct(protected Appointment $appointment)
     {
         $this->afterCommit();
     }
 
     abstract public function notificationType(): string;
+
+    abstract public function toMail(object $notifiable): MailMessage;
 
     public function afterSending(object $notifiable, string $channel, mixed $response): void
     {
@@ -49,6 +57,23 @@ abstract class BaseAppointmentNotification extends Notification implements Shoul
         ]);
     }
 
+    /**
+     * @return array<string, mixed>
+     */
+    public function emailTemplateData(): array
+    {
+        $appointment = $this->appointment->load(['customer', 'pet', 'services', 'tenant']);
+
+        return [
+            'cliente_nome' => $appointment->customer->fullName,
+            'animale_nome' => $appointment->pet->name,
+            'data' => $appointment->start_time->format('d/m/Y'),
+            'ora' => $appointment->start_time->format('H:i'),
+            'servizi' => $appointment->services->pluck('name')->join(', '),
+            'salone_nome' => $appointment->tenant->name,
+        ];
+    }
+
     public function failed(?Throwable $exception): void
     {
         NotificationLog::query()
@@ -73,7 +98,6 @@ abstract class BaseAppointmentNotification extends Notification implements Shoul
      */
     public function via(object $notifiable): array
     {
-        // TODO: resolve from $notifiable->preferred_channel when SMS/WhatsApp are active
-        return ['mail'];
+        return [TenantMailChannel::class];
     }
 }

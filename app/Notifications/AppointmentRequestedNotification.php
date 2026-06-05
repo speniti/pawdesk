@@ -17,8 +17,6 @@ class AppointmentRequestedNotification extends BaseAppointmentNotification
     {
         return (new MailMessage)
             ->subject('Nuova richiesta di appuntamento')
-            ->line('Abbiamo ricevuto la tua richiesta di appuntamento.')
-            ->line('Data: '.$this->appointment->start_time->format('d/m/Y H:i'))
-            ->line('Ti contatteremo per la conferma.');
+            ->markdown('emails.appointments.requested', $this->emailTemplateData());
     }
 }

@@ -64,6 +64,15 @@ class TenantSettingsForm
                         TextInput::make('notification_settings.mailgun_domain')
                             ->label('Dominio')
                             ->maxLength(255),
+
+                        TextInput::make('notification_settings.mail_from_address')
+                            ->label('Indirizzo mittente')
+                            ->email()
+                            ->maxLength(255),
+
+                        TextInput::make('notification_settings.mail_from_name')
+                            ->label('Nome mittente')
+                            ->maxLength(255),
                     ])
                     ->columns(1)
                     ->collapsible()

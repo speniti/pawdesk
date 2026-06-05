@@ -17,8 +17,6 @@ class AppointmentConfirmedNotification extends BaseAppointmentNotification
     {
         return (new MailMessage)
             ->subject('Appuntamento confermato')
-            ->line('Il tuo appuntamento è stato confermato.')
-            ->line('Data: '.$this->appointment->start_time->format('d/m/Y H:i'))
-            ->line('Ti aspettiamo!');
+            ->markdown('emails.appointments.confirmed', $this->emailTemplateData());
     }
 }

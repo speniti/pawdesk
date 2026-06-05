@@ -17,8 +17,6 @@ class AppointmentCompletedNotification extends BaseAppointmentNotification
     {
         return (new MailMessage)
             ->subject('Appuntamento completato')
-            ->line('Il tuo appuntamento è stato completato.')
-            ->line('Data: '.$this->appointment->start_time->format('d/m/Y H:i'))
-            ->line('Grazie per averci scelto!');
+            ->markdown('emails.appointments.completed', $this->emailTemplateData());
     }
 }
