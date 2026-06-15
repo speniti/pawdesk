@@ -73,6 +73,11 @@ class Tenant extends Model
         return "tenant-mailgun-{$this->id}";
     }
 
+    public function mailgunRegion(): string
+    {
+        return $this->notification_settings['mailgun_region'] ?? 'us';
+    }
+
     public function pets(): HasMany
     {
         return $this->hasMany(Pet::class);

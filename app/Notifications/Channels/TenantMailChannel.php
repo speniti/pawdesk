@@ -70,6 +70,7 @@ class TenantMailChannel extends MailChannel
             'transport' => 'tenant-mailgun',
             'secret' => $tenant->mailgunApiKey(),
             'domain' => $tenant->mailgunDomain(),
+            'region' => $tenant->mailgunRegion(),
         ]);
     }
 }

@@ -23,9 +23,11 @@ class AppServiceProvider extends ServiceProvider
             return (new MailgunTransportFactory)->create(
                 new Dsn(
                     'mailgun+https',
-                    'hosted.eu.mailgun.org',
+                    'default',
                     $config['secret'] ?? '',
                     $config['domain'] ?? '',
+                    null,
+                    ['region' => $config['region'] ?? 'us'],
                 )
             );
         });

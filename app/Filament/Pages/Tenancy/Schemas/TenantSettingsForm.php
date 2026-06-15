@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Filament\Pages\Tenancy\Schemas;
 
 use App\Filament\Pages\Tenancy\Schemas\Components\OpeningHoursDaySection;
+use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
@@ -64,6 +65,15 @@ class TenantSettingsForm
                         TextInput::make('notification_settings.mailgun_domain')
                             ->label('Dominio')
                             ->maxLength(255),
+
+                        Select::make('notification_settings.mailgun_region')
+                            ->label('Regione Mailgun')
+                            ->options([
+                                'us' => 'Stati Uniti',
+                                'eu' => 'Europa',
+                            ])
+                            ->default('us')
+                            ->selectablePlaceholder(false),
 
                         TextInput::make('notification_settings.mail_from_address')
                             ->label('Indirizzo mittente')
