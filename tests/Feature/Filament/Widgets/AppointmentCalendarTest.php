@@ -215,7 +215,7 @@ test('pet options are filtered by selected customer', function () {
     });
 });
 
-test('status field is disabled in edit form', function () {
+test('status field is editable in edit form', function () {
     $customer = Customer::factory()->create(['tenant_id' => $this->tenant->id]);
     $pet = Pet::factory()->create(['customer_id' => $customer->id, 'tenant_id' => $this->tenant->id]);
 
@@ -233,7 +233,7 @@ test('status field is disabled in edit form', function () {
     Livewire::test(AppointmentCalendar::class)
         ->call('select', $appointment->id)
         ->mountAction('edit')
-        ->assertFormFieldIsDisabled('status');
+        ->assertFormFieldExists('status', fn (Select $field) => ! $field->isDisabled());
 });
 
 test('view action shows status transition buttons for valid transitions', function () {
