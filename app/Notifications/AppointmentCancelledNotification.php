@@ -17,8 +17,6 @@ class AppointmentCancelledNotification extends BaseAppointmentNotification
     {
         return (new MailMessage)
             ->subject('Appuntamento cancellato')
-            ->line('Il tuo appuntamento è stato cancellato.')
-            ->line('Data: '.$this->appointment->start_time->format('d/m/Y H:i'))
-            ->line('Per qualsiasi domanda, non esitare a contattarci.');
+            ->markdown('emails.appointments.cancelled', $this->emailTemplateData());
     }
 }

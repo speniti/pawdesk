@@ -87,7 +87,6 @@ class AppointmentForm
                             ->label('Stato')
                             ->options(AppointmentStatus::class)
                             ->default(AppointmentStatus::Requested)
-                            ->disabled()
                             ->saved()
                             ->required(),
 

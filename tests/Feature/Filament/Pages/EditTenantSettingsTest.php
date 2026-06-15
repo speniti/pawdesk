@@ -225,6 +225,9 @@ describe('saving notification credentials', function () {
         expect($this->tenant->notification_settings)->toBe([
             'mailgun_api_key' => 'key-test-mailgun-123',
             'mailgun_domain' => 'mg.example.com',
+            'mailgun_region' => null,
+            'mail_from_address' => null,
+            'mail_from_name' => null,
             'vonage_api_key' => 'key-test-vonage-456',
             'vonage_api_secret' => 'secret-test-vonage-789',
             'vonage_sms_sender_id' => '+39123456789',
