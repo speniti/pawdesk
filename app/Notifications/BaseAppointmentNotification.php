@@ -5,13 +5,16 @@ declare(strict_types=1);
 namespace App\Notifications;
 
 use App\Enums\NotificationStatus;
+use App\Enums\PreferredChannel;
 use App\Models\Appointment;
 use App\Models\Customer;
 use App\Models\NotificationLog;
 use App\Notifications\Channels\TenantMailChannel;
+use App\Notifications\Channels\TenantVonageChannel;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
+use Illuminate\Notifications\Messages\VonageMessage;
 use Illuminate\Notifications\Notification;
 use Throwable;
 
@@ -30,6 +33,8 @@ abstract class BaseAppointmentNotification extends Notification implements Shoul
 
     abstract public function notificationType(): string;
 
+    abstract public function smsContent(): string;
+
     abstract public function toMail(object $notifiable): MailMessage;
 
     public function afterSending(object $notifiable, string $channel, mixed $response): void
@@ -37,6 +42,7 @@ abstract class BaseAppointmentNotification extends Notification implements Shoul
         NotificationLog::query()
             ->where('appointment_id', $this->appointment->id)
             ->where('type', $this->notificationType())
+            ->where('channel', $this->channelSlug($channel))
             ->where('status', NotificationStatus::Pending->value)
             ->latest()
             ->first()?->update([
@@ -52,7 +58,7 @@ abstract class BaseAppointmentNotification extends Notification implements Shoul
             'customer_id' => $customer->id,
             'appointment_id' => $this->appointment->id,
             'type' => $this->notificationType(),
-            'channel' => 'mail',
+            'channel' => $this->channelSlugFor($customer),
             'status' => NotificationStatus::Pending->value,
         ]);
     }
@@ -79,6 +85,7 @@ abstract class BaseAppointmentNotification extends Notification implements Shoul
         NotificationLog::query()
             ->where('appointment_id', $this->appointment->id)
             ->where('type', $this->notificationType())
+            ->where('channel', $this->channelSlugFor($this->appointment->customer))
             ->where('status', NotificationStatus::Pending->value)
             ->latest()
             ->first()?->update([
@@ -93,11 +100,46 @@ abstract class BaseAppointmentNotification extends Notification implements Shoul
         return $this->appointment;
     }
 
+    public function toVonage(object $notifiable): VonageMessage
+    {
+        return (new VonageMessage)->content($this->smsContent());
+    }
+
     /**
      * @return array<int, string>
      */
     public function via(object $notifiable): array
     {
-        return [TenantMailChannel::class];
+        return [$notifiable instanceof Customer ? $this->resolveChannelClass($notifiable) : TenantMailChannel::class];
+    }
+
+    /**
+     * Map a resolved channel class (or a customer) to its log slug.
+     */
+    protected function channelSlug(string $channel): string
+    {
+        return ($channel === TenantVonageChannel::class || $channel === 'sms') ? 'sms' : 'mail';
+    }
+
+    protected function channelSlugFor(Customer $customer): string
+    {
+        return $this->channelSlug($this->resolveChannelClass($customer));
+    }
+
+    /**
+     * Resolve the delivery channel based on the customer's preference, the
+     * tenant's channel configuration and the availability of a phone number.
+     *
+     * @return class-string
+     */
+    protected function resolveChannelClass(Customer $customer): string
+    {
+        if ($customer->preferred_channel === PreferredChannel::Sms
+            && $customer->tenant?->hasVonageConfigured()
+            && filled($customer->phone)) {
+            return TenantVonageChannel::class;
+        }
+
+        return TenantMailChannel::class;
     }
 }

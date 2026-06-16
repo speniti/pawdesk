@@ -13,7 +13,10 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Notifications\Notifiable;
 
-/** @property string $fullName */
+/**
+ * @property string $fullName
+ * @property PreferredChannel|null $preferred_channel
+ */
 #[Fillable([
     'first_name',
     'last_name',

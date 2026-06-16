@@ -19,14 +19,14 @@ test('via returns TenantMailChannel for email preferred channel', function () {
     expect($notification->via($customer))->toBe([TenantMailChannel::class]);
 });
 
-test('via returns TenantMailChannel for sms preferred channel as fallback', function () {
-    $customer = new Customer(['preferred_channel' => PreferredChannel::Sms]);
+test('via returns TenantMailChannel for sms preferred channel when tenant is not configured', function () {
+    // Transient customer with no configured tenant and no phone falls back to mail.
+    $customer = (new Customer(['preferred_channel' => PreferredChannel::Sms]))->setRelation('tenant', null);
     $appointment = new Appointment(['tenant_id' => 1, 'customer_id' => 1]);
     $appointment->id = 1;
 
     $notification = new AppointmentConfirmedNotification($appointment);
 
-    // TODO: update when SMS channel is active
     expect($notification->via($customer))->toBe([TenantMailChannel::class]);
 });
 

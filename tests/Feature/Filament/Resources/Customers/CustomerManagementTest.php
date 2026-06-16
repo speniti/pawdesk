@@ -24,7 +24,7 @@ test('admin can create a customer', function () {
             'first_name' => 'Mario',
             'last_name' => 'Rossi',
             'email' => 'mario.rossi@example.com',
-            'phone' => '+39 02 1234567',
+            'phone' => '+39021234567',
             'preferred_channel' => 'email',
         ])
         ->call('create')
@@ -39,7 +39,10 @@ test('admin can create a customer', function () {
 });
 
 test('admin can update a customer', function () {
-    $customer = Customer::factory()->create(['tenant_id' => $this->tenant->id]);
+    $customer = Customer::factory()->create([
+        'tenant_id' => $this->tenant->id,
+        'phone' => '+39021234567',
+    ]);
     bootFilamentPanelAs($this->admin, $this->tenant);
 
     Livewire::test(EditCustomer::class, ['record' => $customer->id])
@@ -47,7 +50,7 @@ test('admin can update a customer', function () {
             'first_name' => 'Luigi',
             'last_name' => 'Bianchi',
             'email' => $customer->email,
-            'phone' => $customer->phone,
+            'phone' => '+39021234567',
             'preferred_channel' => $customer->preferred_channel->value,
         ])
         ->call('save')
@@ -80,7 +83,7 @@ test('duplicate email for same tenant fails validation', function () {
             'first_name' => 'Mario',
             'last_name' => 'Rossi',
             'email' => 'shared@example.com',
-            'phone' => '+39 02 1234567',
+            'phone' => '+39021234567',
             'preferred_channel' => 'email',
         ])
         ->call('create')
@@ -101,7 +104,7 @@ test('duplicate email for different tenant is allowed', function () {
             'first_name' => 'Mario',
             'last_name' => 'Rossi',
             'email' => 'shared@example.com',
-            'phone' => '+39 02 1234567',
+            'phone' => '+39021234567',
             'preferred_channel' => 'email',
         ])
         ->call('create')

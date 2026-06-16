@@ -13,6 +13,13 @@ class AppointmentRequestedNotification extends BaseAppointmentNotification
         return 'appointment_requested';
     }
 
+    public function smsContent(): string
+    {
+        $data = $this->emailTemplateData();
+
+        return "PawDesk: richiesta appuntamento per {$data['animale_nome']} il {$data['data']} alle {$data['ora']}. Ti confermeremo presto. {$data['salone_nome']}";
+    }
+
     public function toMail(object $notifiable): MailMessage
     {
         return (new MailMessage)

@@ -52,7 +52,11 @@ class CustomerForm
                             ->label('Telefono')
                             ->tel()
                             ->required()
-                            ->maxLength(50),
+                            ->maxLength(50)
+                            ->regex('/^\+[1-9]\d{6,14}$/')
+                            ->validationMessages([
+                                'regex' => 'Inserisci il numero in formato internazionale (E.164), es. +393331234567.',
+                            ]),
 
                         Geocoder::make('address')
                             ->label('Indirizzo')
