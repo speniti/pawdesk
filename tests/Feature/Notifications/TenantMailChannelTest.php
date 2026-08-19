@@ -2,8 +2,10 @@
 
 declare(strict_types=1);
 
+use App\Enums\NotificationStatus;
 use App\Models\Appointment;
 use App\Models\Customer;
+use App\Models\NotificationLog;
 use App\Models\Pet;
 use App\Models\Service;
 use App\Models\Tenant;
@@ -16,7 +18,7 @@ beforeEach(function () {
     Mail::fake();
 });
 
-test('channel skips sending when tenant has no Mailgun configured', function () {
+test('channel skips sending and marks the log skipped when tenant has no Mailgun configured', function () {
     $tenant = Tenant::factory()->create([
         'notification_settings' => [],
     ]);
@@ -30,11 +32,47 @@ test('channel skips sending when tenant has no Mailgun configured', function () 
     ]);
 
     $notification = new AppointmentConfirmedNotification($appointment);
+    $notification->createLog($customer);
+
     $channel = app(TenantMailChannel::class);
 
-    $channel->send($customer, $notification);
+    expect($channel->send($customer, $notification))->toBeNull();
 
     Mail::assertNothingSent();
+
+    $log = NotificationLog::query()->where('appointment_id', $appointment->id)->first();
+    expect($log->status)->toBe(NotificationStatus::Skipped)
+        ->and($log->error_message)->toBe('Mailgun non configurato per il tenant.');
+});
+
+test('channel skips sending and marks the log skipped when customer has no email', function () {
+    $tenant = Tenant::factory()->create([
+        'notification_settings' => [
+            'mailgun_api_key' => 'key-test-123',
+            'mailgun_domain' => 'example.com',
+        ],
+    ]);
+
+    $customer = Customer::factory()->for($tenant)->create(['email' => '']);
+    $pet = Pet::factory()->for($customer)->for($tenant)->create();
+    $appointment = Appointment::factory()->create([
+        'tenant_id' => $tenant->id,
+        'customer_id' => $customer->id,
+        'pet_id' => $pet->id,
+    ]);
+
+    $notification = new AppointmentConfirmedNotification($appointment);
+    $notification->createLog($customer);
+
+    $channel = app(TenantMailChannel::class);
+
+    expect($channel->send($customer, $notification))->toBeNull();
+
+    Mail::assertNothingSent();
+
+    $log = NotificationLog::query()->where('appointment_id', $appointment->id)->first();
+    expect($log->status)->toBe(NotificationStatus::Skipped)
+        ->and($log->error_message)->toBe('Email del cliente mancante.');
 });
 
 test('channel configures runtime mailer with tenant credentials and cleans up', function () {

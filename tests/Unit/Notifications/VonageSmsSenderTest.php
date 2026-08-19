@@ -55,6 +55,16 @@ it('does not throw when vonage accepts the message', function () {
     expect(true)->toBeTrue();
 });
 
+it('accepts a null sender id and falls back to the shared pool', function () {
+    $client = vonageClientMock(vonageResponse([deliveredMessage()]));
+
+    $sender = senderWithClient($client);
+
+    $sender->send(Mockery::mock(Tenant::class), '+393331234567', 'Test message', null);
+
+    expect(true)->toBeTrue();
+});
+
 it('throws a VonageSmsException when vonage rejects the message', function () {
     $client = vonageClientMock(vonageResponse([
         array_merge(deliveredMessage(), ['status' => '1', 'error-text' => 'Throttled']),

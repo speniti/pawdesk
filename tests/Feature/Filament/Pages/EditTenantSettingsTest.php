@@ -214,7 +214,7 @@ describe('saving notification credentials', function () {
                     'mailgun_domain' => 'mg.example.com',
                     'vonage_api_key' => 'key-test-vonage-456',
                     'vonage_api_secret' => 'secret-test-vonage-789',
-                    'vonage_sms_sender_id' => '+39123456789',
+                    'vonage_sms_sender_id' => 'PawDesk',
                 ],
             ])
             ->call('save')
@@ -230,7 +230,36 @@ describe('saving notification credentials', function () {
             'mail_from_name' => null,
             'vonage_api_key' => 'key-test-vonage-456',
             'vonage_api_secret' => 'secret-test-vonage-789',
-            'vonage_sms_sender_id' => '+39123456789',
+            'vonage_sms_sender_id' => 'PawDesk',
         ]);
+    });
+
+    test('sender id is required when vonage api key is filled', function () {
+        bootFilamentPanelAs($this->admin, $this->tenant);
+
+        Livewire::test(EditTenantSettings::class)
+            ->fillForm([
+                'notification_settings' => [
+                    'vonage_api_key' => 'key-test-vonage-456',
+                    'vonage_api_secret' => 'secret-test-vonage-789',
+                ],
+            ])
+            ->call('save')
+            ->assertHasFormErrors(['notification_settings.vonage_sms_sender_id']);
+    });
+
+    test('sender id cannot exceed 11 characters', function () {
+        bootFilamentPanelAs($this->admin, $this->tenant);
+
+        Livewire::test(EditTenantSettings::class)
+            ->fillForm([
+                'notification_settings' => [
+                    'vonage_api_key' => 'key-test-vonage-456',
+                    'vonage_api_secret' => 'secret-test-vonage-789',
+                    'vonage_sms_sender_id' => 'PawDeskTroppoLungo',
+                ],
+            ])
+            ->call('save')
+            ->assertHasFormErrors(['notification_settings.vonage_sms_sender_id']);
     });
 });

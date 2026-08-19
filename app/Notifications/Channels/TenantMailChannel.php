@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Notifications\Channels;
 
+use App\Models\NotificationLog;
 use App\Models\Tenant;
 use App\Notifications\BaseAppointmentNotification;
 use Illuminate\Config\Repository as Config;
@@ -21,6 +22,8 @@ class TenantMailChannel extends MailChannel
         $tenant = Tenant::findOrFail($appointment->tenant_id);
 
         if (! $tenant->hasMailgunConfigured()) {
+            $this->markSkipped($notification, 'Mailgun non configurato per il tenant.');
+
             return null;
         }
 
@@ -30,7 +33,6 @@ class TenantMailChannel extends MailChannel
 
         try {
             $message = $notification->toMail($notifiable);
-            $message->mailer($mailerName);
 
             if ($tenant->mailFromAddress()) {
                 $message->from($tenant->mailFromAddress(), $tenant->mailFromName());
@@ -38,6 +40,8 @@ class TenantMailChannel extends MailChannel
 
             // Replicate parent::send() logic since parent calls toMail() again internally
             if (! $notifiable->routeNotificationFor('mail', $notification)) {
+                $this->markSkipped($notification, 'Email del cliente mancante.');
+
                 return null;
             }
 
@@ -49,6 +53,15 @@ class TenantMailChannel extends MailChannel
         } finally {
             $this->cleanupTenantMailerConfig($mailerName);
         }
+    }
+
+    private function markSkipped(BaseAppointmentNotification $notification, string $reason): void
+    {
+        NotificationLog::latestPending(
+            $notification->getAppointment()->id,
+            $notification->notificationType(),
+            'mail',
+        )?->markSkipped($reason);
     }
 
     private function cleanupTenantMailerConfig(string $mailerName): void

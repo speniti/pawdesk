@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Notifications;
 
-use App\Enums\NotificationStatus;
 use App\Enums\PreferredChannel;
 use App\Models\Appointment;
 use App\Models\Customer;
@@ -39,16 +38,17 @@ abstract class BaseAppointmentNotification extends Notification implements Shoul
 
     public function afterSending(object $notifiable, string $channel, mixed $response): void
     {
-        NotificationLog::query()
-            ->where('appointment_id', $this->appointment->id)
-            ->where('type', $this->notificationType())
-            ->where('channel', $this->channelSlug($channel))
-            ->where('status', NotificationStatus::Pending->value)
-            ->latest()
-            ->first()?->update([
-                'status' => NotificationStatus::Sent->value,
-                'sent_at' => now(),
-            ]);
+        // A null response means the channel skipped delivery (it marks the
+        // log itself), so only a real send transitions the log to sent.
+        if ($response === null) {
+            return;
+        }
+
+        NotificationLog::latestPending(
+            $this->appointment->id,
+            $this->notificationType(),
+            $this->channelSlug($channel),
+        )?->markSent();
     }
 
     public function createLog(Customer $customer): NotificationLog
@@ -58,8 +58,7 @@ abstract class BaseAppointmentNotification extends Notification implements Shoul
             'customer_id' => $customer->id,
             'appointment_id' => $this->appointment->id,
             'type' => $this->notificationType(),
-            'channel' => $this->channelSlugFor($customer),
-            'status' => NotificationStatus::Pending->value,
+            'channel' => $this->resolveChannelSlug($customer),
         ]);
     }
 
@@ -82,17 +81,14 @@ abstract class BaseAppointmentNotification extends Notification implements Shoul
 
     public function failed(?Throwable $exception): void
     {
-        NotificationLog::query()
-            ->where('appointment_id', $this->appointment->id)
-            ->where('type', $this->notificationType())
-            ->where('channel', $this->channelSlugFor($this->appointment->customer))
-            ->where('status', NotificationStatus::Pending->value)
-            ->latest()
-            ->first()?->update([
-                'status' => NotificationStatus::Failed->value,
-                'error_message' => $exception?->getMessage(),
-                'failed_at' => now(),
-            ]);
+        // The notification is deserialized from the queue without relations loaded.
+        $customer = $this->appointment->loadMissing('customer.tenant')->customer;
+
+        NotificationLog::latestPending(
+            $this->appointment->id,
+            $this->notificationType(),
+            $this->resolveChannelSlug($customer),
+        )?->markFailed($exception?->getMessage());
     }
 
     public function getAppointment(): Appointment
@@ -114,14 +110,18 @@ abstract class BaseAppointmentNotification extends Notification implements Shoul
     }
 
     /**
-     * Map a resolved channel class (or a customer) to its log slug.
+     * Map the channel identifier received by afterSending() (channel class
+     * or slug) to its log slug.
      */
     protected function channelSlug(string $channel): string
     {
         return ($channel === TenantVonageChannel::class || $channel === 'sms') ? 'sms' : 'mail';
     }
 
-    protected function channelSlugFor(Customer $customer): string
+    /**
+     * Resolve the log slug for the channel the customer will be notified on.
+     */
+    protected function resolveChannelSlug(Customer $customer): string
     {
         return $this->channelSlug($this->resolveChannelClass($customer));
     }

@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Notifications\Channels;
 
-use App\Enums\NotificationStatus;
 use App\Models\NotificationLog;
 use App\Models\Tenant;
 use App\Notifications\BaseAppointmentNotification;
@@ -20,23 +19,29 @@ class TenantVonageChannel
 
     public function __construct(private readonly VonageSmsSender $sender) {}
 
-    public function send(object $notifiable, Notification $notification): void
+    /**
+     * @return bool|null True when the SMS was sent; null when delivery was
+     *                   skipped (the log is marked skipped/failed here).
+     */
+    public function send(object $notifiable, Notification $notification): ?bool
     {
         /** @var BaseAppointmentNotification $notification */
         $appointment = $notification->getAppointment();
 
-        $tenant = Tenant::find($appointment->tenant_id);
+        $tenant = Tenant::findOrFail($appointment->tenant_id);
 
-        if (! $tenant?->hasVonageConfigured()) {
-            return;
+        if (! $tenant->hasVonageConfigured()) {
+            $this->latestPendingLog($notification)?->markSkipped('Vonage non configurato per il tenant.');
+
+            return null;
         }
 
         $to = $notifiable->routeNotificationFor('vonage', $notification);
 
         if (! $this->isValidPhoneNumber($to)) {
-            $this->markFailed($notification, 'Numero telefono non valido o mancante (richiesto formato E.164, es. +393331234567).');
+            $this->latestPendingLog($notification)?->markFailed('Numero telefono non valido o mancante (richiesto formato E.164, es. +393331234567).');
 
-            return;
+            return null;
         }
 
         $this->sender->send(
@@ -45,6 +50,8 @@ class TenantVonageChannel
             $notification->toVonage($notifiable)->content,
             $tenant->vonageSmsSenderId(),
         );
+
+        return true;
     }
 
     private function isValidPhoneNumber(mixed $to): bool
@@ -52,18 +59,12 @@ class TenantVonageChannel
         return is_string($to) && preg_match(self::E164_PATTERN, $to) === 1;
     }
 
-    private function markFailed(BaseAppointmentNotification $notification, string $message): void
+    private function latestPendingLog(BaseAppointmentNotification $notification): ?NotificationLog
     {
-        NotificationLog::query()
-            ->where('appointment_id', $notification->getAppointment()->id)
-            ->where('type', $notification->notificationType())
-            ->where('channel', 'sms')
-            ->where('status', NotificationStatus::Pending->value)
-            ->latest()
-            ->first()?->update([
-                'status' => NotificationStatus::Failed->value,
-                'error_message' => $message,
-                'failed_at' => now(),
-            ]);
+        return NotificationLog::latestPending(
+            $notification->getAppointment()->id,
+            $notification->notificationType(),
+            'sms',
+        );
     }
 }

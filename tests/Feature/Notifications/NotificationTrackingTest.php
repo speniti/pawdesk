@@ -40,12 +40,30 @@ test('log transitions to sent with sent_at timestamp', function () {
     $notification = new AppointmentConfirmedNotification($appointment);
     $log = $notification->createLog($customer);
 
-    $notification->afterSending($customer, 'mail', null);
+    $notification->afterSending($customer, 'mail', true);
 
     $log->refresh();
 
     expect($log->status)->toBe(NotificationStatus::Sent)
         ->and($log->sent_at)->not->toBeNull();
+});
+
+test('log stays pending when the channel skipped delivery', function () {
+    $customer = Customer::factory()->create();
+    $appointment = Appointment::factory()->create([
+        'customer_id' => $customer->id,
+        'tenant_id' => $customer->tenant_id,
+    ]);
+
+    $notification = new AppointmentConfirmedNotification($appointment);
+    $log = $notification->createLog($customer);
+
+    $notification->afterSending($customer, 'mail', null);
+
+    $log->refresh();
+
+    expect($log->status)->toBe(NotificationStatus::Pending)
+        ->and($log->sent_at)->toBeNull();
 });
 
 test('log transitions to failed with error message', function () {
@@ -91,7 +109,7 @@ test('sms log transitions to sent when sent via the vonage channel', function ()
 
     expect($log->channel)->toBe('sms');
 
-    $notification->afterSending($customer, TenantVonageChannel::class, null);
+    $notification->afterSending($customer, TenantVonageChannel::class, true);
 
     $log->refresh();
 

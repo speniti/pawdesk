@@ -25,7 +25,7 @@ class VonageSmsSender
         $client = $this->createClient($tenant);
 
         /** @var Collection $collection */
-        $collection = $client->sms()->send(new SMS($to, $from, $content));
+        $collection = $client->sms()->send(new SMS($to, $from ?? '', $content));
 
         /** @var array<int, array> $rawMessages */
         $rawMessages = $collection->getAllMessagesRaw()['messages'] ?? [];

@@ -61,8 +61,10 @@ test('via falls back to TenantMailChannel when tenant has no vonage configured',
     ))->via($customer))->toBe([App\Notifications\Channels\TenantMailChannel::class]);
 });
 
-test('channel skips sending when tenant has no vonage configured', function () {
-    $tenant = vonageTenant(['notification_settings' => []]);
+test('channel skips sending and marks the log skipped when tenant has no vonage configured', function () {
+    // Vonage is configured when the log is created, then removed before the
+    // queued send runs: the sms log must be marked skipped, not left pending.
+    $tenant = vonageTenant();
     $customer = Customer::factory()->for($tenant)->create([
         'preferred_channel' => PreferredChannel::Sms,
         'phone' => '+393331234567',
@@ -74,10 +76,19 @@ test('channel skips sending when tenant has no vonage configured', function () {
         'pet_id' => $pet->id,
     ]);
 
+    $notification = new AppointmentConfirmedNotification($appointment);
+    $notification->createLog($customer);
+
+    $tenant->update(['notification_settings' => []]);
+
     $this->mock(VonageSmsSender::class, fn ($mock) => $mock->shouldNotReceive('send'));
 
     $channel = app(TenantVonageChannel::class);
-    $channel->send($customer, new AppointmentConfirmedNotification($appointment));
+    expect($channel->send($customer, $notification))->toBeNull();
+
+    $log = NotificationLog::query()->where('appointment_id', $appointment->id)->first();
+    expect($log->status)->toBe(NotificationStatus::Skipped)
+        ->and($log->error_message)->toBe('Vonage non configurato per il tenant.');
 });
 
 test('channel marks the log failed and skips sending when phone is not valid E.164', function () {
@@ -134,7 +145,7 @@ test('channel sends the sms with the correct content and variables', function ()
     });
 
     $channel = app(TenantVonageChannel::class);
-    $channel->send($customer, new AppointmentConfirmedNotification($appointment));
+    expect($channel->send($customer, new AppointmentConfirmedNotification($appointment)))->toBeTrue();
 
     $expected = sprintf(
         'PawDesk: appuntamento confermato per Fido il %s alle %s. (Taglio pelo) PawDesk Salone',
