@@ -119,14 +119,6 @@ abstract class BaseAppointmentNotification extends Notification implements Shoul
     }
 
     /**
-     * Resolve the log slug for the channel the customer will be notified on.
-     */
-    protected function resolveChannelSlug(Customer $customer): string
-    {
-        return $this->channelSlug($this->resolveChannelClass($customer));
-    }
-
-    /**
      * Resolve the delivery channel based on the customer's preference, the
      * tenant's channel configuration and the availability of a phone number.
      *
@@ -141,5 +133,13 @@ abstract class BaseAppointmentNotification extends Notification implements Shoul
         }
 
         return TenantMailChannel::class;
+    }
+
+    /**
+     * Resolve the log slug for the channel the customer will be notified on.
+     */
+    protected function resolveChannelSlug(Customer $customer): string
+    {
+        return $this->channelSlug($this->resolveChannelClass($customer));
     }
 }

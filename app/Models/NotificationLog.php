@@ -30,6 +30,20 @@ class NotificationLog extends Model
     ];
 
     /**
+     * The most recent pending log for a given appointment notification channel.
+     */
+    public static function latestPending(int $appointmentId, string $type, string $channel): ?self
+    {
+        return self::query()
+            ->forAppointment($appointmentId)
+            ->where('type', $type)
+            ->where('channel', $channel)
+            ->pending()
+            ->latest()
+            ->first();
+    }
+
+    /**
      * @return BelongsTo<Appointment, $this>
      */
     public function appointment(): BelongsTo
@@ -43,35 +57,6 @@ class NotificationLog extends Model
     public function customer(): BelongsTo
     {
         return $this->belongsTo(Customer::class);
-    }
-
-    public function scopeFailed($query): void
-    {
-        $query->where('status', NotificationStatus::Failed->value);
-    }
-
-    public function scopeForAppointment($query, int $appointmentId): void
-    {
-        $query->where('appointment_id', $appointmentId);
-    }
-
-    public function scopePending($query): void
-    {
-        $query->where('status', NotificationStatus::Pending->value);
-    }
-
-    /**
-     * The most recent pending log for a given appointment notification channel.
-     */
-    public static function latestPending(int $appointmentId, string $type, string $channel): ?self
-    {
-        return self::query()
-            ->forAppointment($appointmentId)
-            ->where('type', $type)
-            ->where('channel', $channel)
-            ->pending()
-            ->latest()
-            ->first();
     }
 
     public function markFailed(?string $error): void
@@ -97,6 +82,21 @@ class NotificationLog extends Model
             'status' => NotificationStatus::Skipped->value,
             'error_message' => $reason,
         ]);
+    }
+
+    public function scopeFailed($query): void
+    {
+        $query->where('status', NotificationStatus::Failed->value);
+    }
+
+    public function scopeForAppointment($query, int $appointmentId): void
+    {
+        $query->where('appointment_id', $appointmentId);
+    }
+
+    public function scopePending($query): void
+    {
+        $query->where('status', NotificationStatus::Pending->value);
     }
 
     /**

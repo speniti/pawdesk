@@ -55,15 +55,6 @@ class TenantMailChannel extends MailChannel
         }
     }
 
-    private function markSkipped(BaseAppointmentNotification $notification, string $reason): void
-    {
-        NotificationLog::latestPending(
-            $notification->getAppointment()->id,
-            $notification->notificationType(),
-            'mail',
-        )?->markSkipped($reason);
-    }
-
     private function cleanupTenantMailerConfig(string $mailerName): void
     {
         /** @var Config $config */
@@ -85,5 +76,14 @@ class TenantMailChannel extends MailChannel
             'domain' => $tenant->mailgunDomain(),
             'region' => $tenant->mailgunRegion(),
         ]);
+    }
+
+    private function markSkipped(BaseAppointmentNotification $notification, string $reason): void
+    {
+        NotificationLog::latestPending(
+            $notification->getAppointment()->id,
+            $notification->notificationType(),
+            'mail',
+        )?->markSkipped($reason);
     }
 }
