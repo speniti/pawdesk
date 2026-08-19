@@ -44,6 +44,20 @@ class NotificationLog extends Model
     }
 
     /**
+     * Whether a notification of the given type was already dispatched
+     * (sent or still pending in the queue) for the appointment. Failed
+     * sends do not count, so they are retried on the next run.
+     */
+    public static function wasDispatched(int $appointmentId, string $type): bool
+    {
+        return self::query()
+            ->forAppointment($appointmentId)
+            ->where('type', $type)
+            ->whereIn('status', [NotificationStatus::Sent->value, NotificationStatus::Pending->value])
+            ->exists();
+    }
+
+    /**
      * @return BelongsTo<Appointment, $this>
      */
     public function appointment(): BelongsTo
