@@ -3,7 +3,7 @@
 
 Ciao {{ $cliente_nome }},
 
-ti ricordiamo l'appuntamento per **{{ $animale_nome }}** @if($ore >= 12) di domani @else di oggi @endif.
+ti ricordiamo l'appuntamento per **{{ $animale_nome }}** di {{ $quando }}.
 
 @component('mail::table')
 | Dettaglio | |

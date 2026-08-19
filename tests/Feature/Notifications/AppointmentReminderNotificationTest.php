@@ -13,8 +13,8 @@ beforeEach(function () {
 test('24h reminder has its own notification type and Italian content', function () {
     $appointment = Appointment::factory()->create([
         'status' => AppointmentStatus::Confirmed->value,
-        'start_time' => now()->addHours(23),
-        'end_time' => now()->addHours(24),
+        'start_time' => now()->addDay()->setTime(15, 0),
+        'end_time' => now()->addDay()->setTime(17, 0),
     ]);
     $customer = $appointment->customer;
 
@@ -28,7 +28,9 @@ test('24h reminder has its own notification type and Italian content', function 
     expect($mail->subject)->toBe('Promemoria appuntamento');
 });
 
-test('1h reminder uses the 1h type', function () {
+test('1h reminder uses the 1h type and a today label', function () {
+    $this->travelTo(now()->setTime(10, 0));
+
     $appointment = Appointment::factory()->create([
         'status' => AppointmentStatus::Confirmed->value,
         'start_time' => now()->addMinutes(50),
@@ -38,5 +40,5 @@ test('1h reminder uses the 1h type', function () {
     $notification = new AppointmentReminderNotification($appointment, 1);
 
     expect($notification->notificationType())->toBe('appointment_reminder_1h')
-        ->and($notification->smsContent())->toContain('tra poco');
+        ->and($notification->smsContent())->toContain('oggi');
 });

@@ -23,11 +23,7 @@ class AppointmentReminderNotification extends BaseAppointmentNotification
     {
         $data = $this->emailTemplateData();
 
-        $when = $this->hoursBefore >= 12
-            ? "domani ({$data['data']})"
-            : "tra poco ({$data['data']} alle {$data['ora']})";
-
-        return "PawDesk: promemoria, appuntamento per {$data['animale_nome']} {$when} alle {$data['ora']}. ({$data['servizi']}) {$data['salone_nome']}";
+        return "PawDesk: promemoria, appuntamento per {$data['animale_nome']} {$this->whenLabel()} ({$data['data']} alle {$data['ora']}). ({$data['servizi']}) {$data['salone_nome']}";
     }
 
     public function toMail(object $notifiable): MailMessage
@@ -36,7 +32,16 @@ class AppointmentReminderNotification extends BaseAppointmentNotification
             ->subject('Promemoria appuntamento')
             ->markdown('emails.appointments.reminder', [
                 ...$this->emailTemplateData(),
-                'ore' => $this->hoursBefore,
+                'quando' => $this->whenLabel(),
             ]);
+    }
+
+    /**
+     * Derived from the actual start time so late (catch-up) reminders
+     * still read correctly.
+     */
+    private function whenLabel(): string
+    {
+        return $this->appointment->start_time->isTomorrow() ? 'domani' : 'oggi';
     }
 }
