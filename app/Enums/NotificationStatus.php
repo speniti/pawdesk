@@ -12,6 +12,7 @@ enum NotificationStatus: string implements HasColor, HasLabel
     case Failed = 'failed';
     case Pending = 'pending';
     case Sent = 'sent';
+    case Skipped = 'skipped';
 
     public function getColor(): string
     {
@@ -19,6 +20,7 @@ enum NotificationStatus: string implements HasColor, HasLabel
             self::Pending => 'gray',
             self::Sent => 'success',
             self::Failed => 'danger',
+            self::Skipped => 'warning',
         };
     }
 
@@ -28,6 +30,7 @@ enum NotificationStatus: string implements HasColor, HasLabel
             self::Pending => 'In attesa',
             self::Sent => 'Inviata',
             self::Failed => 'Fallita',
+            self::Skipped => 'Saltata',
         };
     }
 }

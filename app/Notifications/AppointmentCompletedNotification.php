@@ -13,6 +13,13 @@ class AppointmentCompletedNotification extends BaseAppointmentNotification
         return 'appointment_completed';
     }
 
+    public function smsContent(): string
+    {
+        $data = $this->emailTemplateData();
+
+        return "PawDesk: grazie per la visita di {$data['animale_nome']}! A presto. {$data['salone_nome']}";
+    }
+
     public function toMail(object $notifiable): MailMessage
     {
         return (new MailMessage)

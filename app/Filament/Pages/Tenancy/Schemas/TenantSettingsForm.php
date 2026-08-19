@@ -106,7 +106,9 @@ class TenantSettingsForm
 
                         TextInput::make('notification_settings.vonage_sms_sender_id')
                             ->label('Mittente SMS')
-                            ->maxLength(255),
+                            ->requiredWith('notification_settings.vonage_api_key')
+                            ->maxLength(11)
+                            ->helperText('Mittente visualizzato dal cliente: 11 caratteri max, es. PawDesk.'),
                     ])
                     ->columns(1)
                     ->collapsible()

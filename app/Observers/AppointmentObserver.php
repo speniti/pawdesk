@@ -10,17 +10,14 @@ use App\Notifications\AppointmentCancelledNotification;
 use App\Notifications\AppointmentCompletedNotification;
 use App\Notifications\AppointmentConfirmedNotification;
 use App\Notifications\AppointmentRequestedNotification;
+use App\Notifications\BaseAppointmentNotification;
 use Illuminate\Contracts\Events\ShouldHandleEventsAfterCommit;
 
 class AppointmentObserver implements ShouldHandleEventsAfterCommit
 {
     public function created(Appointment $appointment): void
     {
-        $customer = $appointment->customer;
-
-        $notification = new AppointmentRequestedNotification($appointment);
-        $notification->createLog($customer);
-        $customer->notify($notification);
+        $this->dispatch(new AppointmentRequestedNotification($appointment), $appointment);
     }
 
     public function updated(Appointment $appointment): void
@@ -40,7 +37,15 @@ class AppointmentObserver implements ShouldHandleEventsAfterCommit
             return;
         }
 
-        $customer = $appointment->customer;
+        $this->dispatch($notification, $appointment);
+    }
+
+    private function dispatch(BaseAppointmentNotification $notification, Appointment $appointment): void
+    {
+        // loadMissing() avoids lazy loading violations with preventLazyLoading()
+        // enabled outside production; tenant is needed for channel resolution.
+        $customer = $appointment->loadMissing('customer.tenant')->customer;
+
         $notification->createLog($customer);
         $customer->notify($notification);
     }

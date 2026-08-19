@@ -30,6 +30,20 @@ class NotificationLog extends Model
     ];
 
     /**
+     * The most recent pending log for a given appointment notification channel.
+     */
+    public static function latestPending(int $appointmentId, string $type, string $channel): ?self
+    {
+        return self::query()
+            ->forAppointment($appointmentId)
+            ->where('type', $type)
+            ->where('channel', $channel)
+            ->pending()
+            ->latest()
+            ->first();
+    }
+
+    /**
      * @return BelongsTo<Appointment, $this>
      */
     public function appointment(): BelongsTo
@@ -43,6 +57,31 @@ class NotificationLog extends Model
     public function customer(): BelongsTo
     {
         return $this->belongsTo(Customer::class);
+    }
+
+    public function markFailed(?string $error): void
+    {
+        $this->update([
+            'status' => NotificationStatus::Failed->value,
+            'error_message' => $error,
+            'failed_at' => now(),
+        ]);
+    }
+
+    public function markSent(): void
+    {
+        $this->update([
+            'status' => NotificationStatus::Sent->value,
+            'sent_at' => now(),
+        ]);
+    }
+
+    public function markSkipped(string $reason): void
+    {
+        $this->update([
+            'status' => NotificationStatus::Skipped->value,
+            'error_message' => $reason,
+        ]);
     }
 
     public function scopeFailed($query): void

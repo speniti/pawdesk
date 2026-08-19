@@ -13,6 +13,13 @@ class AppointmentCancelledNotification extends BaseAppointmentNotification
         return 'appointment_cancelled';
     }
 
+    public function smsContent(): string
+    {
+        $data = $this->emailTemplateData();
+
+        return "PawDesk: l'appuntamento del {$data['data']} alle {$data['ora']} per {$data['animale_nome']} e' stato annullato. {$data['salone_nome']}";
+    }
+
     public function toMail(object $notifiable): MailMessage
     {
         return (new MailMessage)

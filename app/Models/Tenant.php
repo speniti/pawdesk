@@ -48,6 +48,14 @@ class Tenant extends Model
             && filled($settings['mailgun_domain'] ?? null);
     }
 
+    public function hasVonageConfigured(): bool
+    {
+        $settings = $this->notification_settings ?? [];
+
+        return filled($settings['vonage_api_key'] ?? null)
+            && filled($settings['vonage_api_secret'] ?? null);
+    }
+
     public function mailFromAddress(): ?string
     {
         return $this->notification_settings['mail_from_address'] ?? null;
@@ -96,6 +104,21 @@ class Tenant extends Model
     public function users(): BelongsToMany
     {
         return $this->belongsToMany(User::class);
+    }
+
+    public function vonageApiKey(): ?string
+    {
+        return $this->notification_settings['vonage_api_key'] ?? null;
+    }
+
+    public function vonageApiSecret(): ?string
+    {
+        return $this->notification_settings['vonage_api_secret'] ?? null;
+    }
+
+    public function vonageSmsSenderId(): ?string
+    {
+        return $this->notification_settings['vonage_sms_sender_id'] ?? null;
     }
 
     protected function casts(): array
