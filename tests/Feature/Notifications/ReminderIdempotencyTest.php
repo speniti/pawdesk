@@ -11,18 +11,17 @@ beforeEach(function () {
     Notification::fake();
 });
 
-function confirmedAppointment(array $attributes = []): Appointment
+function reminderTestAppointment(): Appointment
 {
     return Appointment::factory()->create([
         'status' => AppointmentStatus::Confirmed->value,
         'start_time' => now()->addHours(23),
         'end_time' => now()->addHours(24),
-        ...$attributes,
     ]);
 }
 
 test('wasDispatched is true for sent or pending logs of the given type', function () {
-    $appointment = confirmedAppointment();
+    $appointment = reminderTestAppointment();
 
     expect(NotificationLog::wasDispatched($appointment->id, 'appointment_reminder_24h'))->toBeFalse();
 
@@ -40,7 +39,7 @@ test('wasDispatched is true for sent or pending logs of the given type', functio
 });
 
 test('pending logs count as dispatched', function () {
-    $appointment = confirmedAppointment();
+    $appointment = reminderTestAppointment();
 
     $appointment->notificationLogs()->create([
         'tenant_id' => $appointment->tenant_id,
@@ -53,7 +52,7 @@ test('pending logs count as dispatched', function () {
 });
 
 test('failed logs do not count as dispatched', function () {
-    $appointment = confirmedAppointment();
+    $appointment = reminderTestAppointment();
 
     $appointment->notificationLogs()->create([
         'tenant_id' => $appointment->tenant_id,
