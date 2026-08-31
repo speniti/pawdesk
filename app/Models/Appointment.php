@@ -6,6 +6,7 @@ namespace App\Models;
 
 use App\Enums\AppointmentStatus;
 use App\Observers\AppointmentObserver;
+use App\Observers\TreatmentGenerationObserver;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -27,7 +28,7 @@ use Illuminate\Support\Carbon;
  * @property string|null $internal_notes
  */
 #[Fillable(['tenant_id', 'customer_id', 'pet_id', 'user_id', 'status', 'start_time', 'end_time', 'internal_notes'])]
-#[ObservedBy([AppointmentObserver::class])]
+#[ObservedBy([AppointmentObserver::class, TreatmentGenerationObserver::class])]
 class Appointment extends Model
 {
     /** @use HasFactory<\Database\Factories\AppointmentFactory> */
@@ -61,9 +62,13 @@ class Appointment extends Model
         return $this->belongsTo(Pet::class);
     }
 
+    /**
+     * @return BelongsToMany<Service, $this, AppointmentServicePivot>
+     */
     public function services(): BelongsToMany
     {
         return $this->belongsToMany(Service::class, 'appointment_service')
+            ->using(AppointmentServicePivot::class)
             ->withPivot(['applied_price', 'duration_minutes']);
     }
 
