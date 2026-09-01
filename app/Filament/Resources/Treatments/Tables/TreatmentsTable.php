@@ -42,7 +42,7 @@ class TreatmentsTable
                     ->label('Visibile al cliente')
                     ->boolean(),
             ])
-            ->defaultSort('created_at', 'desc')
+            ->defaultSort('appointment.start_time', 'desc')
             ->recordActions([
                 ViewAction::make(),
                 EditAction::make(),
