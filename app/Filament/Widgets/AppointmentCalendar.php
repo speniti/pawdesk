@@ -22,6 +22,7 @@ use Filament\Support\Enums\Width;
 use Filament\Support\Facades\FilamentColor;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\DB;
 use Peniti\FilamentCalendar\Calendar\Event;
 use Peniti\FilamentCalendar\Widgets\Calendar;
 use Spatie\OpeningHours\OpeningHours;
@@ -125,11 +126,16 @@ class AppointmentCalendar extends Calendar
                         $data['end_time'] = $this->calculateEndTime($data['start_time'], $serviceIds);
                     }
 
-                    $record->update($data);
+                    // Services are synced before the update so that, when the same
+                    // edit completes the appointment, the generated treatment totals
+                    // reflect the new pivot. One transaction keeps them atomic.
+                    DB::transaction(function () use ($data, $record, $serviceIds): void {
+                        if ($serviceIds && $record instanceof Appointment) {
+                            $this->syncServicesWithPivotData($record, $serviceIds);
+                        }
 
-                    if ($serviceIds && $record instanceof Appointment) {
-                        $this->syncServicesWithPivotData($record, $serviceIds);
-                    }
+                        $record->update($data);
+                    });
                 })
                 ->extraModalFooterActions(function () {
                     $deleteAction = Arr::get($this->cachedActions, 'delete');
@@ -230,7 +236,7 @@ class AppointmentCalendar extends Calendar
                     if (! $status->canTransitionTo($nextStatus)) {
                         return;
                     }
-                    $record->update(['status' => $nextStatus]);
+                    DB::transaction(static fn () => $record->update(['status' => $nextStatus]));
                     $this->refreshEvents();
                 });
         }

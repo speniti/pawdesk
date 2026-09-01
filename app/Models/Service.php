@@ -13,6 +13,9 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
+/**
+ * @property-read AppointmentServicePivot $pivot
+ */
 #[Fillable([
     'name',
     'description',
@@ -35,9 +38,13 @@ class Service extends Model
         'size_prices' => '{}',
     ];
 
+    /**
+     * @return BelongsToMany<Appointment, $this, AppointmentServicePivot>
+     */
     public function appointments(): BelongsToMany
     {
         return $this->belongsToMany(Appointment::class, 'appointment_service')
+            ->using(AppointmentServicePivot::class)
             ->withPivot(['applied_price', 'duration_minutes']);
     }
 

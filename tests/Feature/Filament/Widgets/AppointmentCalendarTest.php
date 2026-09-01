@@ -11,7 +11,9 @@ use App\Models\Pet;
 use App\Models\Service;
 use App\Models\Tenant;
 use App\Models\User;
+use App\Services\AppointmentPriceCalculator;
 use Filament\Forms\Components\Select;
+use Illuminate\Support\Facades\Notification;
 use Livewire\Livewire;
 
 beforeEach(function () {
@@ -408,4 +410,52 @@ test('end_time is auto-calculated from services duration on create', function ()
 
     $appointment = Appointment::latest()->first();
     expect($appointment->end_time->format('H:i'))->toBe('11:15');
+});
+
+test('edit completing the appointment generates treatment totals from the new services', function () {
+    Notification::fake();
+
+    $customer = Customer::factory()->create(['tenant_id' => $this->tenant->id]);
+    $pet = Pet::factory()->create(['customer_id' => $customer->id, 'tenant_id' => $this->tenant->id]);
+    $appointment = Appointment::factory()->create([
+        'customer_id' => $customer->id,
+        'pet_id' => $pet->id,
+        'tenant_id' => $this->tenant->id,
+        'start_time' => now()->addDay()->setTime(10, 0),
+        'end_time' => now()->addDay()->setTime(11, 0),
+        'status' => AppointmentStatus::InProgress,
+    ]);
+    $oldService = Service::factory()->create([
+        'tenant_id' => $this->tenant->id,
+        'base_price' => 2000,
+        'duration_minutes' => 30,
+    ]);
+    $newService = Service::factory()->create([
+        'tenant_id' => $this->tenant->id,
+        'base_price' => 5000,
+        'duration_minutes' => 60,
+    ]);
+    $appointment->services()->sync(
+        AppointmentPriceCalculator::buildPivotData(
+            Service::where('id', $oldService->id)->get(),
+            $pet->size,
+        ),
+    );
+
+    bootFilamentPanelAs($this->admin, $this->tenant);
+
+    Livewire::test(AppointmentCalendar::class)
+        ->call('select', $appointment->id)
+        ->mountAction('edit')
+        ->fillForm([
+            'services' => [(string) $newService->id],
+            'status' => AppointmentStatus::Completed->value,
+        ])
+        ->callMountedAction();
+
+    $treatment = $appointment->treatment()->first();
+
+    expect($treatment)->not->toBeNull()
+        ->actual_duration_minutes->toBe(60)
+        ->final_price->toBe(5000);
 });
