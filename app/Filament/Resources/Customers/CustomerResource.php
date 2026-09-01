@@ -9,6 +9,7 @@ use App\Filament\Resources\Customers\Pages\EditCustomer;
 use App\Filament\Resources\Customers\Pages\ListCustomers;
 use App\Filament\Resources\Customers\Pages\ViewCustomer;
 use App\Filament\Resources\Customers\RelationManagers\PetsRelationManager;
+use App\Filament\Resources\Customers\RelationManagers\TreatmentsRelationManager;
 use App\Filament\Resources\Customers\Schemas\CustomerForm;
 use App\Filament\Resources\Customers\Schemas\CustomerInfolist;
 use App\Filament\Resources\Customers\Tables\CustomersTable;
@@ -64,6 +65,7 @@ class CustomerResource extends Resource
     {
         return [
             PetsRelationManager::class,
+            TreatmentsRelationManager::class,
         ];
     }
 

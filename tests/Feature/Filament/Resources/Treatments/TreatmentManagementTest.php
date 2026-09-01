@@ -77,3 +77,20 @@ test('manual treatment creation is not possible', function () {
     expect(TreatmentResource::getPages())->not->toHaveKey('create')
         ->and($this->admin->can('create', Treatment::class))->toBeFalse();
 });
+
+test('treatment list shows most recent appointment first', function () {
+    $createTreatment = fn (string $startTime): Treatment => Treatment::factory()
+        ->forAppointment(Appointment::factory()->forTenant($this->tenant)->create([
+            'start_time' => $startTime,
+        ]))
+        ->create();
+
+    $oldest = $createTreatment(now()->subDays(30)->format('Y-m-d H:i'));
+    $middle = $createTreatment(now()->subDays(10)->format('Y-m-d H:i'));
+    $newest = $createTreatment(now()->subDay()->format('Y-m-d H:i'));
+
+    bootFilamentPanelAs($this->admin, $this->tenant);
+
+    Livewire::test(ListTreatments::class)
+        ->assertCanSeeTableRecords([$newest, $middle, $oldest], inOrder: true);
+});

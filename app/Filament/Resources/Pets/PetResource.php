@@ -9,6 +9,7 @@ use App\Filament\Resources\Pets\Pages\EditPet;
 use App\Filament\Resources\Pets\Pages\ListPets;
 use App\Filament\Resources\Pets\Pages\ViewPet;
 use App\Filament\Resources\Pets\RelationManagers\AppointmentsRelationManager;
+use App\Filament\Resources\Pets\RelationManagers\TreatmentsRelationManager;
 use App\Filament\Resources\Pets\Schemas\PetForm;
 use App\Filament\Resources\Pets\Schemas\PetInfolist;
 use App\Filament\Resources\Pets\Tables\PetsTable;
@@ -67,6 +68,7 @@ class PetResource extends Resource
     {
         return [
             AppointmentsRelationManager::class,
+            TreatmentsRelationManager::class,
         ];
     }
 
