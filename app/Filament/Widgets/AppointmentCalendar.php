@@ -40,6 +40,8 @@ class AppointmentCalendar extends Calendar
 
     protected static string $resource = AppointmentResource::class;
 
+    protected static ?int $sort = 10;
+
     public function fetchEvents(string $start, string $end): array
     {
         /** @var Tenant $tenant */
