@@ -6,6 +6,7 @@ namespace App\Filament\Widgets;
 
 use App\Enums\AppointmentStatus;
 use App\Models\Appointment;
+use App\Models\Tenant;
 use Filament\Facades\Filament;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
@@ -20,12 +21,17 @@ class UpcomingAppointmentsWidget extends TableWidget
     public function table(Table $table): Table
     {
         return $table
-            ->query(fn () => Appointment::query()
-                ->where('tenant_id', Filament::getTenant()->id)
-                ->where('status', AppointmentStatus::Confirmed)
-                ->where('end_time', '>=', now())
-                ->with(['customer', 'pet', 'services'])
-                ->limit(5))
+            ->query(function () {
+                /** @var Tenant $tenant */
+                $tenant = Filament::getTenant();
+
+                return Appointment::query()
+                    ->where('tenant_id', $tenant->id)
+                    ->where('status', AppointmentStatus::Confirmed)
+                    ->where('end_time', '>=', now())
+                    ->with(['customer', 'pet', 'services'])
+                    ->limit(5);
+            })
             ->heading('Prossimi appuntamenti')
             ->defaultSort('start_time')
             ->paginated(false)
