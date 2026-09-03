@@ -6,8 +6,8 @@ use App\Filament\Resources\Users\Pages\CreateUser;
 use App\Filament\Resources\Users\Pages\EditUser;
 use App\Models\Tenant;
 use App\Models\User;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Password;
+use App\Notifications\MagicLinkNotification;
+use Illuminate\Support\Facades\Notification;
 use Livewire\Livewire;
 
 beforeEach(function () {
@@ -17,10 +17,10 @@ beforeEach(function () {
     $this->admin->tenants()->attach($this->tenant);
 });
 
-test('password is auto-generated and hashed on user creation', function () {
-    bootFilamentPanelAs($this->admin, $this->tenant);
+test('creating a user sends them a magic link invite', function () {
+    Notification::fake();
 
-    Password::shouldReceive('sendResetLink')->once();
+    bootFilamentPanelAs($this->admin, $this->tenant);
 
     $newUserData = User::factory()->make();
 
@@ -35,23 +35,23 @@ test('password is auto-generated and hashed on user creation', function () {
 
     $createdUser = User::where('email', $newUserData->email)->first();
 
-    expect($createdUser)->not->toBeNull()
-        ->and(Hash::check('password', $createdUser->password))->toBeFalse()
-        ->and($createdUser->password)->not->toBe('password');
+    expect($createdUser)->not->toBeNull();
+
+    Notification::assertSentTo($createdUser, MagicLinkNotification::class);
 });
 
-test('reset password action sends reset link email', function () {
+test('send access link action sends a magic link email', function () {
+    Notification::fake();
+
     $targetUser = User::factory()->create();
     $targetUser->tenants()->attach($this->tenant);
     bootFilamentPanelAs($this->admin, $this->tenant);
 
-    Password::shouldReceive('sendResetLink')
-        ->once()
-        ->with(['email' => $targetUser->email]);
-
     Livewire::test(EditUser::class, ['record' => $targetUser->id])
-        ->callAction('resetPassword')
+        ->callAction('sendAccessLink')
         ->assertNotified();
+
+    Notification::assertSentTo($targetUser, MagicLinkNotification::class);
 });
 
 test('email must be unique', function () {

@@ -6,12 +6,13 @@ namespace App\Filament\Resources\Users\Pages;
 
 use App\Filament\Resources\Users\UserResource;
 use App\Models\User;
+use App\Notifications\MagicLinkNotification;
+use App\Services\MagicLinkService;
 use Filament\Actions\Action;
 use Filament\Actions\DeleteAction;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\EditRecord;
 use Filament\Support\Icons\Heroicon;
-use Illuminate\Support\Facades\Password;
 
 class EditUser extends EditRecord
 {
@@ -20,23 +21,25 @@ class EditUser extends EditRecord
     protected function getHeaderActions(): array
     {
         return [
-            Action::make('resetPassword')
-                ->label('Reset password')
-                ->icon(Heroicon::OutlinedKey)
+            Action::make('sendAccessLink')
+                ->label('Invia link di accesso')
+                ->icon(Heroicon::OutlinedEnvelope)
                 ->color('warning')
                 ->requiresConfirmation()
-                ->modalHeading('Reset password')
-                ->modalDescription("Verrà inviato un link di reset password all'indirizzo email dell'utente.")
+                ->modalHeading('Invia link di accesso')
+                ->modalDescription("Verrà inviato un link di accesso all'indirizzo email dell'utente.")
                 ->action(function (): void {
                     /** @var User $record */
                     $record = $this->getRecord();
 
-                    Password::sendResetLink(['email' => $record->email]);
+                    $url = app(MagicLinkService::class)->issueLink($record);
+
+                    $record->notify(new MagicLinkNotification($url));
 
                     Notification::make()
                         ->success()
                         ->title('Link inviato')
-                        ->body("Link di reset password inviato a {$record->email}")
+                        ->body("Link di accesso inviato a {$record->email}")
                         ->send();
                 }),
 
