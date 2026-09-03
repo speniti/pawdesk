@@ -2,43 +2,73 @@
 
 declare(strict_types=1);
 
-use App\Models\Tenant;
+use App\Filament\Pages\Auth\Login;
 use App\Models\User;
-use Filament\Auth\Pages\Login;
+use App\Notifications\MagicLinkNotification;
+use Illuminate\Support\Facades\Notification;
 use Livewire\Livewire;
 
 use function Pest\Laravel\actingAs;
 use function Pest\Laravel\assertGuest;
 use function Pest\Laravel\post;
 
-test('login with correct credentials redirects to tenant dashboard', function () {
-    $tenant = Tenant::factory()->create();
-    $user = User::factory()->create();
-    $user->tenants()->attach($tenant);
+test('login with a registered email sends a magic link', function () {
+    Notification::fake();
+
+    $user = User::factory()->admin()->create();
 
     Livewire::test(Login::class)
-        ->fillForm([
-            'email' => $user->email,
-            'password' => 'password',
-        ])
+        ->fillForm(['email' => $user->email])
         ->call('authenticate')
-        ->assertRedirect("/$tenant->slug");
+        ->assertHasNoFormErrors()
+        ->assertNotified('Link inviato');
+
+    Notification::assertSentTo($user, MagicLinkNotification::class);
 });
 
-test('login with wrong credentials shows validation error', function () {
-    $user = User::factory()->create();
+test('login with an unknown email shows the same generic message and sends nothing', function () {
+    Notification::fake();
+
+    User::factory()->admin()->create();
 
     Livewire::test(Login::class)
-        ->fillForm([
-            'email' => $user->email,
-            'password' => 'wrong-password',
-        ])
+        ->fillForm(['email' => 'nessuno@example.com'])
+        ->call('authenticate')
+        ->assertHasNoFormErrors()
+        ->assertNotified('Link inviato');
+
+    Notification::assertNothingSent();
+});
+
+test('login email is required', function () {
+    User::factory()->admin()->create();
+
+    Livewire::test(Login::class)
+        ->fillForm(['email' => ''])
         ->call('authenticate')
         ->assertHasFormErrors(['email']);
 });
 
+test('login is rate limited after five attempts', function () {
+    Notification::fake();
+
+    $user = User::factory()->admin()->create();
+
+    $component = Livewire::test(Login::class)
+        ->fillForm(['email' => $user->email]);
+
+    for ($attempt = 1; $attempt <= 5; $attempt++) {
+        $component->call('authenticate');
+    }
+
+    $component->call('authenticate');
+
+    Notification::assertSentTo($user, MagicLinkNotification::class, 5);
+});
+
 test('logout destroys session', function () {
-    actingAs($user = User::factory()->create());
+    actingAs(User::factory()->admin()->create());
+
     post('/logout')->assertRedirect('/login');
 
     assertGuest();

@@ -1,0 +1,5 @@
+# $schema: https://github.com/AJenbo/phpantom_lsp/raw/main/config-schema.json
+[formatting]
+pint = "vendor/bin/pint"
+[phpstan]
+command = "vendor/bin/phpstan"

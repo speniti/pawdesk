@@ -10,7 +10,6 @@ use Filament\Models\Contracts\FilamentUser;
 use Filament\Models\Contracts\HasTenants;
 use Filament\Panel;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
-use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -22,8 +21,7 @@ use Illuminate\Support\Collection;
 /**
  * @property UserRole $role
  */
-#[Fillable(['name', 'email', 'password', 'role'])]
-#[Hidden(['password', 'remember_token'])]
+#[Fillable(['name', 'email', 'role'])]
 class User extends Authenticatable implements FilamentUser, HasTenants
 {
     /** @use HasFactory<UserFactory> */
@@ -58,7 +56,6 @@ class User extends Authenticatable implements FilamentUser, HasTenants
     {
         return [
             'email_verified_at' => 'datetime',
-            'password' => 'hashed',
             'role' => UserRole::class,
         ];
     }

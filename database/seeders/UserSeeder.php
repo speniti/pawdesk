@@ -8,7 +8,6 @@ use App\Enums\UserRole;
 use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\Hash;
 
 class UserSeeder extends Seeder
 {
@@ -19,7 +18,6 @@ class UserSeeder extends Seeder
             ['email' => 'simone@peniti.it'],
             [
                 'name' => 'Simone Peniti',
-                'password' => Hash::make('password'),
                 'role' => UserRole::Admin,
             ],
         );
@@ -28,7 +26,6 @@ class UserSeeder extends Seeder
             ['email' => 'marco@pawdesk-demo.it'],
             [
                 'name' => 'Marco Rossi',
-                'password' => Hash::make('password'),
                 'role' => UserRole::Staff,
             ],
         );

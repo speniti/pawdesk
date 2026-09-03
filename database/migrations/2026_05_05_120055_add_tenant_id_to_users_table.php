@@ -21,7 +21,7 @@ return new class extends Migration
     {
         Schema::table('users', static function (Blueprint $table) {
             $table->foreignId('tenant_id')->nullable()->after('id')->constrained()->cascadeOnDelete();
-            $table->string('role')->default(UserRole::Staff->value)->after('password');
+            $table->string('role')->default(UserRole::Staff->value)->after('email');
 
             $table->index(['tenant_id', 'email']);
             $table->index(['tenant_id', 'role']);

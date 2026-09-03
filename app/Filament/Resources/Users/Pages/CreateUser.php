@@ -6,11 +6,11 @@ namespace App\Filament\Resources\Users\Pages;
 
 use App\Filament\Resources\Users\UserResource;
 use App\Models\User;
+use App\Notifications\MagicLinkNotification;
+use App\Services\MagicLinkService;
 use Filament\Facades\Filament;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\CreateRecord;
-use Illuminate\Support\Facades\Password;
-use Illuminate\Support\Str;
 
 class CreateUser extends CreateRecord
 {
@@ -23,17 +23,14 @@ class CreateUser extends CreateRecord
 
         $record->tenants()->attach(Filament::getTenant());
 
-        Password::sendResetLink(['email' => $record->email]);
+        $url = app(MagicLinkService::class)->issueLink($record);
+
+        $record->notify(new MagicLinkNotification($url));
 
         Notification::make()
             ->success()
             ->title('Utente creato')
-            ->body("Inviato link di reset password a {$record->email}")
+            ->body("Inviato link di accesso a {$record->email}")
             ->send();
-    }
-
-    protected function mutateFormDataBeforeCreate(array $data): array
-    {
-        return [...$data, 'password' => Str::password()];
     }
 }
