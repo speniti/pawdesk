@@ -4,9 +4,7 @@ declare(strict_types=1);
 
 namespace App\Filament\Resources\Users;
 
-use App\Filament\Resources\Users\Pages\CreateUser;
-use App\Filament\Resources\Users\Pages\EditUser;
-use App\Filament\Resources\Users\Pages\ListUsers;
+use App\Filament\Resources\Users\Pages\ManageUsers;
 use App\Filament\Resources\Users\Schemas\UserForm;
 use App\Filament\Resources\Users\Tables\UsersTable;
 use App\Models\User;
@@ -45,15 +43,14 @@ class UserResource extends Resource
         $tenant = Filament::getTenant();
 
         return parent::getEloquentQuery()
+            ->whereKeyNot(Filament::auth()->id())
             ->when($tenant, fn (Builder $query) => $query->whereHas('tenants', fn (Builder $q) => $q->whereKey($tenant)));
     }
 
     public static function getPages(): array
     {
         return [
-            'index' => ListUsers::route('/'),
-            'create' => CreateUser::route('/create'),
-            'edit' => EditUser::route('/{record}/edit'),
+            'index' => ManageUsers::route('/'),
         ];
     }
 
