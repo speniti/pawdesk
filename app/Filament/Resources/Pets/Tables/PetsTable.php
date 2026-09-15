@@ -4,10 +4,13 @@ declare(strict_types=1);
 
 namespace App\Filament\Resources\Pets\Tables;
 
+use App\Filament\Resources\Pets\PetResource;
+use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
+use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
@@ -39,7 +42,7 @@ class PetsTable
 
                 TextColumn::make('customer.full_name')
                     ->label('Proprietario')
-                    ->searchable(['customers.first_name', 'customers.last_name']),
+                    ->searchable(['first_name', 'last_name']),
 
                 TextColumn::make('created_at')
                     ->label('Creato il')
@@ -58,11 +61,17 @@ class PetsTable
                     ->label('Manto'),
             ])
             ->recordActions([
-                ViewAction::make(),
-                EditAction::make(),
+                ActionGroup::make([
+                    ViewAction::make(),
+                    EditAction::make(),
+                ])
+                    ->icon(Heroicon::OutlinedEllipsisVertical),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([DeleteBulkAction::make()]),
-            ]);
+            ])
+            ->emptyStateHeading('Nessun animale trovato')
+            ->emptyStateDescription('Prova a rimuovere i filtri oppure creane uno nuovo.')
+            ->emptyStateIcon(PetResource::getNavigationIcon());
     }
 }

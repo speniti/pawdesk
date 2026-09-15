@@ -57,7 +57,10 @@ class PetsRelationManager extends RelationManager
                         ->icon(Heroicon::OutlinedPencilSquare)
                         ->url(fn ($record): string => PetResource::getUrl('edit', ['record' => $record])),
                 ]),
-            ]);
+            ])
+            ->emptyStateHeading('Nessun animale associato')
+            ->emptyStateDescription('Questo cliente non ha ancora animali registrati.')
+            ->emptyStateIcon(PetResource::getNavigationIcon());
     }
 
     protected function headerActions(): array

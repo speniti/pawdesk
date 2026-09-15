@@ -4,8 +4,11 @@ declare(strict_types=1);
 
 namespace App\Filament\Resources\Treatments\Tables;
 
+use App\Filament\Resources\Treatments\TreatmentResource;
+use Filament\Actions\ActionGroup;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
+use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
@@ -27,7 +30,7 @@ class TreatmentsTable
 
                 TextColumn::make('customer.full_name')
                     ->label('Cliente')
-                    ->searchable(['customers.first_name', 'customers.last_name']),
+                    ->searchable(['first_name', 'last_name']),
 
                 TextColumn::make('actual_duration_minutes')
                     ->label('Durata effettiva')
@@ -44,8 +47,14 @@ class TreatmentsTable
             ])
             ->defaultSort('appointment.start_time', 'desc')
             ->recordActions([
-                ViewAction::make(),
-                EditAction::make(),
-            ]);
+                ActionGroup::make([
+                    ViewAction::make(),
+                    EditAction::make(),
+                ])
+                    ->icon(Heroicon::OutlinedEllipsisVertical),
+            ])
+            ->emptyStateHeading('Nessun trattamento trovato')
+            ->emptyStateDescription('I trattamenti vengono generati automaticamente al completamento degli appuntamenti.')
+            ->emptyStateIcon(TreatmentResource::getNavigationIcon());
     }
 }

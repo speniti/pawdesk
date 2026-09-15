@@ -59,6 +59,9 @@ class TreatmentsRelationManager extends RelationManager
                         ->icon(Heroicon::OutlinedPencilSquare)
                         ->url(fn ($record): string => TreatmentResource::getUrl('edit', ['record' => $record])),
                 ]),
-            ]);
+            ])
+            ->emptyStateHeading('Nessun trattamento trovato')
+            ->emptyStateDescription('I trattamenti vengono generati automaticamente al completamento degli appuntamenti.')
+            ->emptyStateIcon(TreatmentResource::getNavigationIcon());
     }
 }

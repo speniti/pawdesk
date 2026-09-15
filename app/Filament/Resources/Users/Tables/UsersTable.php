@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Filament\Resources\Users\Tables;
 
 use App\Enums\UserRole;
+use App\Filament\Resources\Users\UserResource;
 use App\Models\User;
 use App\Notifications\MagicLinkNotification;
 use App\Services\MagicLinkService;
@@ -83,6 +84,9 @@ class UsersTable
             ])
             ->toolbarActions([
                 BulkActionGroup::make([DeleteBulkAction::make()]),
-            ]);
+            ])
+            ->emptyStateHeading('Nessun utente trovato')
+            ->emptyStateDescription('Prova a rimuovere i filtri oppure creane uno nuovo.')
+            ->emptyStateIcon(UserResource::getNavigationIcon());
     }
 }
