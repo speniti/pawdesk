@@ -15,14 +15,17 @@ use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
+use Filament\Support\Icons\Heroicon;
 
 class PetForm
 {
     public static function configure(Schema $schema): Schema
     {
         return $schema
+            ->columns(1)
             ->components([
                 Section::make('Dati anagrafici')
+                    ->icon(Heroicon::OutlinedHeart)
                     ->schema([
                         Select::make('customer_id')
                             ->label('Proprietario')
@@ -37,6 +40,15 @@ class PetForm
                             ->required()
                             ->maxLength(255),
 
+                        DatePicker::make('date_of_birth')
+                            ->label('Data di nascita')
+                            ->maxDate(now()),
+                    ])
+                    ->columns(3),
+
+                Section::make('Caratteristiche fisiche')
+                    ->icon(Heroicon::OutlinedSparkles)
+                    ->schema([
                         Select::make('species')
                             ->label('Specie')
                             ->options(Species::class)
@@ -52,14 +64,6 @@ class PetForm
                             ->default(Gender::Unknown)
                             ->required(),
 
-                        DatePicker::make('date_of_birth')
-                            ->label('Data di nascita')
-                            ->maxDate(now()),
-                    ])
-                    ->columns(2),
-
-                Section::make('Caratteristiche fisiche')
-                    ->schema([
                         Select::make('size')
                             ->label('Taglia')
                             ->options(Size::class)
@@ -69,17 +73,22 @@ class PetForm
                             ->label('Manto')
                             ->options(Coat::class),
                     ])
-                    ->columns(2),
+                    ->columns(3),
 
-                Section::make('Note')
+                Section::make('Note comportamentali')
+                    ->icon(Heroicon::OutlinedBookOpen)
                     ->schema([
                         Textarea::make('behavioral_notes')
-                            ->label('Note comportamentali')
+                            ->hiddenLabel()
                             ->maxLength(2000)
                             ->columnSpanFull(),
+                    ]),
 
+                Section::make('Note sanitarie')
+                    ->icon(Heroicon::OutlinedBookOpen)
+                    ->schema([
                         Textarea::make('health_notes')
-                            ->label('Note sanitarie')
+                            ->hiddenLabel()
                             ->maxLength(2000)
                             ->columnSpanFull(),
                     ]),

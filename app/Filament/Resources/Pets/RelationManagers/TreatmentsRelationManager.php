@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Filament\Resources\Pets\RelationManagers;
 
 use App\Filament\Resources\Treatments\TreatmentResource;
+use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
 use Filament\Resources\RelationManagers\RelationManager;
@@ -15,9 +16,13 @@ use Filament\Tables\Table;
 
 class TreatmentsRelationManager extends RelationManager
 {
+    protected static string|BackedEnum|null $icon = Heroicon::OutlinedFolderOpen;
+
     protected static ?string $pluralModelLabel = 'Trattamenti';
 
     protected static string $relationship = 'treatments';
+
+    protected static ?string $title = 'Trattamenti';
 
     public function table(Table $table): Table
     {

@@ -44,7 +44,7 @@ class CustomerInfolist
 
                         Section::make('Note')
                             ->collapsed()
-                            ->icon(Heroicon::OutlinedClipboardDocumentList)
+                            ->icon(Heroicon::OutlinedBookOpen)
                             ->schema([
                                 TextEntry::make('notes')
                                     ->hiddenLabel()
