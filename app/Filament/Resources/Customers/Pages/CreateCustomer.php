@@ -18,7 +18,6 @@ class CreateCustomer extends CreateRecord
             $data['address'] = (string) new AddressInfo(...$data['address']);
         }
 
-        $data['gdpr_policy_sent_at'] = now();
         $data['marketing_consent_at'] = data_get($data, 'marketing_consent', false) ? now() : null;
 
         unset($data['marketing_consent']);

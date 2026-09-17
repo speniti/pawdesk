@@ -8,6 +8,7 @@ use App\Filament\Pages\Auth\Login;
 use App\Filament\Pages\Auth\MagicLinkConfirmation;
 use App\Filament\Pages\Auth\Profile;
 use App\Filament\Pages\Auth\RegisterFirstAdmin;
+use App\Filament\Pages\PublicArea\PrivacyPolicy;
 use App\Filament\Pages\Tenancy\EditTenantSettings;
 use App\Filament\Pages\Tenancy\RegisterTenant;
 use App\Models\Tenant;
@@ -32,6 +33,7 @@ class PawDeskProvider extends PanelProvider
         return $panel
             ->id('pawdesk')
             ->default()
+            ->viteTheme('resources/css/filament/pawdesk/theme.css')
             ->login(Login::class)
             ->registration(RegisterFirstAdmin::class)
             ->profile(Profile::class)
@@ -43,9 +45,13 @@ class PawDeskProvider extends PanelProvider
             ->tenantRegistration(RegisterTenant::class)
             ->tenantProfile(EditTenantSettings::class)
             ->routes(function (Panel $panel) {
-                return Route::get('/auth/magic-link/{token}', MagicLinkConfirmation::class)
-                    ->name('auth.magic-link.verify')
-                    ->middleware('throttle:10,1');
+                return [
+                    Route::get('/auth/magic-link/{token}', MagicLinkConfirmation::class)
+                        ->name('auth.magic-link.verify')
+                        ->middleware('throttle:10,1'),
+                    Route::get('/{tenant:slug}/privacy-policy', PrivacyPolicy::class)
+                        ->name('privacy-policy'),
+                ];
             })
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\Filament\Pages')

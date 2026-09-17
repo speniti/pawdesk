@@ -88,6 +88,40 @@ class TenantSettingsForm
                     ->collapsible()
                     ->collapsed(),
 
+                Section::make('Dati del titolare del trattamento')
+                    ->description('Questi dati compaiono nell\'informativa sulla privacy inviata ai clienti, come richiesto dall\'art. 13 del Regolamento UE 2016/679 (GDPR).')
+                    ->aside()
+                    ->schema([
+                        TextInput::make('settings.privacy_business_name')
+                            ->label('Ragione sociale')
+                            ->maxLength(255),
+
+                        TextInput::make('settings.privacy_owner_name')
+                            ->label('Titolare / Legale rappresentativo')
+                            ->maxLength(255),
+
+                        TextInput::make('settings.privacy_vat_number')
+                            ->label('Partita IVA')
+                            ->maxLength(20),
+
+                        TextInput::make('settings.privacy_business_address')
+                            ->label('Sede legale')
+                            ->maxLength(255),
+
+                        TextInput::make('settings.privacy_contact_email')
+                            ->label('Email contatto privacy')
+                            ->email()
+                            ->maxLength(255),
+
+                        TextInput::make('settings.privacy_contact_phone')
+                            ->label('Telefono')
+                            ->tel()
+                            ->maxLength(30),
+                    ])
+                    ->columns(1)
+                    ->collapsible()
+                    ->collapsed(),
+
                 Section::make('SMS (Vonage)')
                     ->description('Configura le credenziali per l\'invio di SMS tramite Vonage.')
                     ->aside()

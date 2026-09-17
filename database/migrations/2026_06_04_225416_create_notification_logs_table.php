@@ -19,7 +19,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('tenant_id')->constrained()->cascadeOnDelete();
             $table->foreignId('customer_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('appointment_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('appointment_id')->nullable()->constrained()->cascadeOnDelete();
             $table->string('type');
             $table->string('channel');
             $table->string('status')->default('pending');

@@ -5,7 +5,7 @@ import tailwindcss from '@tailwindcss/vite';
 export default defineConfig(({ command }) => ({
     plugins: [
         laravel({
-            input: ['resources/css/app.css'],
+            input: ['resources/css/app.css', 'resources/css/filament/pawdesk/theme.css'],
             refresh: true,
         }),
         tailwindcss(),
