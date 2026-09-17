@@ -8,28 +8,19 @@ use App\Models\Customer;
 use App\Notifications\AppointmentCancelledNotification;
 use App\Notifications\AppointmentCompletedNotification;
 use App\Notifications\AppointmentConfirmedNotification;
-use App\Notifications\AppointmentRequestedNotification;
 use Illuminate\Support\Facades\Notification;
 
 beforeEach(function () {
     Notification::fake();
 });
 
-test('created dispatches AppointmentRequestedNotification', function () {
+test('creation sends no notification', function () {
     $customer = Customer::factory()->create();
     $appointment = Appointment::factory()->create([
         'customer_id' => $customer->id,
-        'tenant_id' => $customer->tenant_id,
     ]);
 
-    Notification::assertSentTo(
-        $customer,
-        AppointmentRequestedNotification::class,
-        function (AppointmentRequestedNotification $notification) use ($appointment) {
-            return $notification->notificationType() === 'appointment_requested'
-                && $notification->getAppointment()->id === $appointment->id;
-        },
-    );
+    Notification::assertNothingSent();
 });
 
 test('status change to Confirmed sends AppointmentConfirmedNotification', function () {
