@@ -13,11 +13,11 @@ interface TenantNotification
 {
     public function createLog(Customer $customer): NotificationLog;
 
-    public function toMail(object $notifiable): MailMessage;
-
     public function latestPendingLog(Customer $customer, string $channel): ?NotificationLog;
 
     public function notificationType(): string;
 
     public function tenant(): Tenant;
+
+    public function toMail(object $notifiable): MailMessage;
 }
