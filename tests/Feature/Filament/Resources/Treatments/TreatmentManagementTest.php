@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Filament\Resources\Treatments\Pages\EditTreatment;
 use App\Filament\Resources\Treatments\Pages\ListTreatments;
+use App\Filament\Resources\Treatments\Pages\ViewTreatment;
 use App\Filament\Resources\Treatments\TreatmentResource;
 use App\Models\Appointment;
 use App\Models\Tenant;
@@ -56,7 +57,7 @@ test('edit treatment page saves notes, products, duration, price and visibility'
         ->fillForm([
             'actual_duration_minutes' => 75,
             'final_price' => 25.50,
-            'visible_to_customer' => false,
+            'visible_to_customer' => 0,
             'notes' => 'Note di test',
             'products_used' => 'Shampoo medicato',
         ])
@@ -69,6 +70,26 @@ test('edit treatment page saves notes, products, duration, price and visibility'
         ->visible_to_customer->toBeFalse()
         ->notes->toBe('Note di test')
         ->products_used->toBe('Shampoo medicato');
+});
+
+test('view treatment page shows products used as bulleted list', function () {
+    $this->treatment->update(['products_used' => "Shampoo medicato\nBalsamo\nPiega"]);
+
+    bootFilamentPanelAs($this->admin, $this->tenant);
+
+    Livewire::test(ViewTreatment::class, ['record' => $this->treatment->id])
+        ->assertOk()
+        ->assertSeeTextInOrder(['Shampoo medicato', 'Balsamo', 'Piega']);
+});
+
+test('view treatment page shows placeholder when no products used', function () {
+    $this->treatment->update(['products_used' => null]);
+
+    bootFilamentPanelAs($this->admin, $this->tenant);
+
+    Livewire::test(ViewTreatment::class, ['record' => $this->treatment->id])
+        ->assertOk()
+        ->assertSeeText('Nessun prodotto');
 });
 
 test('manual treatment creation is not possible', function () {

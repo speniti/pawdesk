@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Filament\Resources\Customers\RelationManagers;
 
 use App\Filament\Resources\Pets\PetResource;
+use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
 use Filament\Resources\RelationManagers\RelationManager;
@@ -14,7 +15,13 @@ use Filament\Tables\Table;
 
 class PetsRelationManager extends RelationManager
 {
+    protected static string|BackedEnum|null $icon = Heroicon::OutlinedHeart;
+
+    protected static ?string $pluralModelLabel = 'Pets';
+
     protected static string $relationship = 'pets';
+
+    protected static ?string $title = 'Pets';
 
     public function table(Table $table): Table
     {
@@ -57,7 +64,10 @@ class PetsRelationManager extends RelationManager
                         ->icon(Heroicon::OutlinedPencilSquare)
                         ->url(fn ($record): string => PetResource::getUrl('edit', ['record' => $record])),
                 ]),
-            ]);
+            ])
+            ->emptyStateHeading('Nessun animale associato')
+            ->emptyStateDescription('Questo cliente non ha ancora animali registrati.')
+            ->emptyStateIcon(PetResource::getNavigationIcon());
     }
 
     protected function headerActions(): array

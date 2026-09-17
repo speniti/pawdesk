@@ -17,7 +17,16 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property string|null $primary_color
  * @property array<string, array<array{open: string, close: string}>> $opening_hours
  * @property array $notification_settings
- * @property array{slot_duration_minutes?: int} $settings
+ * @property array{
+ *     slot_duration_minutes?: int,
+ *     buffer_minutes?: int,
+ *     privacy_business_name?: string,
+ *     privacy_owner_name?: string,
+ *     privacy_vat_number?: string,
+ *     privacy_business_address?: string,
+ *     privacy_contact_email?: string,
+ *     privacy_contact_phone?: string,
+ * } $settings
  */
 #[Fillable(['name', 'slug', 'primary_color', 'opening_hours', 'notification_settings', 'settings'])]
 class Tenant extends Model
@@ -89,6 +98,41 @@ class Tenant extends Model
     public function pets(): HasMany
     {
         return $this->hasMany(Pet::class);
+    }
+
+    public function privacyBusinessAddress(): ?string
+    {
+        return $this->settings['privacy_business_address'] ?? null;
+    }
+
+    /**
+     * Data of the data controller (art. 4 GDPR) shown in the privacy notice.
+     * The business name and contact email fall back to the salon name and the
+     * mail from address so the notice works before the fields are filled in.
+     */
+    public function privacyBusinessName(): string
+    {
+        return $this->settings['privacy_business_name'] ?? $this->name;
+    }
+
+    public function privacyContactEmail(): ?string
+    {
+        return $this->settings['privacy_contact_email'] ?? $this->mailFromAddress();
+    }
+
+    public function privacyContactPhone(): ?string
+    {
+        return $this->settings['privacy_contact_phone'] ?? null;
+    }
+
+    public function privacyOwnerName(): ?string
+    {
+        return $this->settings['privacy_owner_name'] ?? null;
+    }
+
+    public function privacyVatNumber(): ?string
+    {
+        return $this->settings['privacy_vat_number'] ?? null;
     }
 
     public function services(): HasMany

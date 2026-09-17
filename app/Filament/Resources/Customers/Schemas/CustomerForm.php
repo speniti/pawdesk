@@ -68,7 +68,7 @@ class CustomerForm
 
                 Section::make('Note')
                     ->collapsed()
-                    ->icon(Heroicon::OutlinedClipboardDocumentList)
+                    ->icon(Heroicon::OutlinedBookOpen)
                     ->schema([
                         Textarea::make('notes')
                             ->hiddenLabel(),

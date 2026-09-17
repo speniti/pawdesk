@@ -10,7 +10,6 @@ use App\Models\Customer;
 use App\Models\Pet;
 use App\Models\Service;
 use App\Models\Tenant;
-use App\Models\Treatment;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Collection;
@@ -50,18 +49,19 @@ class AppointmentSeeder extends Seeder
             $customer = $customers[$i];
             $pet = $pets->first(fn (Pet $p): bool => $p->customer_id === $customer->id) ?? $pets[$i];
 
+            // Completing happens after the services pivot is attached, so the
+            // TreatmentGenerationObserver generates the treatment with real totals.
             $appointment = Appointment::create([
                 'tenant_id' => $tenant->id,
                 'customer_id' => $customer->id,
                 'pet_id' => $pet->id,
                 'user_id' => $staff->id,
-                'status' => $status->value,
+                'status' => $status === AppointmentStatus::Completed
+                    ? AppointmentStatus::Confirmed->value
+                    : $status->value,
                 'start_time' => $start,
                 'end_time' => $end,
             ]);
-
-            $totalPrice = 0;
-            $totalDuration = 0;
 
             foreach ($serviceMap[$i] as $serviceKey) {
                 $service = $services[$serviceKey];
@@ -73,16 +73,10 @@ class AppointmentSeeder extends Seeder
                     'applied_price' => $price,
                     'duration_minutes' => $service->duration_minutes,
                 ]);
-
-                $totalPrice += $price;
-                $totalDuration += $service->duration_minutes;
             }
 
             if ($status === AppointmentStatus::Completed) {
-                Treatment::factory()->forAppointment($appointment)->create([
-                    'final_price' => $totalPrice,
-                    'actual_duration_minutes' => $totalDuration,
-                ]);
+                $appointment->update(['status' => AppointmentStatus::Completed]);
             }
         }
     }

@@ -35,7 +35,7 @@ test('admin can create a customer', function () {
     expect($customer)->not->toBeNull()
         ->and($customer->first_name)->toBe('Mario')
         ->and($customer->last_name)->toBe('Rossi')
-        ->and($customer->gdpr_policy_sent_at)->not->toBeNull();
+        ->and($customer->gdpr_policy_sent_at)->toBeNull();
 });
 
 test('admin can update a customer', function () {

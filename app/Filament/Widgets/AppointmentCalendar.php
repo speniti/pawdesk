@@ -142,10 +142,10 @@ class AppointmentCalendar extends Calendar
                 ->extraModalFooterActions(function () {
                     $deleteAction = Arr::get($this->cachedActions, 'delete');
 
-                    return [
+                    return array_filter([
                         $deleteAction?->extraAttributes(['class' => 'ml-auto order-last']),
                         ...$this->getTransitionActions(),
-                    ];
+                    ]);
                 }),
 
             ViewAction::make()
@@ -154,10 +154,10 @@ class AppointmentCalendar extends Calendar
                 ->extraModalFooterActions(function () {
                     $editAction = Arr::get($this->cachedActions, 'edit');
 
-                    return [
+                    return array_filter([
                         $editAction,
                         ...$this->getTransitionActions(),
-                    ];
+                    ]);
                 }),
         ];
     }

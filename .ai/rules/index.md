@@ -4,4 +4,8 @@ Before planning or editing, find the row whose globs match the file's path and r
 
 | Applies to | Rule file |
 | --- | --- |
+| app/Filament/**/*.php | .ai/rules/filament.md |
 | * | .ai/rules/general.md |
+| app/Filament/**/RelationManagers/*.php | .ai/rules/relation-managers.md |
+| app/Filament/Resources/**/Tables/*.php | .ai/rules/tables.md |
+| resources/views/** | .ai/rules/views.md |

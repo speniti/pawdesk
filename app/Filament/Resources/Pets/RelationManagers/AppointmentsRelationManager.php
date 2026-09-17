@@ -4,13 +4,21 @@ declare(strict_types=1);
 
 namespace App\Filament\Resources\Pets\RelationManagers;
 
+use BackedEnum;
 use Filament\Resources\RelationManagers\RelationManager;
+use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 
 class AppointmentsRelationManager extends RelationManager
 {
+    protected static string|BackedEnum|null $icon = Heroicon::OutlinedCalendarDays;
+
+    protected static ?string $pluralModelLabel = 'Appuntamenti';
+
     protected static string $relationship = 'appointments';
+
+    protected static ?string $title = 'Appuntamenti';
 
     public function table(Table $table): Table
     {

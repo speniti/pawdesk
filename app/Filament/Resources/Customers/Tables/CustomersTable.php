@@ -4,10 +4,13 @@ declare(strict_types=1);
 
 namespace App\Filament\Resources\Customers\Tables;
 
+use App\Filament\Resources\Customers\CustomerResource;
+use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
+use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\SelectFilter;
@@ -64,11 +67,17 @@ class CustomersTable
                     ->query(fn (Builder $query): Builder => $query->whereDoesntHave('appointments')),
             ])
             ->recordActions([
-                ViewAction::make(),
-                EditAction::make(),
+                ActionGroup::make([
+                    ViewAction::make(),
+                    EditAction::make(),
+                ])
+                    ->icon(Heroicon::OutlinedEllipsisVertical),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([DeleteBulkAction::make()]),
-            ]);
+            ])
+            ->emptyStateHeading('Nessun cliente trovato')
+            ->emptyStateDescription('Prova a rimuovere i filtri oppure creane uno nuovo.')
+            ->emptyStateIcon(CustomerResource::getNavigationIcon());
     }
 }

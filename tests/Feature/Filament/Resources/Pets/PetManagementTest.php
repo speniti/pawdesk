@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Filament\Resources\Pets\Pages\CreatePet;
 use App\Filament\Resources\Pets\Pages\EditPet;
+use App\Filament\Resources\Pets\Pages\ListPets;
 use App\Models\Customer;
 use App\Models\Pet;
 use App\Models\Tenant;
@@ -99,3 +100,32 @@ test('pet form requires field', function (string $field) {
         ->call('create')
         ->assertHasFormErrors([$field]);
 })->with(['name', 'species', 'size', 'customer_id']);
+
+test('pets can be searched by owner name', function () {
+    $customer = Customer::factory()->create([
+        'tenant_id' => $this->tenant->id,
+        'first_name' => 'Mario',
+        'last_name' => 'Rossi',
+    ]);
+    $pet = Pet::factory()->create([
+        'customer_id' => $customer->id,
+        'tenant_id' => $this->tenant->id,
+    ]);
+
+    $otherCustomer = Customer::factory()->create([
+        'tenant_id' => $this->tenant->id,
+        'first_name' => 'Luca',
+        'last_name' => 'Bianchi',
+    ]);
+    $otherPet = Pet::factory()->create([
+        'customer_id' => $otherCustomer->id,
+        'tenant_id' => $this->tenant->id,
+    ]);
+
+    bootFilamentPanelAs($this->admin, $this->tenant);
+
+    Livewire::test(ListPets::class)
+        ->searchTable('Mario')
+        ->assertCanSeeTableRecords([$pet])
+        ->assertCanNotSeeTableRecords([$otherPet]);
+});

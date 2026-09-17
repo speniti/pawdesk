@@ -12,27 +12,32 @@ use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
-use Filament\Forms\Components\Toggle;
+use Filament\Forms\Components\ToggleButtons;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
+use Filament\Support\Icons\Heroicon;
 
 class ServiceForm
 {
     public static function configure(Schema $schema): Schema
     {
         return $schema
+            ->columns(1)
             ->components([
                 Section::make('Informazioni generali')
+                    ->icon(Heroicon::OutlinedClipboardDocumentList)
                     ->schema([
                         TextInput::make('name')
                             ->label('Nome')
                             ->required()
-                            ->maxLength(255),
+                            ->maxLength(255)
+                            ->columnSpanFull(),
 
                         Textarea::make('description')
                             ->label('Descrizione')
                             ->maxLength(1000)
-                            ->rows(3),
+                            ->rows(3)
+                            ->columnSpanFull(),
 
                         Select::make('category')
                             ->label('Categoria')
@@ -67,22 +72,21 @@ class ServiceForm
                             ->default(ServiceStatus::Active)
                             ->required()
                             ->live(),
-                    ])
-                    ->columns(2),
 
-                Section::make('Opzioni')
-                    ->schema([
-                        Toggle::make('combinable')
+                        ToggleButtons::make('combinable')
                             ->label('Combinabile con altri servizi')
+                            ->boolean()
+                            ->grouped()
                             ->default(true),
                     ])
-                    ->columns(1),
+                    ->columns(3),
 
                 Section::make('Prezzi per taglia')
+                    ->icon(Heroicon::OutlinedBanknotes)
                     ->description('Definisci prezzi specifici per ogni taglia. Se non specificato, verrà utilizzato il prezzo base.')
                     ->schema([
                         Repeater::make('size_prices')
-                            ->label('')
+                            ->hiddenLabel()
                             ->schema([
                                 Select::make('size')
                                     ->label('Taglia')
@@ -101,8 +105,13 @@ class ServiceForm
                                     ->suffix('€'),
                             ])
                             ->columns(2)
-                            ->collapsed()
-                            ->itemLabel(fn (array $state): ?string => isset($state['size']) && $state['size'] instanceof Size ? $state['size']->getLabel() : ($state['size'] ?? null)),
+                            ->defaultItems(0)
+                            ->addActionLabel('Aggiungi un prezzo per taglia')
+                            ->itemLabel(function (array $state): ?string {
+                                return isset($state['size']) && $state['size'] instanceof Size
+                                        ? $state['size']->getLabel()
+                                        : ($state['size'] ?? null);
+                            }),
                     ])
                     ->columns(1),
             ]);

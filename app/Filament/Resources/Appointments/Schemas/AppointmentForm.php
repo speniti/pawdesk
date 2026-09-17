@@ -19,6 +19,7 @@ use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
+use Filament\Support\Icons\Heroicon;
 use Illuminate\Support\Carbon;
 
 class AppointmentForm
@@ -31,6 +32,7 @@ class AppointmentForm
         return $schema
             ->components([
                 Section::make('Cliente e Animale')
+                    ->icon(Heroicon::OutlinedHeart)
                     ->schema([
                         Select::make('customer_id')
                             ->label('Cliente')
@@ -59,10 +61,10 @@ class AppointmentForm
                             ->searchable()
                             ->nullable()
                             ->preload(),
-                    ])
-                    ->columns(3),
+                    ]),
 
                 Section::make('Data e Ora')
+                    ->icon(Heroicon::OutlinedClock)
                     ->schema([
                         DateTimePicker::make('start_time')
                             ->label('Inizio')
@@ -82,6 +84,7 @@ class AppointmentForm
                     ->columns(2),
 
                 Section::make('Dettagli')
+                    ->icon(Heroicon::OutlinedClipboardDocumentList)
                     ->schema([
                         Select::make('status')
                             ->label('Stato')
@@ -138,8 +141,7 @@ class AppointmentForm
                             ->maxLength(1000)
                             ->rows(3)
                             ->columnSpanFull(),
-                    ])
-                    ->columns(2),
+                    ]),
             ]);
     }
 

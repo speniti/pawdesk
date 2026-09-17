@@ -9,17 +9,11 @@ use App\Models\Appointment;
 use App\Notifications\AppointmentCancelledNotification;
 use App\Notifications\AppointmentCompletedNotification;
 use App\Notifications\AppointmentConfirmedNotification;
-use App\Notifications\AppointmentRequestedNotification;
 use App\Notifications\BaseAppointmentNotification;
 use Illuminate\Contracts\Events\ShouldHandleEventsAfterCommit;
 
 class AppointmentObserver implements ShouldHandleEventsAfterCommit
 {
-    public function created(Appointment $appointment): void
-    {
-        $this->dispatch(new AppointmentRequestedNotification($appointment), $appointment);
-    }
-
     public function updated(Appointment $appointment): void
     {
         if (! $appointment->wasChanged('status')) {

@@ -12,6 +12,7 @@ use App\Filament\Resources\Treatments\Schemas\TreatmentInfolist;
 use App\Filament\Resources\Treatments\Tables\TreatmentsTable;
 use App\Models\Treatment;
 use BackedEnum;
+use Filament\Pages\Enums\SubNavigationPosition;
 use Filament\Resources\Pages\Page;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
@@ -26,11 +27,13 @@ class TreatmentResource extends Resource
 
     protected static ?string $modelLabel = 'Trattamento';
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedClipboardDocumentList;
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedFolderOpen;
 
     protected static ?int $navigationSort = 35;
 
     protected static ?string $pluralModelLabel = 'Trattamenti';
+
+    protected static ?SubNavigationPosition $subNavigationPosition = SubNavigationPosition::Top;
 
     public static function form(Schema $schema): Schema
     {

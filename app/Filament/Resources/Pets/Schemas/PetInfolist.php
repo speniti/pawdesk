@@ -22,23 +22,9 @@ class PetInfolist
                 Grid::make(1)
                     ->columnSpan(2)
                     ->schema([
-                        Section::make('Dati anagrafici')
-                            ->columns(2)
-                            ->icon(Heroicon::OutlinedHeart)
-                            ->schema([
-                                TextEntry::make('breed')
-                                    ->label('Razza')
-                                    ->placeholder('Non specificata'),
-
-                                TextEntry::make('date_of_birth')
-                                    ->label('Data di nascita')
-                                    ->date('d/m/Y')
-                                    ->placeholder('Non specificata'),
-                            ]),
-
                         Section::make('Note comportamentali')
                             ->collapsed(false)
-                            ->icon(Heroicon::OutlinedClipboardDocumentList)
+                            ->icon(Heroicon::OutlinedBookOpen)
                             ->schema([
                                 TextEntry::make('behavioral_notes')
                                     ->hiddenLabel()
@@ -48,7 +34,7 @@ class PetInfolist
 
                         Section::make('Note sanitarie')
                             ->collapsed(false)
-                            ->icon(Heroicon::OutlinedClipboardDocumentList)
+                            ->icon(Heroicon::OutlinedBookOpen)
                             ->schema([
                                 TextEntry::make('health_notes')
                                     ->hiddenLabel()
@@ -59,12 +45,18 @@ class PetInfolist
 
                 Grid::make(1)
                     ->schema([
-                        Section::make('Proprietario')
-                            ->icon(Heroicon::OutlinedUserCircle)
+                        Section::make('Dati anagrafici')
+                            ->icon(Heroicon::OutlinedHeart)
+                            ->inlineLabel()
                             ->schema([
+                                TextEntry::make('date_of_birth')
+                                    ->label('Data di nascita')
+                                    ->alignEnd()
+                                    ->date('d/m/Y')
+                                    ->placeholder('Non specificata'),
+
                                 TextEntry::make('customer.full_name')
                                     ->label('Proprietario')
-                                    ->inlineLabel()
                                     ->alignEnd()
                                     ->url(fn (Pet $record): string => CustomerResource::getUrl('view', ['record' => $record->customer_id])),
                             ]),
@@ -77,6 +69,11 @@ class PetInfolist
                                     ->label('Specie')
                                     ->alignEnd()
                                     ->badge(),
+
+                                TextEntry::make('breed')
+                                    ->label('Razza')
+                                    ->alignEnd()
+                                    ->placeholder('Non specificata'),
 
                                 TextEntry::make('sex')
                                     ->label('Sesso')

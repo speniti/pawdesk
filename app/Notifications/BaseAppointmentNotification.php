@@ -8,8 +8,10 @@ use App\Enums\PreferredChannel;
 use App\Models\Appointment;
 use App\Models\Customer;
 use App\Models\NotificationLog;
+use App\Models\Tenant;
 use App\Notifications\Channels\TenantMailChannel;
 use App\Notifications\Channels\TenantVonageChannel;
+use App\Notifications\Contracts\TenantNotification;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
@@ -17,7 +19,7 @@ use Illuminate\Notifications\Messages\VonageMessage;
 use Illuminate\Notifications\Notification;
 use Throwable;
 
-abstract class BaseAppointmentNotification extends Notification implements ShouldQueue
+abstract class BaseAppointmentNotification extends Notification implements ShouldQueue, TenantNotification
 {
     use Queueable;
 
@@ -94,6 +96,20 @@ abstract class BaseAppointmentNotification extends Notification implements Shoul
     public function getAppointment(): Appointment
     {
         return $this->appointment;
+    }
+
+    public function latestPendingLog(Customer $customer, string $channel): ?NotificationLog
+    {
+        return NotificationLog::latestPending(
+            $this->appointment->id,
+            $this->notificationType(),
+            $channel,
+        );
+    }
+
+    public function tenant(): Tenant
+    {
+        return $this->appointment->loadMissing('tenant')->tenant;
     }
 
     public function toVonage(object $notifiable): VonageMessage

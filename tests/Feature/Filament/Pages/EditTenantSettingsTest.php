@@ -53,6 +53,12 @@ describe('form rendering', function () {
                 'settings' => [
                     'slot_duration_minutes' => 30,
                     'buffer_minutes' => 15,
+                    'privacy_business_name' => null,
+                    'privacy_owner_name' => null,
+                    'privacy_vat_number' => null,
+                    'privacy_business_address' => null,
+                    'privacy_contact_email' => null,
+                    'privacy_contact_phone' => null,
                 ],
             ]);
     });
@@ -261,5 +267,34 @@ describe('saving notification credentials', function () {
             ])
             ->call('save')
             ->assertHasFormErrors(['notification_settings.vonage_sms_sender_id']);
+    });
+});
+
+describe('saving privacy owner data', function () {
+    test('can save the data controller details', function () {
+        bootFilamentPanelAs($this->admin, $this->tenant);
+
+        Livewire::test(EditTenantSettings::class)
+            ->fillForm([
+                'settings' => [
+                    'privacy_business_name' => 'Ace S.r.l.',
+                    'privacy_owner_name' => 'Mario Rossi',
+                    'privacy_vat_number' => 'IT01234567890',
+                    'privacy_business_address' => 'Via Roma 1, 00100 Roma (RM)',
+                    'privacy_contact_email' => 'privacy@saloneace.it',
+                    'privacy_contact_phone' => '+39021234567',
+                ],
+            ])
+            ->call('save')
+            ->assertNotified();
+
+        $this->tenant->refresh();
+
+        expect($this->tenant->settings['privacy_business_name'])->toBe('Ace S.r.l.')
+            ->and($this->tenant->settings['privacy_owner_name'])->toBe('Mario Rossi')
+            ->and($this->tenant->settings['privacy_vat_number'])->toBe('IT01234567890')
+            ->and($this->tenant->settings['privacy_business_address'])->toBe('Via Roma 1, 00100 Roma (RM)')
+            ->and($this->tenant->settings['privacy_contact_email'])->toBe('privacy@saloneace.it')
+            ->and($this->tenant->settings['privacy_contact_phone'])->toBe('+39021234567');
     });
 });

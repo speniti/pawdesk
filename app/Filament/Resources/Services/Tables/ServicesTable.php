@@ -7,10 +7,13 @@ namespace App\Filament\Resources\Services\Tables;
 use App\Enums\Coat;
 use App\Enums\ServiceCategory;
 use App\Enums\ServiceStatus;
+use App\Filament\Resources\Services\ServiceResource;
+use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
+use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
@@ -60,12 +63,6 @@ class ServicesTable
                     ->label('Stato')
                     ->badge()
                     ->color(fn (ServiceStatus $state): string => $state->getColor()),
-
-                TextColumn::make('created_at')
-                    ->label('Creato il')
-                    ->dateTime('d/m/Y H:i')
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->defaultSort('category', 'asc')
             ->filters([
@@ -84,11 +81,17 @@ class ServicesTable
                     ->default(ServiceStatus::Active),
             ])
             ->recordActions([
-                ViewAction::make(),
-                EditAction::make(),
+                ActionGroup::make([
+                    ViewAction::make(),
+                    EditAction::make(),
+                ])
+                    ->icon(Heroicon::OutlinedEllipsisVertical),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([DeleteBulkAction::make()]),
-            ]);
+            ])
+            ->emptyStateHeading('Nessun servizio trovato')
+            ->emptyStateDescription('Prova a rimuovere i filtri oppure creane uno nuovo.')
+            ->emptyStateIcon(ServiceResource::getNavigationIcon());
     }
 }

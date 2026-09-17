@@ -13,7 +13,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 /**
  * @property int $tenant_id
  * @property int $customer_id
- * @property int $appointment_id
+ * @property int|null $appointment_id
  * @property string $type
  * @property string $channel
  * @property NotificationStatus $status
@@ -36,6 +36,21 @@ class NotificationLog extends Model
     {
         return self::query()
             ->forAppointment($appointmentId)
+            ->where('type', $type)
+            ->where('channel', $channel)
+            ->pending()
+            ->latest()
+            ->first();
+    }
+
+    /**
+     * The most recent pending log for a customer notification of the given
+     * type and channel (notifications not tied to an appointment).
+     */
+    public static function latestPendingForCustomer(int $customerId, string $type, string $channel): ?self
+    {
+        return self::query()
+            ->where('customer_id', $customerId)
             ->where('type', $type)
             ->where('channel', $channel)
             ->pending()
