@@ -6,19 +6,7 @@ RUN install-php-extensions intl
 
 USER www-data
 
-FROM node:lts-alpine AS node
-
-WORKDIR /app
-
-COPY package.json package-lock.json ./
-RUN npm ci
-
-COPY *.config.ts ./
-COPY resources/ resources/
-
-RUN npm run build
-
-FROM dev AS production
+FROM dev AS php-deps
 
 USER root
 
@@ -31,6 +19,28 @@ RUN composer install \
     --no-dev \
     --optimize-autoloader \
     && composer clear-cache
+
+FROM node:lts-alpine AS node
+
+WORKDIR /app
+
+COPY package.json package-lock.json ./
+RUN npm ci
+
+COPY *.config.ts ./
+COPY resources/ resources/
+COPY app/ app/
+
+# The Filament panel theme imports the base theme and scans views from vendor
+COPY --from=php-deps /var/www/html/vendor/ vendor/
+
+RUN npm run build
+
+FROM dev AS production
+
+USER root
+
+COPY --from=php-deps /var/www/html/vendor/ vendor/
 
 COPY . .
 
