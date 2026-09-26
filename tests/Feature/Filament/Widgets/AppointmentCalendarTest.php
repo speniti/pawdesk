@@ -329,8 +329,8 @@ test('creating appointment syncs services with pivot data', function () {
         'tenant_id' => $this->tenant->id,
         'base_price' => 5000,
         'duration_minutes' => 60,
-        'size_prices' => [
-            ['size' => 'small', 'price' => 3500],
+        'variations' => [
+            ['size' => 'small', 'coat' => 'short', 'price' => 3500, 'duration_minutes' => 75],
         ],
     ]);
 
@@ -352,18 +352,18 @@ test('creating appointment syncs services with pivot data', function () {
     $pivot = $appointment->services()->first()->pivot;
 
     expect($pivot->applied_price)->toBe(3500)
-        ->and($pivot->duration_minutes)->toBe(60);
+        ->and($pivot->duration_minutes)->toBe(75);
 });
 
-test('pivot uses base_price when no size override', function () {
+test('pivot uses base price and duration when no combination matches', function () {
     $customer = Customer::factory()->create(['tenant_id' => $this->tenant->id]);
     $pet = Pet::factory()->create(['customer_id' => $customer->id, 'tenant_id' => $this->tenant->id, 'size' => Size::Large]);
     $service = Service::factory()->create([
         'tenant_id' => $this->tenant->id,
         'base_price' => 5000,
         'duration_minutes' => 45,
-        'size_prices' => [
-            ['size' => 'small', 'price' => 3500],
+        'variations' => [
+            ['size' => 'large', 'coat' => 'long', 'price' => 3500, 'duration_minutes' => 90],
         ],
     ]);
 
@@ -438,7 +438,7 @@ test('edit completing the appointment generates treatment totals from the new se
     $appointment->services()->sync(
         AppointmentPriceCalculator::buildPivotData(
             Service::where('id', $oldService->id)->get(),
-            $pet->size,
+            $pet,
         ),
     );
 

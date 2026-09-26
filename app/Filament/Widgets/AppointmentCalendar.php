@@ -7,6 +7,7 @@ namespace App\Filament\Widgets;
 use App\Enums\AppointmentStatus;
 use App\Filament\Resources\Appointments\AppointmentResource;
 use App\Models\Appointment;
+use App\Models\Pet;
 use App\Models\Service;
 use App\Models\Tenant;
 use App\Services\AppointmentPriceCalculator;
@@ -124,16 +125,18 @@ class AppointmentCalendar extends Calendar
                     $serviceIds = $data['services'] ?? [];
                     unset($data['services']);
 
+                    $pet = isset($data['pet_id']) ? Pet::find($data['pet_id']) : $record->pet;
+
                     if (! empty($serviceIds) && isset($data['start_time'])) {
-                        $data['end_time'] = $this->calculateEndTime($data['start_time'], $serviceIds);
+                        $data['end_time'] = $this->calculateEndTime($data['start_time'], $serviceIds, $pet);
                     }
 
                     // Services are synced before the update so that, when the same
                     // edit completes the appointment, the generated treatment totals
                     // reflect the new pivot. One transaction keeps them atomic.
-                    DB::transaction(function () use ($data, $record, $serviceIds): void {
+                    DB::transaction(function () use ($data, $record, $serviceIds, $pet): void {
                         if ($serviceIds && $record instanceof Appointment) {
-                            $this->syncServicesWithPivotData($record, $serviceIds);
+                            $this->syncServicesWithPivotData($record, $serviceIds, $pet);
                         }
 
                         $record->update($data);
@@ -177,14 +180,16 @@ class AppointmentCalendar extends Calendar
         $serviceIds = $data['services'] ?? [];
         unset($data['services']);
 
+        $pet = isset($data['pet_id']) ? Pet::find($data['pet_id']) : null;
+
         if (! empty($serviceIds) && isset($data['start_time'])) {
-            $data['end_time'] = $this->calculateEndTime($data['start_time'], $serviceIds);
+            $data['end_time'] = $this->calculateEndTime($data['start_time'], $serviceIds, $pet);
         }
 
         $record = parent::save($data, $model);
 
         if ($record instanceof Appointment && $serviceIds) {
-            $this->syncServicesWithPivotData($record, $serviceIds);
+            $this->syncServicesWithPivotData($record, $serviceIds, $pet);
         }
 
         return $record;
@@ -198,11 +203,12 @@ class AppointmentCalendar extends Calendar
         ]);
     }
 
-    private function calculateEndTime(string $startTime, array $serviceIds): Carbon
+    private function calculateEndTime(string $startTime, array $serviceIds, ?Pet $pet): Carbon
     {
-        $totalMinutes = Service::whereIn('id', $serviceIds)->sum('duration_minutes');
+        $services = Service::whereIn('id', $serviceIds)->get();
+        $totalMinutes = AppointmentPriceCalculator::totalDuration($services, $pet);
 
-        return Carbon::parse($startTime)->addMinutes((int) $totalMinutes);
+        return Carbon::parse($startTime)->addMinutes($totalMinutes);
     }
 
     private function getStatusColor(AppointmentStatus $status): string
@@ -251,12 +257,12 @@ class AppointmentCalendar extends Calendar
         return ! in_array($status, [AppointmentStatus::Completed, AppointmentStatus::Cancelled, AppointmentStatus::NoShow], true);
     }
 
-    private function syncServicesWithPivotData(Appointment $appointment, array $serviceIds): void
+    private function syncServicesWithPivotData(Appointment $appointment, array $serviceIds, ?Pet $pet = null): void
     {
         $services = Service::whereIn('id', $serviceIds)->get();
-        $petSize = $appointment->pet?->size;
+        $pet ??= $appointment->pet;
 
-        $pivotData = AppointmentPriceCalculator::buildPivotData($services, $petSize);
+        $pivotData = AppointmentPriceCalculator::buildPivotData($services, $pet);
         $appointment->services()->sync($pivotData);
     }
 }

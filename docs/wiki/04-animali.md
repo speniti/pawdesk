@@ -16,7 +16,7 @@ Ogni animale è collegato a un cliente (proprietario). La **taglia** dell'animal
    - **Razza** — testo libero;
    - **Sesso** — Maschio, Femmina, Sconosciuto (predefinito);
    - **Taglia** — obbligatoria: Toy, Piccolo, Medio, Grande, Gigante;
-   - **Manto** — facoltativo: Corto, Pelo corto, Liscio, Piatto, Lungo, Piumato, Riccio, Spaniel, Doppio pelo, Primitivo.
+   - **Manto** — facoltativo: Corto, Liscio, Raso, Lungo, Riccio, Spaniel, Doppio pelo, Primitivo.
 4. **Note comportamentali** e **Note sanitarie** (fino a 2000 caratteri ciascuna): reazioni, morsichi, allergie, condizioni mediche. Sono il primo riferimento per lavorare in sicurezza.
 5. Premi **Crea**.
 

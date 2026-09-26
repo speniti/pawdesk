@@ -25,7 +25,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
     'base_price',
     'combinable',
     'status',
-    'size_prices',
+    'variations',
 ])]
 class Service extends Model
 {
@@ -35,7 +35,7 @@ class Service extends Model
     protected $attributes = [
         'combinable' => true,
         'status' => 'active',
-        'size_prices' => '{}',
+        'variations' => '[]',
     ];
 
     /**
@@ -64,7 +64,7 @@ class Service extends Model
             'coat' => Coat::class,
             'combinable' => 'boolean',
             'status' => ServiceStatus::class,
-            'size_prices' => 'array',
+            'variations' => 'array',
         ];
     }
 }

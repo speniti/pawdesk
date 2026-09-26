@@ -8,6 +8,7 @@ use App\Enums\Coat;
 use App\Enums\ServiceCategory;
 use App\Enums\ServiceStatus;
 use App\Enums\Size;
+use Closure;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
@@ -50,7 +51,7 @@ class ServiceForm
                             ->nullable(),
 
                         TextInput::make('duration_minutes')
-                            ->label('Durata (minuti)')
+                            ->label('Durata base (minuti)')
                             ->required()
                             ->numeric()
                             ->minValue(1)
@@ -81,19 +82,22 @@ class ServiceForm
                     ])
                     ->columns(3),
 
-                Section::make('Prezzi per taglia')
+                Section::make('Prezzi e durate per combinazione')
                     ->icon(Heroicon::OutlinedBanknotes)
-                    ->description('Definisci prezzi specifici per ogni taglia. Se non specificato, verrà utilizzato il prezzo base.')
+                    ->description('Prezzo e durata applicati solo con corrispondenza esatta di taglia e tipo di pelo. In tutti gli altri casi vengono usati prezzo base e durata base.')
                     ->schema([
-                        Repeater::make('size_prices')
+                        Repeater::make('variations')
                             ->hiddenLabel()
                             ->schema([
                                 Select::make('size')
                                     ->label('Taglia')
                                     ->options(Size::class)
-                                    ->required()
-                                    ->distinct()
-                                    ->disableOptionsWhenSelectedInSiblingRepeaterItems(),
+                                    ->required(),
+
+                                Select::make('coat')
+                                    ->label('Tipo di pelo')
+                                    ->options(Coat::class)
+                                    ->required(),
 
                                 TextInput::make('price')
                                     ->label('Prezzo (€)')
@@ -103,14 +107,44 @@ class ServiceForm
                                     ->formatStateUsing(fn ($state): ?float => $state ? $state / 100 : null)
                                     ->dehydrateStateUsing(fn ($state): ?int => $state !== null ? (int) round($state * 100) : null)
                                     ->suffix('€'),
+
+                                TextInput::make('duration_minutes')
+                                    ->label('Durata (minuti)')
+                                    ->required()
+                                    ->numeric()
+                                    ->minValue(1)
+                                    ->maxValue(480),
                             ])
-                            ->columns(2)
+                            ->columns(4)
                             ->defaultItems(0)
-                            ->addActionLabel('Aggiungi un prezzo per taglia')
+                            ->addActionLabel('Aggiungi una combinazione')
+                            ->rules([
+                                static fn (): Closure => static function (string $attribute, $value, Closure $fail): void {
+                                    $pairs = collect($value ?? [])
+                                        ->map(fn (array $item): string => implode('|', [
+                                            $item['size'] ?? '',
+                                            $item['coat'] ?? '',
+                                        ]))
+                                        ->filter(fn (string $pair): bool => $pair !== '|');
+
+                                    if ($pairs->duplicates()->isNotEmpty()) {
+                                        $fail('Alcune combinazioni taglia e tipo di pelo sono duplicate.');
+                                    }
+                                },
+                            ])
                             ->itemLabel(function (array $state): ?string {
-                                return isset($state['size']) && $state['size'] instanceof Size
-                                        ? $state['size']->getLabel()
-                                        : ($state['size'] ?? null);
+                                $size = $state['size'] instanceof Size
+                                    ? $state['size']->getLabel()
+                                    : ($state['size'] ?? null);
+                                $coat = $state['coat'] instanceof Coat
+                                    ? $state['coat']->getLabel()
+                                    : ($state['coat'] ?? null);
+
+                                if ($size === null && $coat === null) {
+                                    return null;
+                                }
+
+                                return collect([$size, $coat])->filter()->implode(' · ');
                             }),
                     ])
                     ->columns(1),
