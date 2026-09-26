@@ -125,7 +125,7 @@ class AppointmentCalendar extends Calendar
                     $serviceIds = $data['services'] ?? [];
                     unset($data['services']);
 
-                    $pet = isset($data['pet_id']) ? Pet::find($data['pet_id']) : $record->pet;
+                    $pet = isset($data['pet_id']) ? Pet::find($data['pet_id']) : ($record instanceof Appointment ? $record->pet : null);
 
                     if (! empty($serviceIds) && isset($data['start_time'])) {
                         $data['end_time'] = $this->calculateEndTime($data['start_time'], $serviceIds, $pet);
