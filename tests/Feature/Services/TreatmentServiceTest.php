@@ -10,7 +10,7 @@ use App\Services\TreatmentService;
 
 function attachServices(Appointment $appointment, Service ...$services): void
 {
-    $pivotData = AppointmentPriceCalculator::buildPivotData(collect($services), $appointment->pet?->size);
+    $pivotData = AppointmentPriceCalculator::buildPivotData(collect($services), $appointment->pet);
     $appointment->services()->sync($pivotData);
 }
 

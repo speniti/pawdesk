@@ -26,7 +26,7 @@ return new class extends Migration
             $table->unsignedInteger('base_price')->comment('Price in cents');
             $table->boolean('combinable')->default(true);
             $table->string('status')->default('active');
-            $table->json('size_prices')->default('{}');
+            $table->json('variations')->default('[]')->comment('[{size, coat, price, duration_minutes}]');
             $table->timestamp('created_at', precision: 0)->useCurrent();
             $table->timestamp('updated_at', precision: 0)->useCurrent();
 

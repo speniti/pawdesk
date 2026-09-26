@@ -45,7 +45,7 @@ class ServiceInfolist
                             ->placeholder('Non specificato'),
 
                         TextEntry::make('duration_minutes')
-                            ->label('Durata')
+                            ->label('Durata base')
                             ->formatStateUsing(fn ($state): string => "{$state} min"),
 
                         TextEntry::make('base_price')
@@ -63,22 +63,30 @@ class ServiceInfolist
                     ])
                     ->columns(3),
 
-                Section::make('Prezzi per taglia')
+                Section::make('Prezzi e durate per combinazione')
                     ->icon(Heroicon::OutlinedBanknotes)
                     ->schema([
-                        RepeatableEntry::make('size_prices')
+                        RepeatableEntry::make('variations')
                             ->hiddenLabel()
-                            ->hidden(fn ($record): bool => empty($record->size_prices))
+                            ->hidden(fn ($record): bool => empty($record->variations))
                             ->schema([
                                 TextEntry::make('size')
                                     ->label('Taglia')
                                     ->formatStateUsing(fn ($state): string => Size::from($state)->getLabel()),
 
+                                TextEntry::make('coat')
+                                    ->label('Tipo di pelo')
+                                    ->formatStateUsing(fn ($state): string => Coat::from($state)->getLabel()),
+
                                 TextEntry::make('price')
                                     ->label('Prezzo')
                                     ->formatStateUsing(fn ($state): string => Number::format($state / 100, precision: 2, locale: 'it').' €'),
+
+                                TextEntry::make('duration_minutes')
+                                    ->label('Durata')
+                                    ->formatStateUsing(fn ($state): string => "{$state} min"),
                             ])
-                            ->columns(2),
+                            ->columns(4),
                     ]),
             ]);
     }

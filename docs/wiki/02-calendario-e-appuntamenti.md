@@ -26,10 +26,10 @@ La dashboard di PawDesk è il calendario del salone (menu **Calendario**): qui s
    - **Cliente** — obbligatorio, cerca per nome o cognome;
    - **Animale** — obbligatorio; l'elenco mostra solo gli animali del cliente selezionato;
    - **Toelettatore** — opzionale, uno degli operatori del salone.
-3. Sezione **Data e Ora**: imposta **Inizio**. **Fine** è calcolata automaticamente e non è modificabile: è la somma delle durate dei servizi selezionati.
+3. Sezione **Data e Ora**: imposta **Inizio**. **Fine** è calcolata automaticamente e non è modificabile: è la somma delle durate effettive dei servizi selezionati, che possono variare per taglia e tipo di pelo dell'animale.
 4. Sezione **Dettagli**:
    - **Stato** — predefinito **Richiesto**;
-   - **Servizi** — solo i servizi attivi del catalogo; per ogni servizio il **Riepilogo Costi** mostra in tempo reale prezzo e durata, con il prezzo della taglia dell'animale quando previsto, più il totale e la durata complessiva;
+   - **Servizi** — solo i servizi attivi del catalogo; se l'animale ha un tipo di pelo, compaiono solo i servizi compatibili con quel manto. Per ogni servizio il **Riepilogo Costi** mostra in tempo reale prezzo e durata effettivi in base alla combinazione taglia + tipo di pelo dell'animale, più il totale e la durata complessiva;
    - **Note interne** — fino a 1000 caratteri, visibili solo allo staff.
 5. Premi **Crea**.
 

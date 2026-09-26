@@ -26,12 +26,12 @@ class ServiceSeeder extends Seeder
                 'base_price' => 2500,
                 'combinable' => true,
                 'status' => ServiceStatus::Active->value,
-                'size_prices' => [
-                    ['size' => 'toy', 'price' => 2000],
-                    ['size' => 'small', 'price' => 2500],
-                    ['size' => 'medium', 'price' => 3000],
-                    ['size' => 'large', 'price' => 3500],
-                    ['size' => 'giant', 'price' => 4500],
+                'variations' => [
+                    ['size' => 'small', 'coat' => 'long', 'price' => 3000, 'duration_minutes' => 75],
+                    ['size' => 'medium', 'coat' => 'curly', 'price' => 3500, 'duration_minutes' => 75],
+                    ['size' => 'medium', 'coat' => 'long', 'price' => 3500, 'duration_minutes' => 75],
+                    ['size' => 'large', 'coat' => 'double_coat', 'price' => 4000, 'duration_minutes' => 90],
+                    ['size' => 'giant', 'coat' => 'short', 'price' => 4500, 'duration_minutes' => 60],
                 ],
             ],
         );
@@ -45,12 +45,11 @@ class ServiceSeeder extends Seeder
                 'base_price' => 4000,
                 'combinable' => false,
                 'status' => ServiceStatus::Active->value,
-                'size_prices' => [
-                    ['size' => 'toy', 'price' => 3500],
-                    ['size' => 'small', 'price' => 4000],
-                    ['size' => 'medium', 'price' => 5000],
-                    ['size' => 'large', 'price' => 6000],
-                    ['size' => 'giant', 'price' => 7500],
+                'variations' => [
+                    ['size' => 'small', 'coat' => 'long', 'price' => 4500, 'duration_minutes' => 90],
+                    ['size' => 'medium', 'coat' => 'curly', 'price' => 5500, 'duration_minutes' => 120],
+                    ['size' => 'medium', 'coat' => 'spaniel', 'price' => 5000, 'duration_minutes' => 105],
+                    ['size' => 'large', 'coat' => 'double_coat', 'price' => 6500, 'duration_minutes' => 120],
                 ],
             ],
         );
@@ -64,7 +63,7 @@ class ServiceSeeder extends Seeder
                 'base_price' => 1000,
                 'combinable' => true,
                 'status' => ServiceStatus::Active->value,
-                'size_prices' => [],
+                'variations' => [],
             ],
         );
 
@@ -77,7 +76,7 @@ class ServiceSeeder extends Seeder
                 'base_price' => 1000,
                 'combinable' => true,
                 'status' => ServiceStatus::Active->value,
-                'size_prices' => [],
+                'variations' => [],
             ],
         );
 
@@ -90,12 +89,9 @@ class ServiceSeeder extends Seeder
                 'base_price' => 3000,
                 'combinable' => true,
                 'status' => ServiceStatus::Active->value,
-                'size_prices' => [
-                    ['size' => 'toy', 'price' => 2500],
-                    ['size' => 'small', 'price' => 3000],
-                    ['size' => 'medium', 'price' => 3500],
-                    ['size' => 'large', 'price' => 4000],
-                    ['size' => 'giant', 'price' => 5000],
+                'variations' => [
+                    ['size' => 'large', 'coat' => 'double_coat', 'price' => 4000, 'duration_minutes' => 45],
+                    ['size' => 'giant', 'coat' => 'short', 'price' => 5000, 'duration_minutes' => 45],
                 ],
             ],
         );
@@ -110,11 +106,10 @@ class ServiceSeeder extends Seeder
                 'base_price' => 3500,
                 'combinable' => true,
                 'status' => ServiceStatus::Active->value,
-                'size_prices' => [
-                    ['size' => 'small', 'price' => 3000],
-                    ['size' => 'medium', 'price' => 3500],
-                    ['size' => 'large', 'price' => 4500],
-                    ['size' => 'giant', 'price' => 5500],
+                'variations' => [
+                    ['size' => 'medium', 'coat' => 'double_coat', 'price' => 3500, 'duration_minutes' => 45],
+                    ['size' => 'large', 'coat' => 'double_coat', 'price' => 4500, 'duration_minutes' => 60],
+                    ['size' => 'giant', 'coat' => 'double_coat', 'price' => 5500, 'duration_minutes' => 75],
                 ],
             ],
         );
@@ -128,10 +123,8 @@ class ServiceSeeder extends Seeder
                 'base_price' => 2000,
                 'combinable' => false,
                 'status' => ServiceStatus::Active->value,
-                'size_prices' => [
-                    ['size' => 'toy', 'price' => 1500],
-                    ['size' => 'small', 'price' => 2000],
-                    ['size' => 'medium', 'price' => 2500],
+                'variations' => [
+                    ['size' => 'toy', 'coat' => 'short', 'price' => 1500, 'duration_minutes' => 45],
                 ],
             ],
         );

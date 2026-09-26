@@ -13,7 +13,22 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Carbon;
 
+/**
+ * @property int $id
+ * @property int $customer_id
+ * @property int $tenant_id
+ * @property string $name
+ * @property Species $species
+ * @property string|null $breed
+ * @property Gender $sex
+ * @property Carbon|null $date_of_birth
+ * @property Size $size
+ * @property Coat|null $coat
+ * @property string|null $behavioral_notes
+ * @property string|null $health_notes
+ */
 #[Fillable(['customer_id', 'name', 'species', 'breed', 'sex', 'date_of_birth', 'size', 'coat', 'behavioral_notes', 'health_notes'])]
 class Pet extends Model
 {

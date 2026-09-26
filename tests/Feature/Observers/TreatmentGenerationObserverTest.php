@@ -31,7 +31,7 @@ test('transition to Completed generates a treatment with pivot totals', function
     $appointment->services()->sync(
         AppointmentPriceCalculator::buildPivotData(
             Service::whereIn('id', [$service1->id, $service2->id])->get(),
-            $appointment->pet?->size,
+            $appointment->pet,
         ),
     );
 

@@ -84,7 +84,7 @@ PawDesk è un gestionale multi-tenancy cloud-native per saloni di toelettatura c
 - [ ] CRUD completo su Animale: nome, specie, razza, sesso, data di nascita (o età stimata)
 - [ ] Upload foto profilo ( Cloudflare R2, max 5MB, formati JPG/PNG/WEBP)
 - [ ] Selezione taglia: toy / piccolo / medio / grande / gigante (influenza il prezzo)
-- [ ] Tipo pelo (coat): raso / corto / frangiato / frangiato_spaniel / primitivo / da_muta / riccio / liscio / pelo_lungo / pelo_corto (determina i servizi disponibili)
+- [ ] Tipo pelo (coat): corto / liscio / satin / lungo / riccio / spaniel / doppio_pelo / primitivo (determina i servizi disponibili e i prezzi per combinazione taglia+pelo)
 - [ ] Note comportamentali (campo libero, es. aggressivo con altri cani, ansioso al phon)
 - [ ] Note sanitarie: allergie, patologie, farmaci in corso
 - [ ] Visualizzazione ultimo trattamento eseguito + prossimo consigliato

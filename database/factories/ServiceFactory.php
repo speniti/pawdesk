@@ -30,7 +30,7 @@ class ServiceFactory extends Factory
             'base_price' => fake()->numberBetween(1500, 8000),
             'combinable' => true,
             'status' => ServiceStatus::Active->value,
-            'size_prices' => [],
+            'variations' => [],
         ];
     }
 }
