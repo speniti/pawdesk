@@ -8,3 +8,5 @@ Schedule::command('appointments:send-reminders')
     ->everyFifteenMinutes()
     ->withoutOverlapping()
     ->onOneServer();
+
+Schedule::command('queue:prune-failed --hours=168')->daily();
