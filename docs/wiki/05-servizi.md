@@ -2,7 +2,7 @@
 
 Catalogo dei servizi offerti dal salone. Menu **Servizi**.
 
-Ogni servizio definisce **durata** e **prezzo**. La durata dei servizi selezionati determina la durata dell'appuntamento; il prezzo applicato dipende dalla taglia dell'animale quando è previsto un prezzo dedicato.
+Ogni servizio definisce **prezzo base** e **durata base**. Prezzo e durata effettivi possono variare per combinazione di **taglia** e **tipo di pelo** dell'animale: si applica la combinazione che corrisponde esattamente all'animale, in alternativa prezzo e durata base.
 
 ## Creare un servizio
 
@@ -11,18 +11,20 @@ Ogni servizio definisce **durata** e **prezzo**. La durata dei servizi seleziona
    - **Nome** — obbligatorio;
    - **Descrizione** — facoltativa;
    - **Categoria** — obbligatoria: Grooming, Bagno, Tosatura, Benessere, Specialità;
-   - **Tipo di manto** — facoltativo, per servizi legati a un tipo di pelo;
-   - **Durata (minuti)** — obbligatoria, da 1 a 480; predefinita 60;
-   - **Prezzo base (€)** — obbligatorio, usato quando la taglia dell'animale non ha un prezzo dedicato;
+   - **Tipo di manto** — facoltativo: i servizi con un manto impostato sono offerti solo agli animali con quel tipo di pelo;
+   - **Durata base (minuti)** — obbligatoria, da 1 a 480; predefinita 60;
+   - **Prezzo base (€)** — obbligatorio, usato quando nessuna combinazione corrisponde all'animale;
    - **Stato** — **Attivo** (predefinito) o **Archiviato**;
    - **Combinabile con altri servizi** — Sì/No, predefinito Sì.
-3. Sezione **Prezzi per taglia**: usa **Aggiungi un prezzo per taglia** per ogni taglia con prezzo dedicato (es. Toy 25 €, Gigante 70 €). Ogni taglia può comparire una sola volta.
+3. Sezione **Prezzi e durate per combinazione**: usa **Aggiungi una combinazione** per ogni coppia taglia + tipo di pelo con prezzo e durata dedicati (es. Medio · Pelo lungo 35 €, 75 min). Ogni combinazione può comparire una sola volta.
 4. Premi **Crea**.
 
-## Come vengono usati i prezzi
+## Come vengono usati prezzi e durate
 
-- Se la taglia dell'animale ha un prezzo dedicato, si applica quello; altrimenti il **Prezzo base**.
-- Il **Riepilogo Costi** dell'appuntamento (vedi [Calendario](./02-calendario-e-appuntamenti.md)) mostra il prezzo effettivo per ogni servizio in base all'animale selezionato.
+- Se esiste una combinazione taglia + tipo di pelo identica a quella dell'animale, si applicano il suo prezzo e la sua durata; altrimenti il **Prezzo base** e la **Durata base**.
+- Gli animali senza tipo di pelo registrato ricevono sempre prezzo e durata base.
+- Nel form dell'appuntamento, se l'animale ha un tipo di pelo, l'elenco **Servizi** mostra solo i servizi senza vincolo di manto o compatibili con quel manto.
+- Il **Riepilogo Costi** dell'appuntamento (vedi [Calendario](./02-calendario-e-appuntamenti.md)) mostra prezzo e durata effettivi per ogni servizio in base all'animale selezionato.
 
 ## Note d'uso
 

@@ -11,6 +11,7 @@ use App\Models\Pet;
 use App\Models\Service;
 use App\Models\Tenant;
 use App\Models\User;
+use App\Services\AppointmentPriceCalculator;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Collection;
 
@@ -63,17 +64,12 @@ class AppointmentSeeder extends Seeder
                 'end_time' => $end,
             ]);
 
-            foreach ($serviceMap[$i] as $serviceKey) {
-                $service = $services[$serviceKey];
-                $price = collect($service->size_prices)
-                    ->first(fn (array $sp): bool => $sp['size'] === $pet->size->value)['price']
-                    ?? $service->base_price;
+            $appointmentServices = collect($serviceMap[$i])
+                ->map(fn (string $serviceKey): Service => $services[$serviceKey]);
 
-                $appointment->services()->attach($service->id, [
-                    'applied_price' => $price,
-                    'duration_minutes' => $service->duration_minutes,
-                ]);
-            }
+            $appointment->services()->sync(
+                AppointmentPriceCalculator::buildPivotData($appointmentServices, $pet),
+            );
 
             if ($status === AppointmentStatus::Completed) {
                 $appointment->update(['status' => AppointmentStatus::Completed]);

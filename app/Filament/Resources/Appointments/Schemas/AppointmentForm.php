@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Filament\Resources\Appointments\Schemas;
 
 use App\Enums\AppointmentStatus;
+use App\Enums\Coat;
 use App\Models\Customer;
 use App\Models\Pet;
 use App\Models\Service;
@@ -53,6 +54,11 @@ class AppointmentForm
                             ->live()
                             ->visible(fn (callable $get): bool => filled($get('customer_id')))
                             ->disabled(fn (callable $get): bool => blank($get('customer_id')))
+                            ->afterStateUpdated(function (Set $set, Get $get, $state): void {
+                                self::removeIncompatibleServices($set, $get, $state);
+                                self::recalculateEndTime($set, $get);
+                            })
+                            ->partiallyRenderComponentsAfterStateUpdated(['end_time', 'price_summary'])
                             ->saved(),
 
                         Select::make('user_id')
@@ -101,32 +107,43 @@ class AppointmentForm
                             ->live()
                             ->afterStateUpdated(fn (Set $set, Get $get) => self::recalculateEndTime($set, $get))
                             ->partiallyRenderComponentsAfterStateUpdated(['end_time', 'price_summary'])
-                            ->options(fn () => Service::where('tenant_id', $tenant->id)
-                                ->where('status', 'active')
-                                ->pluck('name', 'id')),
+                            ->options(function (callable $get) use ($tenant): array {
+                                $query = Service::where('tenant_id', $tenant->id)
+                                    ->where('status', 'active');
+
+                                $coat = self::petCoat($get('pet_id'));
+
+                                if ($coat !== null) {
+                                    $query->where(fn ($q) => $q
+                                        ->whereNull('coat')
+                                        ->orWhere('coat', $coat->value));
+                                }
+
+                                return $query->orderBy('name')->pluck('name', 'id')->all();
+                            }),
 
                         TextEntry::make('price_summary')
                             ->label('Riepilogo Costi')
                             ->state(function (Get $get): string {
                                 $serviceIds = $get('services') ?? [];
-                                $petId = $get('pet_id');
+                                $pet = self::pet($get('pet_id'));
 
                                 if (empty($serviceIds)) {
                                     return '—';
                                 }
 
                                 $services = Service::whereIn('id', $serviceIds)->get();
-                                $petSize = $petId ? Pet::find($petId)?->size : null;
 
                                 $totalPrice = 0;
                                 $totalDuration = 0;
                                 $lines = [];
 
                                 foreach ($services as $service) {
-                                    $price = AppointmentPriceCalculator::resolvePrice($service, $petSize);
+                                    $price = AppointmentPriceCalculator::resolvePrice($service, $pet);
+                                    $duration = AppointmentPriceCalculator::resolveDuration($service, $pet);
                                     $totalPrice += $price;
-                                    $totalDuration += $service->duration_minutes;
-                                    $lines[] = "{$service->name}: €".number_format($price / 100, 2)." ({$service->duration_minutes} min)";
+                                    $totalDuration += $duration;
+                                    $lines[] = "{$service->name}: €".number_format($price / 100, 2)." ({$duration} min)";
                                 }
 
                                 $lines[] = 'Totale: €'.number_format($totalPrice / 100, 2)." — Durata: {$totalDuration} min";
@@ -145,6 +162,16 @@ class AppointmentForm
             ]);
     }
 
+    private static function pet($petId): ?Pet
+    {
+        return $petId ? Pet::find($petId) : null;
+    }
+
+    private static function petCoat($petId): ?Coat
+    {
+        return self::pet($petId)?->coat;
+    }
+
     private static function recalculateEndTime(Set $set, Get $get): void
     {
         $start = $get('start_time');
@@ -156,7 +183,33 @@ class AppointmentForm
             return;
         }
 
-        $totalMinutes = Service::whereIn('id', $serviceIds)->sum('duration_minutes');
+        $pet = self::pet($get('pet_id'));
+        $services = Service::whereIn('id', $serviceIds)->get();
+        $totalMinutes = AppointmentPriceCalculator::totalDuration($services, $pet);
+
         $set('end_time', Carbon::parse($start)->addMinutes($totalMinutes));
+    }
+
+    private static function removeIncompatibleServices(Set $set, Get $get, $petId): void
+    {
+        $serviceIds = $get('services') ?? [];
+
+        if (empty($serviceIds)) {
+            return;
+        }
+
+        $coat = self::petCoat($petId);
+
+        // Pets without a coat see every service, so nothing has to be pruned.
+        if ($coat === null) {
+            return;
+        }
+
+        $compatibleIds = Service::whereIn('id', $serviceIds)
+            ->where(fn ($query) => $query->whereNull('coat')->orWhere('coat', $coat->value))
+            ->pluck('id')
+            ->all();
+
+        $set('services', $compatibleIds);
     }
 }
