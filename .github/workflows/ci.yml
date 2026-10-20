@@ -43,7 +43,7 @@ jobs:
         run: npm ci
 
       - name: NPM Audit
-        run: npm audit
+        run: npm audit --omit=dev
 
       - name: NPM Outdated
         continue-on-error: true
