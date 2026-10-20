@@ -1,0 +1,96 @@
+# Stack di produzione, entrypoint per Dokploy (Compose file path).
+# Non carica docker-compose.override.yml: solo i servizi di produzione.
+#
+#   app       FrankenPHP (HTTP, porta interna 8080)
+#   migrate   one-shot: php artisan migrate --force
+#   worker    coda database: php artisan queue:work
+#   scheduler php artisan schedule:work
+#
+# Il dominio/le label Traefik si configurano nel tab Domains di Dokploy
+# sul servizio `app`, porta 8080. L'.env è fornito dal tab Environment.
+include:
+  - docker-compose.yml
+
+services:
+  app:
+    build:
+      context: .
+      target: production
+    environment:
+      PHP_OPCACHE_ENABLE: "1"
+    env_file:
+      - .env
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8080/up"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    volumes:
+      - app-database:/var/www/html/database
+      - app-storage:/var/www/html/storage
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+
+  migrate:
+    build:
+      context: .
+      target: production
+    command: php artisan migrate --force
+    env_file:
+      - .env
+    networks:
+      - pawdesk
+    restart: "no"
+    volumes:
+      - app-database:/var/www/html/database
+      - app-storage:/var/www/html/storage
+
+  worker:
+    build:
+      context: .
+      target: production
+    environment:
+      PHP_OPCACHE_ENABLE: "1"
+    command: php artisan queue:work --tries=3 --backoff=10
+    env_file:
+      - .env
+    networks:
+      - pawdesk
+    restart: unless-stopped
+    volumes:
+      - app-database:/var/www/html/database
+      - app-storage:/var/www/html/storage
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+
+  scheduler:
+    build:
+      context: .
+      target: production
+    environment:
+      PHP_OPCACHE_ENABLE: "1"
+    command: php artisan schedule:work
+    env_file:
+      - .env
+    networks:
+      - pawdesk
+    restart: unless-stopped
+    volumes:
+      - app-database:/var/www/html/database
+      - app-storage:/var/www/html/storage
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+
+networks:
+  pawdesk:
+    name: dokploy-network
+    external: true
+
+volumes:
+  app-database:
+  app-storage:
