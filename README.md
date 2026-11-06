@@ -13,9 +13,9 @@ come Compose file path) include già i processi necessari:
 
 - `scheduler`: `php artisan schedule:work` (esegue i task dovuti ogni minuto)
 - `worker`: `php artisan queue:work` — le notifiche passano dalla coda
-  (`QUEUE_CONNECTION=database`)
-- `migrate`: one-shot `php artisan migrate --force` prima di app/worker/scheduler
-- `app`: FrankenPHP sulla porta interna 8080
+  (`QUEUE_CONNECTION=database`); parte solo quando `app` è healthy
+- `app`: FrankenPHP sulla porta interna 8080; con `AUTORUN_ENABLED` esegue
+  all'avvio `storage:link`, `migrate --force` e `optimize`
 
 Prerequisiti sul server: la rete esterna `dokploy-network` (creata da Dokploy)
 e un `.env` valido (via tab Environment di Dokploy), con `MAIL_MAILER=smtp` e
