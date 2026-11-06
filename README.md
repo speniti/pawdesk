@@ -21,9 +21,9 @@ Prerequisiti sul server: la rete esterna `dokploy-network` (creata da Dokploy)
 e un `.env` valido (via tab Environment di Dokploy), con `MAIL_MAILER=smtp` e
 credenziali per l'invio dell'email di login.
 
-Il database SQLite vive nel volume `app-data`, montato su `/app-data` con
-`DB_DATABASE=/app-data/database.sqlite`: il volume contiene solo il file DB
-(e i suoi `-wal`/`-shm`), quindi è tutto ciò che serve salvare nel backup.
+Il database SQLite vive nel volume `app-storage` (montato su `storage/`) in
+`storage/app/private/database.sqlite` (`DB_DATABASE` nel prod compose).
+`storage/` è quindi l'unico volume persistente: log, cache file e database.
 
 Verifica:
 

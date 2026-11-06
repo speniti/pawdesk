@@ -51,8 +51,6 @@ RUN composer dump-autoload --optimize
 RUN chown -R www-data:www-data /var/www/html/storage \
     && chown -R www-data:www-data /var/www/html/bootstrap/cache \
     && chown www-data:www-data /var/www/html/database \
-    && chown www-data:www-data /var/www/html/public \
-    && mkdir -p /app-data \
-    && chown www-data:www-data /app-data
+    && chown www-data:www-data /var/www/html/public
 
 USER www-data

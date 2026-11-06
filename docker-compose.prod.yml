@@ -21,9 +21,9 @@ services:
       # Il server può ignorare depends_on (modalità Stack di Dokploy): all'avvio
       # l'immagine esegue storage:link + migrate --force + optimize da sola.
       AUTORUN_ENABLED: "true"
-      # SQLite fuori da database/ così il volume contiene solo il file DB (e i
-      # suoi -wal/-shm): database/ resta nel codice dell'immagine, sempre aggiornato.
-      DB_DATABASE: /app-data/database.sqlite
+      # SQLite in storage/ (directory persistente di Laravel, volume condiviso):
+      # database/ resta codice dell'immagine, sempre aggiornato a ogni deploy.
+      DB_DATABASE: /var/www/html/storage/app/private/database.sqlite
     env_file:
       - .env
     restart: unless-stopped
@@ -34,7 +34,6 @@ services:
       retries: 3
       start_period: 30s
     volumes:
-      - app-data:/app-data
       - app-storage:/var/www/html/storage
 
   worker:
@@ -44,7 +43,7 @@ services:
     container_name: peniti_worker
     environment:
       PHP_OPCACHE_ENABLE: "1"
-      DB_DATABASE: /app-data/database.sqlite
+      DB_DATABASE: /var/www/html/storage/app/private/database.sqlite
     command: php artisan queue:work --tries=3 --backoff=10
     env_file:
       - .env
@@ -52,7 +51,6 @@ services:
       - pawdesk
     restart: unless-stopped
     volumes:
-      - app-data:/app-data
       - app-storage:/var/www/html/storage
     # Parte solo quando app è healthy, quindi dopo l'autorun delle migration.
     depends_on:
@@ -66,7 +64,7 @@ services:
     container_name: peniti_scheduler
     environment:
       PHP_OPCACHE_ENABLE: "1"
-      DB_DATABASE: /app-data/database.sqlite
+      DB_DATABASE: /var/www/html/storage/app/private/database.sqlite
     command: php artisan schedule:work
     env_file:
       - .env
@@ -74,7 +72,6 @@ services:
       - pawdesk
     restart: unless-stopped
     volumes:
-      - app-data:/app-data
       - app-storage:/var/www/html/storage
     depends_on:
       app:
@@ -86,5 +83,4 @@ networks:
     external: true
 
 volumes:
-  app-data:
   app-storage:
