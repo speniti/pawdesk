@@ -18,6 +18,9 @@ services:
       target: production
     environment:
       PHP_OPCACHE_ENABLE: "1"
+      # Il server può ignorare depends_on (modalità Stack di Dokploy): all'avvio
+      # l'immagine esegue storage:link + migrate --force + optimize da sola.
+      AUTORUN_ENABLED: "true"
     env_file:
       - .env
     restart: unless-stopped
