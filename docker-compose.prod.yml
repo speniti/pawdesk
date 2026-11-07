@@ -1,8 +1,8 @@
 # Stack di produzione, entrypoint per Dokploy (Compose file path).
 # Non carica docker-compose.override.yml: solo i servizi di produzione.
 #
-#   app       FrankenPHP (HTTP, porta interna 8080)
-#   migrate   one-shot: php artisan migrate --force
+#   app       FrankenPHP (HTTP, porta interna 8080); all'avvio esegue
+#             storage:link + migrate --force + optimize (AUTORUN_ENABLED)
 #   worker    coda database: php artisan queue:work
 #   scheduler php artisan schedule:work
 #
@@ -18,6 +18,12 @@ services:
       target: production
     environment:
       PHP_OPCACHE_ENABLE: "1"
+      # Il server può ignorare depends_on (modalità Stack di Dokploy): all'avvio
+      # l'immagine esegue storage:link + migrate --force + optimize da sola.
+      AUTORUN_ENABLED: "true"
+      # SQLite in storage/ (directory persistente di Laravel, volume condiviso):
+      # database/ resta codice dell'immagine, sempre aggiornato a ogni deploy.
+      DB_DATABASE: /var/www/html/storage/app/private/database.sqlite
     env_file:
       - .env
     restart: unless-stopped
@@ -28,32 +34,16 @@ services:
       retries: 3
       start_period: 30s
     volumes:
-      - app-database:/var/www/html/database
-      - app-storage:/var/www/html/storage
-    depends_on:
-      migrate:
-        condition: service_completed_successfully
-
-  migrate:
-    build:
-      context: .
-      target: production
-    command: php artisan migrate --force
-    env_file:
-      - .env
-    networks:
-      - pawdesk
-    restart: "no"
-    volumes:
-      - app-database:/var/www/html/database
       - app-storage:/var/www/html/storage
 
   worker:
     build:
       context: .
       target: production
+    container_name: peniti_worker
     environment:
       PHP_OPCACHE_ENABLE: "1"
+      DB_DATABASE: /var/www/html/storage/app/private/database.sqlite
     command: php artisan queue:work --tries=3 --backoff=10
     env_file:
       - .env
@@ -61,18 +51,20 @@ services:
       - pawdesk
     restart: unless-stopped
     volumes:
-      - app-database:/var/www/html/database
       - app-storage:/var/www/html/storage
+    # Parte solo quando app è healthy, quindi dopo l'autorun delle migration.
     depends_on:
-      migrate:
-        condition: service_completed_successfully
+      app:
+        condition: service_healthy
 
   scheduler:
     build:
       context: .
       target: production
+    container_name: peniti_scheduler
     environment:
       PHP_OPCACHE_ENABLE: "1"
+      DB_DATABASE: /var/www/html/storage/app/private/database.sqlite
     command: php artisan schedule:work
     env_file:
       - .env
@@ -80,11 +72,10 @@ services:
       - pawdesk
     restart: unless-stopped
     volumes:
-      - app-database:/var/www/html/database
       - app-storage:/var/www/html/storage
     depends_on:
-      migrate:
-        condition: service_completed_successfully
+      app:
+        condition: service_healthy
 
 networks:
   pawdesk:
@@ -92,5 +83,4 @@ networks:
     external: true
 
 volumes:
-  app-database:
   app-storage:
