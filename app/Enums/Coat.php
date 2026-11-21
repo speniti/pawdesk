@@ -17,6 +17,7 @@ enum Coat: string implements HasColor, HasLabel
     case Short = 'short';
     case Smooth = 'smooth';
     case Spaniel = 'spaniel';
+    case Wire = 'wire';
 
     public function getColor(): string
     {
@@ -34,6 +35,7 @@ enum Coat: string implements HasColor, HasLabel
             self::Spaniel => 'Spaniel',
             self::DoubleCoat => 'Doppio pelo',
             self::Primitive => 'Primitivo',
+            self::Wire => 'Ruvido',
         };
     }
 }

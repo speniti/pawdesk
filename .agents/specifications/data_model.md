@@ -1,7 +1,7 @@
 # PawDesk — Data Model Document
 
-> **Versione**: 1.4
-> **Data**: 24 Aprile 2026
+> **Versione**: 1.7
+> **Data**: 21 Novembre 2026
 > **Status**: Draft
 > **Database**: SQLite 3.x (MVP) → PostgreSQL 16.x (SaaS)
 
@@ -171,7 +171,7 @@ erDiagram
 
 **size**: `toy`, `piccolo`, `medio`, `grande`, `gigante`
 
-**coat** (pets & services): `short`, `smooth`, `satin`, `long`, `curly`, `spaniel`, `double_coat`, `primitive`
+**coat** (pets & services): `short`, `smooth`, `satin`, `long`, `curly`, `spaniel`, `double_coat`, `primitive`, `wire`
 
 **status** (services): `active`, `archived`
 
@@ -342,7 +342,7 @@ CREATE TABLE pets (
     sex TEXT CHECK (sex IN ('M', 'F', 'unknown')),
     date_of_birth DATE,
     size TEXT NOT NULL CHECK (size IN ('toy', 'piccolo', 'medio', 'grande', 'gigante')),
-    coat TEXT CHECK (coat IN ('short', 'smooth', 'satin', 'long', 'curly', 'spaniel', 'double_coat', 'primitive')),
+    coat TEXT CHECK (coat IN ('short', 'smooth', 'satin', 'long', 'curly', 'spaniel', 'double_coat', 'primitive', 'wire')),
     behavioral_notes TEXT,
     health_notes TEXT,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
@@ -367,7 +367,7 @@ CREATE TABLE services (
     name TEXT NOT NULL,
     description TEXT,
     category TEXT NOT NULL,
-    coat TEXT CHECK (coat IN ('short', 'smooth', 'satin', 'long', 'curly', 'spaniel', 'double_coat', 'primitive')),
+    coat TEXT CHECK (coat IN ('short', 'smooth', 'satin', 'long', 'curly', 'spaniel', 'double_coat', 'primitive', 'wire')),
     duration_minutes INTEGER NOT NULL CHECK (duration_minutes > 0),
     base_price DECIMAL(8,2) NOT NULL CHECK (base_price >= 0),
     combinable BOOLEAN NOT NULL DEFAULT true,
@@ -1152,6 +1152,7 @@ SELECT count(*) FROM pg_stat_activity WHERE state = 'active';
 - v1.1 (24 Apr 2026) - Aggiornamento database: SQLite per MVP, PostgreSQL per SaaS. Sezioni [SaaS] marcate (partial indexes, GIN, Docker Compose, monitoring). Correzione bug ->regex() nella migration tenants. Chiarimento tipo notification_settings. Aggiunta sezione 5.9 differenze SQLite vs PostgreSQL.
 - v1.2 (24 Apr 2026) - Ridesign colonne GDPR tabella customers: `gdpr_consent_date` e `gdpr_policy_version` sostituite con `gdpr_policy_sent_at` (nullable, traccia invio effettivo), `marketing_consent_at` (nullable, consenso esplicito promozioni) e `preferences` JSONB (metadati e preferenze, include gdpr_policy_version). Aggiunto indice `customers_tenant_marketing_idx` per campagne marketing.
 - v1.3 (24 Apr 2026) - Ridesign taglie e tipo pelo: `size` enum rinominato da `XS/S/M/L/XL` a `toy/piccolo/medio/grande/gigante`. `coat_type` e `coat_length` sostituiti con singolo `coat` enum su tabella pets. Aggiunta colonna `coat` nullable su tabella services per filtraggio servizi per tipo pelo. Chiavi `size_prices` aggiornate alle nuove taglie. Aggiunto indice `services_tenant_coat_idx`.
+- v1.7 (21 Nov 2026) - Aggiunto `wire` (Ruvido) all'enum `coat`. Nessuna migrazione né impatto sui dati esistenti: le colonne `coat` e il JSON `variations` non hanno vincoli DB e i valori esistenti restano invariati; per i pet con manto `wire` senza variazione corrispondente si applicano `base_price`/`duration_minutes` (fallback esistente). In caso di rollback a una versione senza il case `wire`, ripristinare prima i dati con `UPDATE pets SET coat = NULL WHERE coat = 'wire';` e `UPDATE services SET coat = NULL WHERE coat = 'wire';` (il JSON `variations` non richiede pulizia: non viene idratato come enum e una variazione `wire` non può mai corrispondere a un pet sotto il codice precedente).
 - v1.6 (26 Sep 2026) - Revisione enum `coat`: rimossi `feathered` (Piumato), `flat` (Piatto) e `short_hair` (Pelo corto, ridondante con `short`); aggiunto `satin` (Raso). Liste valori allineate ai valori reali dell'enum PHP (in precedenza elencate con nomi storici mai implementati).
 - v1.5 (26 Sep 2026) - Prezzi e durate per combinazione taglia + tipo di pelo: colonna `size_prices` sostituita da `variations` (lista `[{size, coat, price, duration_minutes}]`) su tabella services. Risoluzione solo su match esatto size+coat, fallback su base_price/duration_minutes. `coat` su services diventa attivo: filtra i servizi selezionabili in agenda per il tipo di pelo dell'animale.
 - v1.4 (25 Apr 2026) - Migliorata portabilità migration Laravel: sostituiti tutti i `$table->enum()` con `$table->string()` (9 occorrenze su 5 migration). Le migration non usano più CHECK constraints a livello DB; la validazione dei valori ammessi è demandata a livello applicativo (Form Request). Sezioni SQL DDL (3.x) invariate. Aggiornata tabella compatibilità sezione 5.9.
