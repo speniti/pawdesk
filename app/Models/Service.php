@@ -14,6 +14,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 /**
+ * @property Coat|null $coat
  * @property-read AppointmentServicePivot $pivot
  */
 #[Fillable([

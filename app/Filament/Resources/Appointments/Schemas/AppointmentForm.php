@@ -22,6 +22,7 @@ use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Collection;
 
 class AppointmentForm
 {
@@ -124,32 +125,7 @@ class AppointmentForm
 
                         TextEntry::make('price_summary')
                             ->label('Riepilogo Costi')
-                            ->state(function (Get $get): string {
-                                $serviceIds = $get('services') ?? [];
-                                $pet = self::pet($get('pet_id'));
-
-                                if (empty($serviceIds)) {
-                                    return '—';
-                                }
-
-                                $services = Service::whereIn('id', $serviceIds)->get();
-
-                                $totalPrice = 0;
-                                $totalDuration = 0;
-                                $lines = [];
-
-                                foreach ($services as $service) {
-                                    $price = AppointmentPriceCalculator::resolvePrice($service, $pet);
-                                    $duration = AppointmentPriceCalculator::resolveDuration($service, $pet);
-                                    $totalPrice += $price;
-                                    $totalDuration += $duration;
-                                    $lines[] = "{$service->name}: €".number_format($price / 100, 2)." ({$duration} min)";
-                                }
-
-                                $lines[] = 'Totale: €'.number_format($totalPrice / 100, 2)." — Durata: {$totalDuration} min";
-
-                                return implode(' · ', $lines);
-                            })
+                            ->state(fn (Get $get): string => self::summarizeServices($get('services') ?? [], $get('pet_id')))
                             ->live()
                             ->columnSpanFull(),
 
@@ -162,9 +138,35 @@ class AppointmentForm
             ]);
     }
 
+    /**
+     * Keep only services compatible with the given coat, still constrained
+     * to the current tenant. Pets without a coat see every service.
+     *
+     * @param  array<int, int|string>  $serviceIds
+     * @return array<int, int|string>
+     */
+    private static function compatibleServiceIds(array $serviceIds, ?Coat $coat): array
+    {
+        if ($coat === null) {
+            return $serviceIds;
+        }
+
+        return self::scopedServices($serviceIds)
+            ->filter(fn (Service $service) => $service->coat === null || $service->coat === $coat)
+            ->pluck('id')
+            ->all();
+    }
+
     private static function pet($petId): ?Pet
     {
-        return $petId ? Pet::find($petId) : null;
+        if ($petId === null) {
+            return null;
+        }
+
+        /** @var Tenant|null $tenant */
+        $tenant = Filament::getTenant();
+
+        return $tenant === null ? null : Pet::where('tenant_id', $tenant->id)->find($petId);
     }
 
     private static function petCoat($petId): ?Coat
@@ -184,7 +186,7 @@ class AppointmentForm
         }
 
         $pet = self::pet($get('pet_id'));
-        $services = Service::whereIn('id', $serviceIds)->get();
+        $services = self::scopedServices($serviceIds);
         $totalMinutes = AppointmentPriceCalculator::totalDuration($services, $pet);
 
         $set('end_time', Carbon::parse($start)->addMinutes($totalMinutes));
@@ -205,11 +207,59 @@ class AppointmentForm
             return;
         }
 
-        $compatibleIds = Service::whereIn('id', $serviceIds)
-            ->where(fn ($query) => $query->whereNull('coat')->orWhere('coat', $coat->value))
-            ->pluck('id')
-            ->all();
+        $set('services', self::compatibleServiceIds($serviceIds, $coat));
+    }
 
-        $set('services', $compatibleIds);
+    /**
+     * Resolve services by id, constrained to the current tenant. Fails
+     * closed: without a tenant in context, no services are returned.
+     *
+     * @param  array<int, int|string>  $serviceIds
+     * @return Collection<int, Service>
+     */
+    private static function scopedServices(array $serviceIds): Collection
+    {
+        /** @var Tenant|null $tenant */
+        $tenant = Filament::getTenant();
+
+        if ($tenant === null) {
+            return collect();
+        }
+
+        return Service::where('tenant_id', $tenant->id)->whereIn('id', $serviceIds)->get();
+    }
+
+    /**
+     * @param  array<int, int|string>  $serviceIds
+     */
+    private static function summarizeServices(array $serviceIds, $petId): string
+    {
+        $pet = self::pet($petId);
+
+        if (empty($serviceIds)) {
+            return '—';
+        }
+
+        $services = self::scopedServices($serviceIds);
+
+        if ($services->isEmpty()) {
+            return '—';
+        }
+
+        $totalPrice = 0;
+        $totalDuration = 0;
+        $lines = [];
+
+        foreach ($services as $service) {
+            $price = AppointmentPriceCalculator::resolvePrice($service, $pet);
+            $duration = AppointmentPriceCalculator::resolveDuration($service, $pet);
+            $totalPrice += $price;
+            $totalDuration += $duration;
+            $lines[] = "{$service->name}: €".number_format($price / 100, 2)." ({$duration} min)";
+        }
+
+        $lines[] = 'Totale: €'.number_format($totalPrice / 100, 2)." — Durata: {$totalDuration} min";
+
+        return implode(' · ', $lines);
     }
 }
