@@ -125,7 +125,12 @@ class AppointmentCalendar extends Calendar
                     $serviceIds = $data['services'] ?? [];
                     unset($data['services']);
 
-                    $pet = isset($data['pet_id']) ? Pet::find($data['pet_id']) : ($record instanceof Appointment ? $record->pet : null);
+                    /** @var Tenant $tenant */
+                    $tenant = Filament::getTenant();
+
+                    $pet = isset($data['pet_id'])
+                        ? Pet::where('tenant_id', $tenant->id)->find($data['pet_id'])
+                        : ($record instanceof Appointment ? $record->pet : null);
 
                     if (! empty($serviceIds) && isset($data['start_time'])) {
                         $data['end_time'] = $this->calculateEndTime($data['start_time'], $serviceIds, $pet);
@@ -180,7 +185,12 @@ class AppointmentCalendar extends Calendar
         $serviceIds = $data['services'] ?? [];
         unset($data['services']);
 
-        $pet = isset($data['pet_id']) ? Pet::find($data['pet_id']) : null;
+        /** @var Tenant $tenant */
+        $tenant = Filament::getTenant();
+
+        $pet = isset($data['pet_id'])
+            ? Pet::where('tenant_id', $tenant->id)->find($data['pet_id'])
+            : null;
 
         if (! empty($serviceIds) && isset($data['start_time'])) {
             $data['end_time'] = $this->calculateEndTime($data['start_time'], $serviceIds, $pet);
@@ -197,7 +207,17 @@ class AppointmentCalendar extends Calendar
 
     protected function updateRecord(?Model $record, Carbon $start, ?Carbon $end, bool $allDay): void
     {
-        $record?->update([
+        // Records already resolve through the tenant-scoped query, but this
+        // path has no policy check of its own: keep the guard explicit so a
+        // foreign record can never be moved, even if resolution ever changes.
+        /** @var Tenant|null $tenant */
+        $tenant = Filament::getTenant();
+
+        if ($tenant === null || ! $record instanceof Appointment || $record->tenant_id !== $tenant->id) {
+            return;
+        }
+
+        $record->update([
             'start_time' => $start,
             'end_time' => $end,
         ]);
@@ -205,7 +225,12 @@ class AppointmentCalendar extends Calendar
 
     private function calculateEndTime(string $startTime, array $serviceIds, ?Pet $pet): Carbon
     {
-        $services = Service::whereIn('id', $serviceIds)->get();
+        /** @var Tenant $tenant */
+        $tenant = Filament::getTenant();
+
+        $services = Service::where('tenant_id', $tenant->id)
+            ->whereIn('id', $serviceIds)
+            ->get();
         $totalMinutes = AppointmentPriceCalculator::totalDuration($services, $pet);
 
         return Carbon::parse($startTime)->addMinutes($totalMinutes);
@@ -240,13 +265,7 @@ class AppointmentCalendar extends Calendar
                 ->requiresConfirmation()
                 ->modalHeading("Cambia stato in {$nextStatus->getLabel()}")
                 ->modalDescription("Sei sicuro di voler cambiare lo stato dell'appuntamento in {$nextStatus->getLabel()}?")
-                ->action(function () use ($record, $status, $nextStatus) {
-                    if (! $status->canTransitionTo($nextStatus)) {
-                        return;
-                    }
-                    DB::transaction(static fn () => $record->update(['status' => $nextStatus]));
-                    $this->refreshEvents();
-                });
+                ->action(fn () => $this->transitionStatus($record, $nextStatus));
         }
 
         return $actions;
@@ -259,10 +278,35 @@ class AppointmentCalendar extends Calendar
 
     private function syncServicesWithPivotData(Appointment $appointment, array $serviceIds, ?Pet $pet = null): void
     {
-        $services = Service::whereIn('id', $serviceIds)->get();
+        /** @var Tenant $tenant */
+        $tenant = Filament::getTenant();
+
+        $services = Service::where('tenant_id', $tenant->id)
+            ->whereIn('id', $serviceIds)
+            ->get();
         $pet ??= $appointment->pet;
 
         $pivotData = AppointmentPriceCalculator::buildPivotData($services, $pet);
         $appointment->services()->sync($pivotData);
+    }
+
+    private function transitionStatus(Appointment $record, AppointmentStatus $nextStatus): void
+    {
+        // Transition actions bypass the resource policies, so keep the same
+        // explicit tenant guard as the drag-and-drop path: a foreign record
+        // can never be transitioned, even if its resolution ever changes.
+        /** @var Tenant|null $tenant */
+        $tenant = Filament::getTenant();
+
+        if ($tenant === null || $record->tenant_id !== $tenant->id) {
+            return;
+        }
+
+        if (! $record->status->canTransitionTo($nextStatus)) {
+            return;
+        }
+
+        DB::transaction(static fn () => $record->update(['status' => $nextStatus]));
+        $this->refreshEvents();
     }
 }
