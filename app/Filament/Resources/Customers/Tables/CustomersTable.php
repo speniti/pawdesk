@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Filament\Resources\Customers\Tables;
 
+use App\Enums\PreferredChannel;
 use App\Filament\Resources\Customers\CustomerResource;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkActionGroup;
@@ -51,7 +52,8 @@ class CustomersTable
             ])
             ->filters([
                 SelectFilter::make('preferred_channel')
-                    ->label('Canale preferito'),
+                    ->label('Canale preferito')
+                    ->options(PreferredChannel::class),
 
                 TernaryFilter::make('marketing_consent_at')
                     ->label('Consenso marketing')

@@ -2,11 +2,14 @@
 
 declare(strict_types=1);
 
+use App\Enums\PreferredChannel;
 use App\Filament\Resources\Customers\Pages\CreateCustomer;
 use App\Filament\Resources\Customers\Pages\EditCustomer;
+use App\Filament\Resources\Customers\Pages\ListCustomers;
 use App\Models\Customer;
 use App\Models\Tenant;
 use App\Models\User;
+use Filament\Tables\Filters\SelectFilter;
 use Livewire\Livewire;
 
 beforeEach(function () {
@@ -111,4 +114,19 @@ test('duplicate email for different tenant is allowed', function () {
         ->assertNotified();
 
     expect(Customer::withoutGlobalScopes()->where('email', 'shared@example.com')->count())->toBe(2);
+});
+
+test('customers table preferred channel filter exposes enum options', function () {
+    bootFilamentPanelAs($this->admin, $this->tenant);
+
+    Livewire::test(ListCustomers::class)
+        ->assertTableFilterExists('preferred_channel', function (SelectFilter $tableFilter) {
+            $options = $tableFilter->getOptions();
+
+            expect($options)->toHaveKey('whatsapp')
+                ->and($options['whatsapp'])->toBe('WhatsApp')
+                ->and($options)->toHaveCount(count(PreferredChannel::cases()));
+
+            return true;
+        });
 });
