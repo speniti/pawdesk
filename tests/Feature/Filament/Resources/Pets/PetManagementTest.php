@@ -9,6 +9,7 @@ use App\Models\Customer;
 use App\Models\Pet;
 use App\Models\Tenant;
 use App\Models\User;
+use Filament\Tables\Filters\SelectFilter;
 use Livewire\Livewire;
 
 beforeEach(function () {
@@ -129,3 +130,21 @@ test('pets can be searched by owner name', function () {
         ->assertCanSeeTableRecords([$pet])
         ->assertCanNotSeeTableRecords([$otherPet]);
 });
+
+test('pets table filters expose enum options', function (string $filter, string $value, string $label) {
+    bootFilamentPanelAs($this->admin, $this->tenant);
+
+    Livewire::test(ListPets::class)
+        ->assertTableFilterExists($filter, function (SelectFilter $tableFilter) use ($value, $label) {
+            $options = $tableFilter->getOptions();
+
+            expect($options)->toHaveKey($value)
+                ->and($options[$value])->toBe($label);
+
+            return true;
+        });
+})->with([
+    'specie' => ['species', 'dog', 'Cane'],
+    'taglia' => ['size', 'giant', 'Gigante'],
+    'manto' => ['coat', 'wire', 'Ruvido'],
+]);
