@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace App\Filament\Resources\Pets\Tables;
 
+use App\Enums\Coat;
+use App\Enums\Size;
+use App\Enums\Species;
 use App\Filament\Resources\Pets\PetResource;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkActionGroup;
@@ -52,13 +55,16 @@ class PetsTable
             ])
             ->filters([
                 SelectFilter::make('species')
-                    ->label('Specie'),
+                    ->label('Specie')
+                    ->options(Species::class),
 
                 SelectFilter::make('size')
-                    ->label('Taglia'),
+                    ->label('Taglia')
+                    ->options(Size::class),
 
                 SelectFilter::make('coat')
-                    ->label('Manto'),
+                    ->label('Manto')
+                    ->options(Coat::class),
             ])
             ->recordActions([
                 ActionGroup::make([
