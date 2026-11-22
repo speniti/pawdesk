@@ -10,7 +10,9 @@ use App\Models\Customer;
 use App\Models\Pet;
 use App\Models\Service;
 use App\Models\Tenant;
+use App\Models\Treatment;
 use App\Models\User;
+use App\Notifications\AppointmentConfirmedNotification;
 use App\Services\AppointmentPriceCalculator;
 use Filament\Forms\Components\Select;
 use Illuminate\Support\Facades\Notification;
@@ -458,4 +460,157 @@ test('edit completing the appointment generates treatment totals from the new se
     expect($treatment)->not->toBeNull()
         ->actual_duration_minutes->toBe(60)
         ->final_price->toBe(5000);
+});
+
+test('illegal status transition via edit form is rejected', function () {
+    Notification::fake();
+
+    $customer = Customer::factory()->create(['tenant_id' => $this->tenant->id]);
+    $pet = Pet::factory()->create(['customer_id' => $customer->id, 'tenant_id' => $this->tenant->id]);
+    $appointment = Appointment::factory()->create([
+        'customer_id' => $customer->id,
+        'pet_id' => $pet->id,
+        'tenant_id' => $this->tenant->id,
+        'start_time' => now()->addDay()->setTime(10, 0),
+        'end_time' => now()->addDay()->setTime(11, 0),
+        'status' => AppointmentStatus::Cancelled,
+    ]);
+
+    bootFilamentPanelAs($this->admin, $this->tenant);
+
+    Livewire::test(AppointmentCalendar::class)
+        ->call('select', $appointment->id)
+        ->mountAction('edit')
+        ->fillForm(['status' => AppointmentStatus::Completed->value])
+        ->callMountedAction()
+        ->assertHasFormErrors(['status']);
+
+    expect($appointment->refresh()->status)->toBe(AppointmentStatus::Cancelled)
+        ->and(Treatment::count())->toBe(0);
+
+    Notification::assertNothingSent();
+});
+
+test('legal status transition via edit form is allowed', function () {
+    Notification::fake();
+
+    $customer = Customer::factory()->create(['tenant_id' => $this->tenant->id]);
+    $pet = Pet::factory()->create(['customer_id' => $customer->id, 'tenant_id' => $this->tenant->id]);
+    $appointment = Appointment::factory()->create([
+        'customer_id' => $customer->id,
+        'pet_id' => $pet->id,
+        'tenant_id' => $this->tenant->id,
+        'start_time' => now()->addDay()->setTime(10, 0),
+        'end_time' => now()->addDay()->setTime(11, 0),
+        'status' => AppointmentStatus::Requested,
+    ]);
+
+    bootFilamentPanelAs($this->admin, $this->tenant);
+
+    Livewire::test(AppointmentCalendar::class)
+        ->call('select', $appointment->id)
+        ->mountAction('edit')
+        ->fillForm(['status' => AppointmentStatus::Confirmed->value])
+        ->callMountedAction();
+
+    expect($appointment->refresh()->status)->toBe(AppointmentStatus::Confirmed);
+
+    Notification::assertSentTo($customer, AppointmentConfirmedNotification::class);
+});
+
+test('saving the edit form without changing the status still works', function () {
+    $customer = Customer::factory()->create(['tenant_id' => $this->tenant->id]);
+    $pet = Pet::factory()->create(['customer_id' => $customer->id, 'tenant_id' => $this->tenant->id]);
+    $appointment = Appointment::factory()->create([
+        'customer_id' => $customer->id,
+        'pet_id' => $pet->id,
+        'tenant_id' => $this->tenant->id,
+        'start_time' => now()->addDay()->setTime(10, 0),
+        'end_time' => now()->addDay()->setTime(11, 0),
+        'status' => AppointmentStatus::Requested,
+    ]);
+
+    bootFilamentPanelAs($this->admin, $this->tenant);
+
+    Livewire::test(AppointmentCalendar::class)
+        ->call('select', $appointment->id)
+        ->mountAction('edit')
+        ->fillForm(['internal_notes' => 'note aggiornate'])
+        ->callMountedAction();
+
+    expect($appointment->refresh())
+        ->internal_notes->toBe('note aggiornate')
+        ->status->toBe(AppointmentStatus::Requested)
+        ->and(Treatment::count())->toBe(0);
+});
+
+test('creating an appointment with a non-initial status is rejected', function () {
+    Notification::fake();
+
+    $customer = Customer::factory()->create(['tenant_id' => $this->tenant->id]);
+    $pet = Pet::factory()->create(['customer_id' => $customer->id, 'tenant_id' => $this->tenant->id]);
+    $service = Service::factory()->create(['tenant_id' => $this->tenant->id, 'duration_minutes' => 60]);
+
+    bootFilamentPanelAs($this->admin, $this->tenant);
+    $start = now()->addDay()->setTime(10, 0);
+
+    Livewire::test(AppointmentCalendar::class)
+        ->mountAction('create')
+        ->fillForm([
+            'customer_id' => (string) $customer->id,
+            'pet_id' => (string) $pet->id,
+            'start_time' => $start->format('Y-m-d H:i'),
+            'services' => [(string) $service->id],
+            'status' => AppointmentStatus::Completed->value,
+        ])
+        ->callMountedAction()
+        ->assertHasFormErrors(['status']);
+
+    expect(Appointment::count())->toBe(0)
+        ->and(Treatment::count())->toBe(0);
+
+    Notification::assertNothingSent();
+});
+
+test('create form only offers initial statuses', function () {
+    bootFilamentPanelAs($this->admin, $this->tenant);
+
+    Livewire::test(AppointmentCalendar::class)
+        ->mountAction('create')
+        ->assertFormFieldExists('status', function (Select $field) {
+            expect($field->getOptions())->toBe([
+                AppointmentStatus::Requested->value => AppointmentStatus::Requested->getLabel(),
+            ]);
+
+            return true;
+        });
+});
+
+test('edit form only offers the current and reachable statuses', function () {
+    $customer = Customer::factory()->create(['tenant_id' => $this->tenant->id]);
+    $pet = Pet::factory()->create(['customer_id' => $customer->id, 'tenant_id' => $this->tenant->id]);
+    $appointment = Appointment::factory()->create([
+        'customer_id' => $customer->id,
+        'pet_id' => $pet->id,
+        'tenant_id' => $this->tenant->id,
+        'start_time' => now()->addDay()->setTime(10, 0),
+        'end_time' => now()->addDay()->setTime(11, 0),
+        'status' => AppointmentStatus::Confirmed,
+    ]);
+
+    bootFilamentPanelAs($this->admin, $this->tenant);
+
+    Livewire::test(AppointmentCalendar::class)
+        ->call('select', $appointment->id)
+        ->mountAction('edit')
+        ->assertFormFieldExists('status', function (Select $field) {
+            expect($field->getOptions())->toBe([
+                AppointmentStatus::Confirmed->value => AppointmentStatus::Confirmed->getLabel(),
+                AppointmentStatus::InProgress->value => AppointmentStatus::InProgress->getLabel(),
+                AppointmentStatus::Cancelled->value => AppointmentStatus::Cancelled->getLabel(),
+                AppointmentStatus::NoShow->value => AppointmentStatus::NoShow->getLabel(),
+            ]);
+
+            return true;
+        });
 });

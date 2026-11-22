@@ -18,8 +18,10 @@ use Filament\Actions\DeleteAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
 use Filament\Facades\Filament;
+use Filament\Notifications\Notification;
 use Filament\Schemas\Schema;
 use Filament\Support\Enums\Width;
+use Filament\Support\Exceptions\Halt;
 use Filament\Support\Facades\FilamentColor;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Arr;
@@ -124,6 +126,24 @@ class AppointmentCalendar extends Calendar
                 ->using(function (array $data, Model $record) {
                     $serviceIds = $data['services'] ?? [];
                     unset($data['services']);
+
+                    // Defense in depth for the form validation: the status
+                    // may only change along a legal state machine transition,
+                    // no matter how the submitted data was produced.
+                    if (
+                        $record instanceof Appointment
+                        && ($target = AppointmentStatus::tryFromState($data['status'] ?? null)) !== null
+                        && $target !== $record->status
+                        && ! $record->status->canTransitionTo($target)
+                    ) {
+                        Notification::make()
+                            ->title('Transizione non consentita')
+                            ->body("Lo stato dell'appuntamento non può passare da {$record->status->getLabel()} a {$target->getLabel()}.")
+                            ->danger()
+                            ->send();
+
+                        throw new Halt;
+                    }
 
                     /** @var Tenant $tenant */
                     $tenant = Filament::getTenant();

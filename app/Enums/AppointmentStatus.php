@@ -16,6 +16,31 @@ enum AppointmentStatus: string implements HasColor, HasLabel
     case NoShow = 'no_show';
     case Requested = 'requested';
 
+    /**
+     * Statuses a new appointment may be created with. Requested is the
+     * machine's entry point: every other status is reachable only through
+     * a transition, never at creation time.
+     *
+     * @return array<int, self>
+     */
+    public static function initialStatuses(): array
+    {
+        return [self::Requested];
+    }
+
+    /**
+     * Resolve the loose representation the form layer hands around (enum
+     * instance or backing value), failing closed on anything else.
+     */
+    public static function tryFromState(mixed $value): ?self
+    {
+        if ($value instanceof self) {
+            return $value;
+        }
+
+        return is_string($value) ? self::tryFrom($value) : null;
+    }
+
     public function canTransitionTo(self $target): bool
     {
         return in_array($target, $this->nextStatuses(), true);

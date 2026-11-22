@@ -6,11 +6,13 @@ namespace App\Filament\Resources\Appointments\Schemas;
 
 use App\Enums\AppointmentStatus;
 use App\Enums\Coat;
+use App\Models\Appointment;
 use App\Models\Customer;
 use App\Models\Pet;
 use App\Models\Service;
 use App\Models\Tenant;
 use App\Services\AppointmentPriceCalculator;
+use Closure;
 use Filament\Facades\Filament;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Select;
@@ -95,7 +97,9 @@ class AppointmentForm
                     ->schema([
                         Select::make('status')
                             ->label('Stato')
-                            ->options(AppointmentStatus::class)
+                            ->enum(AppointmentStatus::class)
+                            ->options(fn (?Appointment $record): array => self::statusOptions($record))
+                            ->rule(fn (?Appointment $record): Closure => self::statusTransitionRule($record))
                             ->default(AppointmentStatus::Requested)
                             ->saved()
                             ->required(),
@@ -227,6 +231,51 @@ class AppointmentForm
         }
 
         return Service::where('tenant_id', $tenant->id)->whereIn('id', $serviceIds)->get();
+    }
+
+    /**
+     * Statuses offered by the form: on creation only the machine's initial
+     * statuses; while editing the current status plus the reachable ones,
+     * so the record can always be saved without changing it.
+     *
+     * @return array<string, string>
+     */
+    private static function statusOptions(?Appointment $record): array
+    {
+        $statuses = $record === null
+            ? AppointmentStatus::initialStatuses()
+            : [$record->status, ...$record->status->nextStatuses()];
+
+        return collect($statuses)
+            ->mapWithKeys(fn (AppointmentStatus $status): array => [
+                $status->value => $status->getLabel(),
+            ])
+            ->all();
+    }
+
+    /**
+     * Server-side enforcement of the same rule the options express, so a
+     * forged submission cannot skip the state machine.
+     */
+    private static function statusTransitionRule(?Appointment $record): Closure
+    {
+        return static function (string $attribute, mixed $value, Closure $fail) use ($record): void {
+            $target = AppointmentStatus::tryFromState($value);
+
+            if ($target === null) {
+                return; // Non-enum values are rejected by the enum rule.
+            }
+
+            $allowed = $record === null
+                ? in_array($target, AppointmentStatus::initialStatuses(), true)
+                : ($target === $record->status || $record->status->canTransitionTo($target));
+
+            if (! $allowed) {
+                $fail($record === null
+                    ? 'Lo stato selezionato non è ammesso alla creazione di un appuntamento.'
+                    : "Lo stato {$target->getLabel()} non è raggiungibile da {$record->status->getLabel()}.");
+            }
+        };
     }
 
     /**
