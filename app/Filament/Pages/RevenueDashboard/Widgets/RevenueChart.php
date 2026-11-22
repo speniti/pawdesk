@@ -1,0 +1,56 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Filament\Pages\RevenueDashboard\Widgets;
+
+use App\Models\Tenant;
+use App\Services\TenantRevenue;
+use Filament\Facades\Filament;
+use Filament\Widgets\ChartWidget;
+
+class RevenueChart extends ChartWidget
+{
+    protected ?string $heading = 'Fatturato mensile';
+
+    protected ?string $pollingInterval = null;
+
+    /**
+     * @return array{datasets: array<int, array{label: string, data: array<int, float>}>, labels: array<int, string>}
+     */
+    protected function getData(): array
+    {
+        /** @var Tenant $tenant */
+        $tenant = Filament::getTenant();
+        $revenue = app(TenantRevenue::class);
+        $year = now()->year;
+
+        return [
+            'datasets' => [
+                [
+                    'label' => (string) $year,
+                    'data' => $this->inEuros($revenue->monthlyForYear($tenant, $year)),
+                ],
+                [
+                    'label' => (string) ($year - 1),
+                    'data' => $this->inEuros($revenue->monthlyForYear($tenant, $year - 1)),
+                ],
+            ],
+            'labels' => ['Gen', 'Feb', 'Mar', 'Apr', 'Mag', 'Giu', 'Lug', 'Ago', 'Set', 'Ott', 'Nov', 'Dic'],
+        ];
+    }
+
+    protected function getType(): string
+    {
+        return 'line';
+    }
+
+    /**
+     * @param  array<int, int>  $monthlyCents
+     * @return array<int, float>
+     */
+    private function inEuros(array $monthlyCents): array
+    {
+        return array_map(static fn (int $cents): float => round($cents / 100, 2), array_values($monthlyCents));
+    }
+}
