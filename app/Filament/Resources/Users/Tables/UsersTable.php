@@ -25,6 +25,7 @@ use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\LazyCollection;
 use Throwable;
 
@@ -86,13 +87,40 @@ class UsersTable
 
                     DeleteAction::make()
                         ->modalDescription(fn (User $record): ?string => self::multiTenantRemovalWarning($record))
-                        ->using(fn (User $record): bool => self::removeUser($record)),
+                        ->using(function (User $record, DeleteAction $action): bool {
+                            $wasSharedWithOtherTenants = self::isSharedWithOtherTenants($record);
+
+                            if (! self::removeUser($record)) {
+                                return false;
+                            }
+
+                            if ($wasSharedWithOtherTenants) {
+                                $action->successNotificationTitle('Rimosso da questo salone');
+                            }
+
+                            return true;
+                        }),
                 ])
                     ->icon(Heroicon::OutlinedEllipsisVertical),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make()
+                        ->authorizeIndividualRecords()
+                        ->modalDescription(function (EloquentCollection|Collection|LazyCollection $records): ?string {
+                            $sharedCount = $records
+                                ->filter(fn (User $record): bool => self::isSharedWithOtherTenants($record))
+                                ->count();
+
+                            if ($sharedCount === 0) {
+                                return null;
+                            }
+
+                            return trans_choice(
+                                ':count utente selezionato appartiene anche ad altri saloni: verrà rimosso solo da questo salone e manterrà l\'accesso agli altri saloni.|:count utenti selezionati appartengono anche ad altri saloni: verranno rimossi solo da questo salone e manterranno l\'accesso agli altri saloni.',
+                                $sharedCount,
+                            );
+                        })
                         ->using(function (DeleteBulkAction $action, EloquentCollection|Collection|LazyCollection $records): void {
                             $records->each(function (User $record) use ($action): void {
                                 try {
@@ -111,11 +139,16 @@ class UsersTable
             ->emptyStateIcon(UserResource::getNavigationIcon());
     }
 
-    private static function multiTenantRemovalWarning(User $record): ?string
+    private static function isSharedWithOtherTenants(User $record): bool
     {
         $tenant = Filament::getTenant();
 
-        if (! $tenant instanceof Tenant || ! $record->hasTenantsOtherThan($tenant)) {
+        return $tenant instanceof Tenant && $record->hasTenantsOtherThan($tenant);
+    }
+
+    private static function multiTenantRemovalWarning(User $record): ?string
+    {
+        if (! self::isSharedWithOtherTenants($record)) {
             return null;
         }
 
@@ -123,19 +156,33 @@ class UsersTable
     }
 
     /**
-     * Detaches the user from the current tenant when they still belong to
-     * other tenants, deleting the account only when no other tenant remains.
+     * Detaches the user from the current tenant, then deletes the account
+     * only if no other tenant remains. The user row is locked for the
+     * transaction's duration so concurrent membership changes cannot
+     * interleave with the delete decision.
      */
     private static function removeUser(User $record): bool
     {
         $tenant = Filament::getTenant();
 
-        if ($tenant instanceof Tenant && $record->hasTenantsOtherThan($tenant)) {
-            $record->tenants()->detach($tenant);
-
-            return true;
+        if (! $tenant instanceof Tenant) {
+            return false;
         }
 
-        return (bool) $record->delete();
+        return DB::transaction(function () use ($record, $tenant): bool {
+            $user = User::query()->whereKey($record->getKey())->lockForUpdate()->first();
+
+            if ($user === null) {
+                return false;
+            }
+
+            $user->tenants()->detach($tenant);
+
+            if ($user->tenants()->exists()) {
+                return true;
+            }
+
+            return (bool) $user->delete();
+        });
     }
 }

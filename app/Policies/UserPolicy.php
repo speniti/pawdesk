@@ -24,6 +24,11 @@ class UserPolicy
             && $this->belongsToCurrentTenant($model);
     }
 
+    public function deleteAny(User $user): bool
+    {
+        return $this->isAdmin($user);
+    }
+
     public function forceDelete(User $user, User $model): bool
     {
         return $this->isAdmin($user)
