@@ -65,4 +65,19 @@ describe('content', function () {
             ->assertSeeText('Imposta sostitutiva')
             ->assertSeeText('Accantonamento consigliato');
     });
+
+    test('shows the fixed inps regime label when configured with fixed contributions', function () {
+        $this->tenant->forceFill(['settings' => [
+            'tax_coefficient' => 78,
+            'tax_rate' => 15,
+            'inps_mode' => 'fixed',
+            'inps_fixed_amount' => 4500,
+        ]])->save();
+
+        bootFilamentPanelAs($this->admin, $this->tenant);
+
+        Livewire::test(RevenueDashboard::class)
+            ->assertOk()
+            ->assertSeeText('Contributi fissi (artigiani/commercianti)');
+    });
 });

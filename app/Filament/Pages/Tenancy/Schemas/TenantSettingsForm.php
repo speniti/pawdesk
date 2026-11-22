@@ -66,7 +66,7 @@ class TenantSettingsForm
                             // `default()` never applies here: this form is always
                             // filled with existing tenant data, so hydrate the
                             // fallback explicitly (78% = ATECO 96.09 toelettatura).
-                            ->formatStateUsing(fn ($state): int => filled($state) ? (int) $state : 78)
+                            ->formatStateUsing(fn ($state): float => filled($state) ? (float) $state : 78.0)
                             ->suffix('%'),
 
                         TextInput::make('settings.tax_rate')
@@ -74,7 +74,7 @@ class TenantSettingsForm
                             ->numeric()
                             ->minValue(0)
                             ->maxValue(100)
-                            ->formatStateUsing(fn ($state): int => filled($state) ? (int) $state : 15)
+                            ->formatStateUsing(fn ($state): float => filled($state) ? (float) $state : 15.0)
                             ->suffix('%')
                             ->helperText('15% ordinaria, 5% per nuove attività nei primi 5 anni.'),
 

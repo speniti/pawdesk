@@ -31,9 +31,14 @@ class RevenueDashboard extends Page
 
     protected static ?string $title = 'Fatturato e tasse';
 
+    /**
+     * Role gate for both the navigation item and the page itself: staff gets
+     * a 403 (Filament's abort for inaccessible pages), cross-tenant users a
+     * 404 from mount(), mirroring the tenant settings page.
+     */
     public static function canAccess(): bool
     {
-        $user = auth()->user();
+        $user = Filament::auth()->user();
 
         return $user instanceof User && $user->role === UserRole::Admin;
     }
@@ -106,19 +111,21 @@ class RevenueDashboard extends Page
         ]);
     }
 
-    /** @return array<class-string<RevenueChart|RevenueStats>> */
-    public function getHeaderWidgets(): array
-    {
-        return [RevenueStats::class, RevenueChart::class];
-    }
-
     /** Same tenant-membership gate as the tenant settings page: cross-tenant users get a 404. */
     public function mount(): void
     {
-        /** @var User $user */
-        $user = auth()->user();
+        $user = Filament::auth()->user();
         $tenant = Filament::getTenant();
 
-        abort_unless($tenant instanceof Tenant && $user->canAccessTenant($tenant), 404);
+        abort_unless(
+            $user instanceof User && $tenant instanceof Tenant && $user->canAccessTenant($tenant),
+            404,
+        );
+    }
+
+    /** @return array<class-string<RevenueChart|RevenueStats>> */
+    protected function getHeaderWidgets(): array
+    {
+        return [RevenueStats::class, RevenueChart::class];
     }
 }

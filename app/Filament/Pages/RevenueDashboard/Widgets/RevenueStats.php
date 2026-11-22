@@ -18,6 +18,22 @@ class RevenueStats extends BaseWidget
 {
     protected ?string $pollingInterval = null;
 
+    /**
+     * Defense in depth: the widget renders only inside the admin-gated page,
+     * but keep the page's role gate here so it can never be exposed by
+     * registering it elsewhere (e.g. on a staff-visible page).
+     */
+    public static function canView(): bool
+    {
+        return RevenueDashboard::canAccess();
+    }
+
+    /** Threshold usage color: danger once 80% of the forfettario limit is reached. */
+    public static function thresholdColor(int $ytdCents): string
+    {
+        return $ytdCents / ForfettarioTaxEstimator::REVENUE_LIMIT_CENTS >= 0.8 ? 'danger' : 'gray';
+    }
+
     /** @return array<int, Stat> */
     protected function getStats(): array
     {
@@ -30,7 +46,7 @@ class RevenueStats extends BaseWidget
         $samePeriodLastYear = $revenue->totalBetween(
             $tenant,
             now()->subYear()->startOfYear(),
-            now()->subYear()->startOfDay(),
+            now()->subYear()->endOfDay(),
         );
 
         $config = $tenant->forfettarioTaxConfiguration();
@@ -69,7 +85,7 @@ class RevenueStats extends BaseWidget
             ))
                 ->description(RevenueDashboard::money($ytd).' su '.RevenueDashboard::money(ForfettarioTaxEstimator::REVENUE_LIMIT_CENTS))
                 ->descriptionIcon(Heroicon::OutlinedFlag)
-                ->descriptionColor($ytd / ForfettarioTaxEstimator::REVENUE_LIMIT_CENTS >= 0.8 ? 'danger' : 'gray'),
+                ->descriptionColor(self::thresholdColor($ytd)),
         ];
     }
 

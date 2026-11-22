@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Filament\Pages\RevenueDashboard\Widgets;
 
+use App\Filament\Pages\RevenueDashboard;
 use App\Models\Tenant;
 use App\Services\TenantRevenue;
 use Filament\Facades\Filament;
@@ -14,6 +15,16 @@ class RevenueChart extends ChartWidget
     protected ?string $heading = 'Fatturato mensile';
 
     protected ?string $pollingInterval = null;
+
+    /**
+     * Defense in depth: the widget renders only inside the admin-gated page,
+     * but keep the page's role gate here so it can never be exposed by
+     * registering it elsewhere (e.g. on a staff-visible page).
+     */
+    public static function canView(): bool
+    {
+        return RevenueDashboard::canAccess();
+    }
 
     /**
      * @return array{datasets: array<int, array{label: string, data: array<int, float>}>, labels: array<int, string>}
