@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace App\Filament\Pages\Tenancy\Schemas;
 
+use App\Enums\InpsMode;
 use App\Filament\Pages\Tenancy\Schemas\Components\OpeningHoursDaySection;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
 
 class TenantSettingsForm
@@ -51,6 +53,57 @@ class TenantSettingsForm
                             ->suffix('min'),
                     ])
                     ->columns(1),
+
+                Section::make('Fiscalità (regime forfettario)')
+                    ->description('Parametri per la stima di imposte e contributi nella pagina Fatturato e tasse.')
+                    ->aside()
+                    ->schema([
+                        TextInput::make('settings.tax_coefficient')
+                            ->label('Coefficiente di redditività (%)')
+                            ->numeric()
+                            ->minValue(0)
+                            ->maxValue(100)
+                            // `default()` never applies here: this form is always
+                            // filled with existing tenant data, so hydrate the
+                            // fallback explicitly (78% = ATECO 96.09 toelettatura).
+                            ->formatStateUsing(fn ($state): float => filled($state) ? (float) $state : 78.0)
+                            ->suffix('%'),
+
+                        TextInput::make('settings.tax_rate')
+                            ->label('Aliquota imposta sostitutiva (%)')
+                            ->numeric()
+                            ->minValue(0)
+                            ->maxValue(100)
+                            ->formatStateUsing(fn ($state): float => filled($state) ? (float) $state : 15.0)
+                            ->suffix('%')
+                            ->helperText('15% ordinaria, 5% per nuove attività nei primi 5 anni.'),
+
+                        Select::make('settings.inps_mode')
+                            ->label('Regime contributivo INPS')
+                            ->options(InpsMode::class)
+                            ->placeholder('Seleziona il regime')
+                            ->live(),
+
+                        TextInput::make('settings.inps_fixed_amount')
+                            ->label('Contributi fissi annui (€)')
+                            ->numeric()
+                            ->minValue(0)
+                            ->suffix('€')
+                            ->visible(fn (Get $get): bool => self::inpsModeIs($get, InpsMode::Fixed))
+                            ->required(fn (Get $get): bool => self::inpsModeIs($get, InpsMode::Fixed)),
+
+                        TextInput::make('settings.inps_percentage')
+                            ->label('Aliquota INPS (%)')
+                            ->numeric()
+                            ->minValue(0)
+                            ->maxValue(100)
+                            ->step(0.01)
+                            ->suffix('%')
+                            ->visible(fn (Get $get): bool => self::inpsModeIs($get, InpsMode::Percentage))
+                            ->required(fn (Get $get): bool => self::inpsModeIs($get, InpsMode::Percentage)),
+                    ])
+                    ->columns(1)
+                    ->collapsible(),
 
                 Section::make('Email (Mailgun)')
                     ->description('Configura le credenziali per l\'invio di email tramite Mailgun.')
@@ -162,5 +215,20 @@ class TenantSettingsForm
             'saturday' => 'Sabato',
             'sunday' => 'Domenica',
         ];
+    }
+
+    /**
+     * The select state hydrates to an InpsMode instance, but Livewire requests
+     * may still carry the raw string value: normalize both before comparing.
+     */
+    private static function inpsModeIs(Get $get, InpsMode $mode): bool
+    {
+        $state = $get('settings.inps_mode');
+
+        $state = $state instanceof InpsMode
+            ? $state
+            : InpsMode::tryFrom((string) $state);
+
+        return $state === $mode;
     }
 }

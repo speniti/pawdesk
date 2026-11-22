@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Providers;
 
+use App\Services\TenantRevenue;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\URL;
@@ -31,5 +32,13 @@ class AppServiceProvider extends ServiceProvider
                 )
             );
         });
+    }
+
+    public function register(): void
+    {
+        // Scoped: one instance per request so the dashboard page, stats and
+        // chart share the monthly revenue cache, without leaking it across
+        // requests in long-lived workers.
+        $this->app->scoped(TenantRevenue::class);
     }
 }
