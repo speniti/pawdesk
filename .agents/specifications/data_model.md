@@ -304,7 +304,7 @@ CREATE INDEX customers_tenant_email_idx ON customers (tenant_id, email);
 CREATE INDEX customers_tenant_first_name_idx ON customers (tenant_id, first_name);
 CREATE INDEX customers_tenant_last_name_idx ON customers (tenant_id, last_name);
 
--- Index for re-engagement campaigns (inactive customers)
+-- Index for operational segmentation (customers without recent appointments)
 CREATE INDEX customers_tenant_created_at_idx ON customers (tenant_id, created_at DESC);
 ```
 
@@ -532,7 +532,7 @@ Following best practices (applicabili a SQLite e PostgreSQL):
 -- Pattern: WHERE tenant_id = ? AND status = 'completed' AND start_time BETWEEN ? AND ?
 -- Already defined: appointments_completed_idx (partial)
 
--- 7. Inactive customers (re-engagement)
+-- 7. Customers without recent appointments (operational segmentation)
 -- Pattern: WHERE tenant_id = ? AND created_at < ? ORDER BY created_at ASC
 -- Already defined: customers_tenant_created_at_idx
 
@@ -577,7 +577,7 @@ Most frequent queries and their optimizations:
 | Today's appointments | `WHERE tenant_id AND active_statuses AND today` | `appointments_active_idx` (partial) | O(log n) + filter |
 | Portal authentication | `WHERE tenant_id AND email` | `customers_tenant_email_idx` (unique) | O(log n) |
 | Pet history | `WHERE tenant_id AND pet_id ORDER BY created_at` | `treatments_tenant_pet_idx` | O(log n) + sort |
-| Customer re-engagement | `WHERE tenant_id AND created_at < X` | `customers_tenant_created_at_idx` | O(log n) + scan |
+| Customers without recent appointments | `WHERE tenant_id AND created_at < X` | `customers_tenant_created_at_idx` | O(log n) + scan |
 
 ---
 

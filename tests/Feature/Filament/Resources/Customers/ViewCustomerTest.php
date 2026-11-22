@@ -11,6 +11,7 @@ use App\Models\Pet;
 use App\Models\Tenant;
 use App\Models\Treatment;
 use App\Models\User;
+use Filament\Schemas\Components\Section;
 use Livewire\Livewire;
 
 beforeEach(function () {
@@ -33,6 +34,25 @@ test('admin can view customer detail page', function () {
 
     Livewire::test(ViewCustomer::class, ['record' => $customer->id])
         ->assertOk();
+});
+
+test('customer infolist privacy section shows only the policy entry', function () {
+    $customer = Customer::factory()->create(['tenant_id' => $this->tenant->id]);
+
+    bootFilamentPanelAs($this->admin, $this->tenant);
+
+    $infolist = Livewire::test(ViewCustomer::class, ['record' => $customer->id])
+        ->instance()
+        ->getSchema('infolist');
+
+    $privacy = collect($infolist->getFlatComponents())
+        ->first(fn ($component): bool => $component instanceof Section && $component->getHeading() === 'Privacy');
+
+    expect($privacy)->not->toBeNull()
+        ->and(array_map(
+            fn ($entry): string => $entry->getName(),
+            $privacy->getChildSchema()->getComponents(),
+        ))->toBe(['gdpr_policy_sent_at']);
 });
 
 test('view customer page shows linked pets via relation manager', function () {

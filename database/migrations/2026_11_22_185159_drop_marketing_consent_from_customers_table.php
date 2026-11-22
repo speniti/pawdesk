@@ -8,6 +8,10 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
+    /**
+     * Restores the structure only: historical consent timestamps are not
+     * restored, as the column is recreated empty.
+     */
     public function down(): void
     {
         Schema::table('customers', static function (Blueprint $table) {

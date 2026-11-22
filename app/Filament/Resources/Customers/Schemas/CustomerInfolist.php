@@ -64,7 +64,7 @@ class CustomerInfolist
                                     ->badge(),
                             ]),
 
-                        Section::make('Privacy e consensi')
+                        Section::make('Privacy')
                             ->icon(Heroicon::OutlinedShieldCheck)
                             ->inlineLabel()
                             ->schema([
