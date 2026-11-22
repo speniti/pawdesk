@@ -182,6 +182,9 @@ class Tenant extends Model
         return $this->hasMany(Service::class);
     }
 
+    /**
+     * @return HasMany<Treatment, $this>
+     */
     public function treatments(): HasMany
     {
         return $this->hasMany(Treatment::class);

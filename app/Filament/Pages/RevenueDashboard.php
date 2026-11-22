@@ -45,7 +45,13 @@ class RevenueDashboard extends Page
 
     public function content(Schema $schema): Schema
     {
-        $config = Filament::getTenant()?->forfettarioTaxConfiguration();
+        $tenant = Filament::getTenant();
+
+        if (! $tenant instanceof Tenant) {
+            return $schema;
+        }
+
+        $config = $tenant->forfettarioTaxConfiguration();
 
         if ($config === null) {
             return $schema->components([
@@ -63,8 +69,6 @@ class RevenueDashboard extends Page
             ]);
         }
 
-        /** @var Tenant $tenant */
-        $tenant = Filament::getTenant();
         $revenueCents = app(TenantRevenue::class)->totalForYear($tenant, now()->year);
         $estimate = app(ForfettarioTaxEstimator::class)->estimate($revenueCents, $config);
 
