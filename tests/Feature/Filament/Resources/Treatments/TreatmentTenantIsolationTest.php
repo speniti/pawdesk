@@ -1,0 +1,76 @@
+<?php
+
+declare(strict_types=1);
+
+use App\Filament\Resources\Treatments\Pages\EditTreatment;
+use App\Filament\Resources\Treatments\Pages\ListTreatments;
+use App\Filament\Resources\Treatments\Pages\ViewTreatment;
+use App\Models\Appointment;
+use App\Models\Customer;
+use App\Models\Pet;
+use App\Models\Tenant;
+use App\Models\Treatment;
+use App\Models\User;
+use Livewire\Livewire;
+
+beforeEach(function () {
+    $this->tenant = Tenant::factory()->create();
+
+    $this->admin = User::factory()->admin()->create();
+    $this->admin->tenants()->attach($this->tenant);
+
+    $this->otherTenant = Tenant::factory()->create();
+
+    $foreignCustomer = Customer::factory()->create(['tenant_id' => $this->otherTenant->id]);
+    $foreignPet = Pet::factory()->create([
+        'customer_id' => $foreignCustomer->id,
+        'tenant_id' => $this->otherTenant->id,
+        'name' => 'CaneDiUnAltroTenant',
+    ]);
+
+    $foreignAppointment = Appointment::factory()->create([
+        'tenant_id' => $this->otherTenant->id,
+        'customer_id' => $foreignCustomer->id,
+        'pet_id' => $foreignPet->id,
+    ]);
+
+    $this->foreignTreatment = Treatment::factory()->forAppointment($foreignAppointment)->create([
+        'final_price' => 999999,
+    ]);
+
+    $ownAppointment = Appointment::factory()->forTenant($this->tenant)->create();
+    $this->treatment = Treatment::factory()->forAppointment($ownAppointment)->create();
+});
+
+test('treatment list is scoped to the current tenant', function () {
+    bootFilamentPanelAs($this->admin, $this->tenant);
+
+    // The foreign treatment genuinely exists outside the tenancy scope.
+    expect(Treatment::withoutGlobalScopes()->findOrFail($this->foreignTreatment->id))
+        ->tenant_id->toBe($this->otherTenant->id);
+
+    Livewire::test(ListTreatments::class)
+        ->assertOk()
+        ->assertCanSeeTableRecords([$this->treatment])
+        ->assertCanNotSeeTableRecords([$this->foreignTreatment])
+        ->assertDontSee('CaneDiUnAltroTenant')
+        ->assertDontSee('€9,999.99');
+});
+
+test('treatment view page returns 404 for a foreign tenant treatment', function () {
+    bootFilamentPanelAs($this->admin, $this->tenant);
+
+    Livewire::test(ViewTreatment::class, ['record' => $this->foreignTreatment->id])
+        ->assertStatus(404);
+});
+
+test('treatment edit page returns 404 for a foreign tenant treatment', function () {
+    bootFilamentPanelAs($this->admin, $this->tenant);
+
+    Livewire::test(EditTreatment::class, ['record' => $this->foreignTreatment->id])
+        ->assertStatus(404);
+
+    // The foreign record exists and is untouched.
+    expect(Treatment::withoutGlobalScopes()->findOrFail($this->foreignTreatment->id))
+        ->final_price->toBe(999999);
+});
