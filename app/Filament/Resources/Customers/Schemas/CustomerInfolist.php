@@ -73,12 +73,6 @@ class CustomerInfolist
                                     ->state(static fn (Customer $record) => ! is_null($record->gdpr_policy_sent_at))
                                     ->alignEnd()
                                     ->boolean(),
-
-                                IconEntry::make('marketing_consent_at')
-                                    ->label('Consenso marketing')
-                                    ->state(static fn (Customer $record) => ! is_null($record->marketing_consent_at))
-                                    ->alignEnd()
-                                    ->boolean(),
                             ]),
                     ]),
             ]);

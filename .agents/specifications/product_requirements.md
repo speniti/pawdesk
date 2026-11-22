@@ -68,7 +68,6 @@ PawDesk è un gestionale multi-tenancy cloud-native per saloni di toelettatura c
 - [ ] CRUD completo su Cliente: nome, cognome, email, telefono, indirizzo
 - [ ] Selezione canale di comunicazione preferito: Email / WhatsApp / SMS
 - [ ] Tracciamento invio informativa privacy con timestamp (`gdpr_policy_sent_at`)
-- [ ] Consenso esplicito marketing con timestamp (`marketing_consent_at`, opzionale)
 - [ ] Preferenze cliente in campo JSON (`preferences`): versione policy, opzioni reminder, lingua
 - [ ] Campo note libere (max 1000 caratteri)
 - [ ] Vista aggregata: elenco animali collegati, storico appuntamenti, spesa totale
@@ -319,9 +318,8 @@ graph TB
 
 #### GDPR Compliance
 - **Informativa privacy**: Invio automatico via email alla creazione cliente, tracciato con `gdpr_policy_sent_at` (nullable fino a conferma invio)
-- **Consenso marketing**: Opzionale, timestamp `marketing_consent_at`, separato dall'obbligo informativo
 - **Preferenze cliente**: Campo JSON `preferences` per versione policy, opzioni reminder e altre preferenze
-- **Base giuridica**: Dati anagrafici e promemoria servizio trattati come esecuzione contratto (Art. 6.1.b), consenso esplicito richiesto solo per comunicazioni di marketing
+- **Base giuridica**: Dati anagrafici e promemoria servizio trattati come esecuzione contratto (Art. 6.1.b); nessuna comunicazione di marketing prevista (#77)
 - **Data retention**: Configurabile, default 5 anni per anagrafiche, 10 per trattamenti
 - **Right to erasure**: Endpoint per cancellazione completa cliente + cascade su animali/storico
 - **Data export**: Endpoint per export completo dati cliente in JSON/CSV (RTBF)
@@ -476,3 +474,4 @@ graph TB
 - v1.4 (23 Apr 2026) - Correzione costi: PostgreSQL self-hosted (€0), Hetzner CPX21 (€5-6/mese), totale da €40-55 a €7-14/mese
 - v1.5 (24 Apr 2026) - Database MVP: SQLite al posto di PostgreSQL per semplificare stack e ops. Migrazione a PostgreSQL pianificata in Fase 4 (SaaS). Strategia search: LIKE per MVP, pg_trgm per SaaS, Laravel Scout come escape hatch per search engine dedicato
 - v1.6 (24 Apr 2026) - Allineamento con data model v1.2/v1.3: GDPR ridesign (gdpr_policy_sent_at + marketing_consent_at + preferences JSON), taglie rinominate (toy/piccolo/medio/grande/gigante), tipo pelo unificato in singolo enum coat su pets e services, aggiunto filtraggio servizi per tipo pelo
+- v1.7 (22 Nov 2026) - Rimozione completa del consenso marketing (#77): eliminati requisito, campo `marketing_consent_at` e relativo tracciamento GDPR.

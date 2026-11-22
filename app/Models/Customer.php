@@ -25,7 +25,6 @@ use Illuminate\Notifications\Notifiable;
     'address',
     'preferred_channel',
     'gdpr_policy_sent_at',
-    'marketing_consent_at',
     'preferences',
     'notes',
 ])]
@@ -77,7 +76,6 @@ class Customer extends Model
         return [
             'preferred_channel' => PreferredChannel::class,
             'gdpr_policy_sent_at' => 'datetime',
-            'marketing_consent_at' => 'datetime',
             'preferences' => 'array',
         ];
     }

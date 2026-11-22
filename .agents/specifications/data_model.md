@@ -80,7 +80,6 @@ erDiagram
         string address
         enum preferred_channel
         timestamptz gdpr_policy_sent_at
-        timestamptz marketing_consent_at
         jsonb preferences
         text notes
         timestamptz created_at
@@ -291,7 +290,6 @@ CREATE TABLE customers (
     address TEXT,
     preferred_channel TEXT NOT NULL CHECK (preferred_channel IN ('email', 'whatsapp', 'sms')) DEFAULT 'email',
     gdpr_policy_sent_at TIMESTAMPTZ,        -- NULL finché l'informativa non è stata effettivamente inviata
-    marketing_consent_at TIMESTAMPTZ,        -- NULL se il cliente non ha acconsentito al marketing
     preferences JSONB NOT NULL DEFAULT '{}', -- Metadati e preferenze (versione informativa, opzioni reminder, ecc.)
     notes TEXT,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
@@ -308,9 +306,6 @@ CREATE INDEX customers_tenant_last_name_idx ON customers (tenant_id, last_name);
 
 -- Index for re-engagement campaigns (inactive customers)
 CREATE INDEX customers_tenant_created_at_idx ON customers (tenant_id, created_at DESC);
-
--- Index for marketing consent (batch campaigns)
-CREATE INDEX customers_tenant_marketing_idx ON customers (tenant_id, marketing_consent_at);
 ```
 
 **`preferences` JSONB structure**:
@@ -321,7 +316,6 @@ CREATE INDEX customers_tenant_marketing_idx ON customers (tenant_id, marketing_c
 ```
 
 Campi previsti per il futuro (non presenti di default, aggiunti su necessità):
-- `"marketing_consent_version"` — versione dell'informativa marketing accettata
 - `"reminder_hours_before"` — ore prima dell'appuntamento per il reminder (default: 24)
 - `"quiet_hours_start"` / `"quiet_hours_end"` — fascia oraria in cui non inviare comunicazioni
 - `"language"` — lingua preferita per le comunicazioni
@@ -685,7 +679,6 @@ return new class extends Migration
             $table->string('address')->nullable();
             $table->string('preferred_channel')->default('email');
             $table->timestamp('gdpr_policy_sent_at', precision: 0)->nullable();
-            $table->timestamp('marketing_consent_at', precision: 0)->nullable();
             $table->json('preferences')->default('{}');
             $table->text('notes')->nullable();
             $table->timestamp('created_at', precision: 0)->useCurrent();
@@ -696,7 +689,6 @@ return new class extends Migration
             $table->index(['tenant_id', 'first_name']);
             $table->index(['tenant_id', 'last_name']);
             $table->index(['tenant_id', 'created_at']);
-            $table->index(['tenant_id', 'marketing_consent_at']);
         });
     }
 
@@ -1152,6 +1144,7 @@ SELECT count(*) FROM pg_stat_activity WHERE state = 'active';
 - v1.1 (24 Apr 2026) - Aggiornamento database: SQLite per MVP, PostgreSQL per SaaS. Sezioni [SaaS] marcate (partial indexes, GIN, Docker Compose, monitoring). Correzione bug ->regex() nella migration tenants. Chiarimento tipo notification_settings. Aggiunta sezione 5.9 differenze SQLite vs PostgreSQL.
 - v1.2 (24 Apr 2026) - Ridesign colonne GDPR tabella customers: `gdpr_consent_date` e `gdpr_policy_version` sostituite con `gdpr_policy_sent_at` (nullable, traccia invio effettivo), `marketing_consent_at` (nullable, consenso esplicito promozioni) e `preferences` JSONB (metadati e preferenze, include gdpr_policy_version). Aggiunto indice `customers_tenant_marketing_idx` per campagne marketing.
 - v1.3 (24 Apr 2026) - Ridesign taglie e tipo pelo: `size` enum rinominato da `XS/S/M/L/XL` a `toy/piccolo/medio/grande/gigante`. `coat_type` e `coat_length` sostituiti con singolo `coat` enum su tabella pets. Aggiunta colonna `coat` nullable su tabella services per filtraggio servizi per tipo pelo. Chiavi `size_prices` aggiornate alle nuove taglie. Aggiunto indice `services_tenant_coat_idx`.
+- v1.8 (22 Nov 2026) - Rimozione completa del consenso marketing (#77): eliminati colonna `customers.marketing_consent_at` e indice `(tenant_id, marketing_consent_at)` tramite migrazione reversibile; aggiornate ER, DDL e migrazione Laravel.
 - v1.7 (21 Nov 2026) - Aggiunto `wire` (Ruvido) all'enum `coat`. Nessuna migrazione né impatto sui dati esistenti: le colonne `coat` e il JSON `variations` non hanno vincoli DB e i valori esistenti restano invariati; per i pet con manto `wire` senza variazione corrispondente si applicano `base_price`/`duration_minutes` (fallback esistente). In caso di rollback a una versione senza il case `wire`, ripristinare prima i dati con `UPDATE pets SET coat = NULL WHERE coat = 'wire';` e `UPDATE services SET coat = NULL WHERE coat = 'wire';` (il JSON `variations` non richiede pulizia: non viene idratato come enum e una variazione `wire` non può mai corrispondere a un pet sotto il codice precedente).
 - v1.6 (26 Sep 2026) - Revisione enum `coat`: rimossi `feathered` (Piumato), `flat` (Piatto) e `short_hair` (Pelo corto, ridondante con `short`); aggiunto `satin` (Raso). Liste valori allineate ai valori reali dell'enum PHP (in precedenza elencate con nomi storici mai implementati).
 - v1.5 (26 Sep 2026) - Prezzi e durate per combinazione taglia + tipo di pelo: colonna `size_prices` sostituita da `variations` (lista `[{size, coat, price, duration_minutes}]`) su tabella services. Risoluzione solo su match esatto size+coat, fallback su base_price/duration_minutes. `coat` su services diventa attivo: filtra i servizi selezionabili in agenda per il tipo di pelo dell'animale.

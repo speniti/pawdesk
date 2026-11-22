@@ -15,7 +15,6 @@ use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\SelectFilter;
-use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 
@@ -54,14 +53,6 @@ class CustomersTable
                 SelectFilter::make('preferred_channel')
                     ->label('Canale preferito')
                     ->options(PreferredChannel::class),
-
-                TernaryFilter::make('marketing_consent_at')
-                    ->label('Consenso marketing')
-                    ->nullable()
-                    ->queries(
-                        true: fn (Builder $query): Builder => $query->whereNotNull('marketing_consent_at'),
-                        false: fn (Builder $query): Builder => $query->whereNull('marketing_consent_at'),
-                    ),
 
                 Filter::make('without_appointments')
                     ->label('Senza appuntamenti')
