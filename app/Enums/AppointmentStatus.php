@@ -17,15 +17,38 @@ enum AppointmentStatus: string implements HasColor, HasLabel
     case Requested = 'requested';
 
     /**
-     * Statuses a new appointment may be created with. Requested is the
-     * machine's entry point: every other status is reachable only through
-     * a transition, never at creation time.
+     * Whether the state machine permits setting $target: with no current
+     * status (creation) only the initial statuses are allowed; otherwise
+     * the status must be unchanged or reachable through a transition.
+     */
+    public static function allows(?self $current, self $target): bool
+    {
+        return $current === null
+            ? in_array($target, self::initialStatuses(), true)
+            : ($target === $current || $current->canTransitionTo($target));
+    }
+
+    /**
+     * Statuses a new appointment may be created with: the entry points of
+     * the state machine, i.e. the cases no transition leads to. Derived
+     * from the graph so it cannot drift from nextStatuses().
      *
      * @return array<int, self>
      */
     public static function initialStatuses(): array
     {
-        return [self::Requested];
+        $reachable = [];
+
+        foreach (self::cases() as $status) {
+            foreach ($status->nextStatuses() as $next) {
+                $reachable[$next->value] = true;
+            }
+        }
+
+        return array_values(array_filter(
+            self::cases(),
+            fn (self $status): bool => ! isset($reachable[$status->value]),
+        ));
     }
 
     /**

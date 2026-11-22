@@ -130,19 +130,8 @@ class AppointmentCalendar extends Calendar
                     // Defense in depth for the form validation: the status
                     // may only change along a legal state machine transition,
                     // no matter how the submitted data was produced.
-                    if (
-                        $record instanceof Appointment
-                        && ($target = AppointmentStatus::tryFromState($data['status'] ?? null)) !== null
-                        && $target !== $record->status
-                        && ! $record->status->canTransitionTo($target)
-                    ) {
-                        Notification::make()
-                            ->title('Transizione non consentita')
-                            ->body("Lo stato dell'appuntamento non può passare da {$record->status->getLabel()} a {$target->getLabel()}.")
-                            ->danger()
-                            ->send();
-
-                        throw new Halt;
+                    if ($record instanceof Appointment) {
+                        $this->assertLegalStatusTransition($record, $data['status'] ?? null);
                     }
 
                     /** @var Tenant $tenant */
@@ -159,7 +148,25 @@ class AppointmentCalendar extends Calendar
                     // Services are synced before the update so that, when the same
                     // edit completes the appointment, the generated treatment totals
                     // reflect the new pivot. One transaction keeps them atomic.
-                    DB::transaction(function () use ($data, $record, $serviceIds, $pet): void {
+                    DB::transaction(function () use ($data, $record, $serviceIds, $pet, $tenant): void {
+                        if ($record instanceof Appointment) {
+                            // The pre-flight check read the in-memory status:
+                            // re-verify on a row lock, so a concurrent request
+                            // cannot slip an illegal transition between the
+                            // check and the write.
+                            $locked = Appointment::query()
+                                ->where('tenant_id', $tenant->id)
+                                ->whereKey($record->getKey())
+                                ->lockForUpdate()
+                                ->first();
+
+                            if ($locked === null) {
+                                throw new Halt;
+                            }
+
+                            $this->assertLegalStatusTransition($locked, $data['status'] ?? null);
+                        }
+
                         if ($serviceIds && $record instanceof Appointment) {
                             $this->syncServicesWithPivotData($record, $serviceIds, $pet);
                         }
@@ -241,6 +248,28 @@ class AppointmentCalendar extends Calendar
             'start_time' => $start,
             'end_time' => $end,
         ]);
+    }
+
+    /**
+     * Stop the save path before any write when the submitted status is not
+     * legal for the record's current status. Mirrors the form validation,
+     * which rejects the same change earlier with an inline field error.
+     */
+    private function assertLegalStatusTransition(Appointment $record, mixed $status): void
+    {
+        $target = AppointmentStatus::tryFromState($status);
+
+        if ($target === null || AppointmentStatus::allows($record->status, $target)) {
+            return;
+        }
+
+        Notification::make()
+            ->title('Transizione non consentita')
+            ->body("Lo stato dell'appuntamento non può passare da {$record->status->getLabel()} a {$target->getLabel()}.")
+            ->danger()
+            ->send();
+
+        throw new Halt;
     }
 
     private function calculateEndTime(string $startTime, array $serviceIds, ?Pet $pet): Carbon
@@ -326,7 +355,21 @@ class AppointmentCalendar extends Calendar
             return;
         }
 
-        DB::transaction(static fn () => $record->update(['status' => $nextStatus]));
+        DB::transaction(function () use ($record, $nextStatus, $tenant): void {
+            // Same TOCTOU guard as the edit path: re-verify on a row lock,
+            // since the in-memory status may be stale by now.
+            $locked = Appointment::query()
+                ->where('tenant_id', $tenant->id)
+                ->whereKey($record->getKey())
+                ->lockForUpdate()
+                ->first();
+
+            if ($locked === null || ! $locked->status->canTransitionTo($nextStatus)) {
+                return;
+            }
+
+            $locked->update(['status' => $nextStatus]);
+        });
         $this->refreshEvents();
     }
 }

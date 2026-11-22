@@ -234,19 +234,21 @@ class AppointmentForm
     }
 
     /**
-     * Statuses offered by the form: on creation only the machine's initial
-     * statuses; while editing the current status plus the reachable ones,
-     * so the record can always be saved without changing it.
+     * Statuses offered by the form, derived from the same predicate that
+     * validates them, so options and enforcement cannot drift: on creation
+     * only the machine's initial statuses; while editing the current
+     * status plus the reachable ones.
      *
      * @return array<string, string>
      */
     private static function statusOptions(?Appointment $record): array
     {
-        $statuses = $record === null
-            ? AppointmentStatus::initialStatuses()
-            : [$record->status, ...$record->status->nextStatuses()];
+        $current = $record?->status;
 
-        return collect($statuses)
+        return collect(array_filter(
+            AppointmentStatus::cases(),
+            fn (AppointmentStatus $status): bool => AppointmentStatus::allows($current, $status),
+        ))
             ->mapWithKeys(fn (AppointmentStatus $status): array => [
                 $status->value => $status->getLabel(),
             ])
@@ -266,11 +268,7 @@ class AppointmentForm
                 return; // Non-enum values are rejected by the enum rule.
             }
 
-            $allowed = $record === null
-                ? in_array($target, AppointmentStatus::initialStatuses(), true)
-                : ($target === $record->status || $record->status->canTransitionTo($target));
-
-            if (! $allowed) {
+            if (! AppointmentStatus::allows($record?->status, $target)) {
                 $fail($record === null
                     ? 'Lo stato selezionato non è ammesso alla creazione di un appuntamento.'
                     : "Lo stato {$target->getLabel()} non è raggiungibile da {$record->status->getLabel()}.");
