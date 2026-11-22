@@ -47,6 +47,13 @@ class User extends Authenticatable implements FilamentUser, HasTenants
         return $this->tenants()->get();
     }
 
+    public function hasTenantsOtherThan(Tenant $tenant): bool
+    {
+        return $this->tenants()
+            ->whereKeyNot($tenant)
+            ->exists();
+    }
+
     public function tenants(): BelongsToMany
     {
         return $this->belongsToMany(Tenant::class);
