@@ -53,3 +53,19 @@ test('user with access can view edit service page', function (User $user) {
     'admin' => fn () => test()->admin,
     'staff' => fn () => test()->staff,
 ]);
+
+test('staff cannot update or delete services of another tenant', function () {
+    $otherTenant = Tenant::factory()->create();
+    $foreignService = Service::factory()->create(['tenant_id' => $otherTenant->id]);
+
+    actingAs($this->staff);
+    bootFilamentPanel($this->tenant);
+
+    // The foreign record genuinely exists outside the current tenancy scope.
+    expect(Service::withoutGlobalScopes()->findOrFail($foreignService->id))
+        ->tenant_id->toBe($otherTenant->id);
+
+    expect($this->staff->can('view', $foreignService))->toBeFalse()
+        ->and($this->staff->can('update', $foreignService))->toBeFalse()
+        ->and($this->staff->can('delete', $foreignService))->toBeFalse();
+});

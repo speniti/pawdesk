@@ -20,7 +20,7 @@ beforeEach(function () {
     $this->appointment = Appointment::factory()->forTenant($this->tenant)->create();
 });
 
-test('user with access can view, create, update and delete appointments in their tenant', function (User $user) {
+test('user with access can perform every appointment ability in their tenant', function (User $user) {
     actingAs($user);
     bootFilamentPanel($this->tenant);
 

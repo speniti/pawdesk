@@ -65,3 +65,16 @@ test('pet edit page returns 404 for a foreign tenant pet', function () {
     expect(Pet::withoutGlobalScopes()->findOrFail($this->foreignPet->id))
         ->name->toBe('CaneDiUnAltroTenant');
 });
+
+test('bulk delete with foreign record ids only deletes own tenant pets', function () {
+    bootFilamentPanelAs($this->admin, $this->tenant);
+
+    // Simulates a crafted bulk request mixing foreign and own record keys:
+    // the selected records are re-resolved through the tenancy-scoped table
+    // query, so only the own pet is deleted.
+    Livewire::test(ListPets::class)
+        ->callTableBulkAction('delete', [$this->pet->id, $this->foreignPet->id]);
+
+    expect(Pet::withoutGlobalScopes()->find($this->foreignPet->id))->not->toBeNull()
+        ->and(Pet::withoutGlobalScopes()->find($this->pet->id))->toBeNull();
+});

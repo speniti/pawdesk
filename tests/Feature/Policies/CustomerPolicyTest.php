@@ -53,3 +53,19 @@ test('user with access can view edit customer page', function (User $user) {
     'admin' => fn () => test()->admin,
     'staff' => fn () => test()->staff,
 ]);
+
+test('staff cannot update or delete customers of another tenant', function () {
+    $otherTenant = Tenant::factory()->create();
+    $foreignCustomer = Customer::factory()->create(['tenant_id' => $otherTenant->id]);
+
+    actingAs($this->staff);
+    bootFilamentPanel($this->tenant);
+
+    // The foreign record genuinely exists outside the current tenancy scope.
+    expect(Customer::withoutGlobalScopes()->findOrFail($foreignCustomer->id))
+        ->tenant_id->toBe($otherTenant->id);
+
+    expect($this->staff->can('view', $foreignCustomer))->toBeFalse()
+        ->and($this->staff->can('update', $foreignCustomer))->toBeFalse()
+        ->and($this->staff->can('delete', $foreignCustomer))->toBeFalse();
+});

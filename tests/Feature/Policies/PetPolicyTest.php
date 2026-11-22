@@ -58,3 +58,23 @@ test('user with access can view edit pet page', function (User $user) {
     'admin' => fn () => test()->admin,
     'staff' => fn () => test()->staff,
 ]);
+
+test('staff cannot update or delete pets of another tenant', function () {
+    $otherTenant = Tenant::factory()->create();
+    $otherCustomer = Customer::factory()->create(['tenant_id' => $otherTenant->id]);
+    $foreignPet = Pet::factory()->create([
+        'customer_id' => $otherCustomer->id,
+        'tenant_id' => $otherTenant->id,
+    ]);
+
+    actingAs($this->staff);
+    bootFilamentPanel($this->tenant);
+
+    // The foreign record genuinely exists outside the current tenancy scope.
+    expect(Pet::withoutGlobalScopes()->findOrFail($foreignPet->id))
+        ->tenant_id->toBe($otherTenant->id);
+
+    expect($this->staff->can('view', $foreignPet))->toBeFalse()
+        ->and($this->staff->can('update', $foreignPet))->toBeFalse()
+        ->and($this->staff->can('delete', $foreignPet))->toBeFalse();
+});

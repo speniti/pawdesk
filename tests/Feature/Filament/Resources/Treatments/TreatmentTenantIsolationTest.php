@@ -70,7 +70,22 @@ test('treatment edit page returns 404 for a foreign tenant treatment', function 
     Livewire::test(EditTreatment::class, ['record' => $this->foreignTreatment->id])
         ->assertStatus(404);
 
-    // The foreign record exists and is untouched.
+    // One-way tripwire for side-effect mutations during the 404 request: the
+    // page mount performs no write, and a later Livewire hydrate re-resolves
+    // the record through the same tenancy-scoped query, so the foreign price
+    // can never be modified through this surface.
     expect(Treatment::withoutGlobalScopes()->findOrFail($this->foreignTreatment->id))
         ->final_price->toBe(999999);
+});
+
+test('treatments table registers no bulk delete action', function () {
+    bootFilamentPanelAs($this->admin, $this->tenant);
+
+    // Treatments are system-generated and carry prices, so the table
+    // deliberately registers no destructive bulk action: this pins that no
+    // crafted bulk request can reach one on this surface. The crafted
+    // foreign+own bulk delete path itself is pinned in
+    // PetTenantIsolationTest, where a DeleteBulkAction is registered.
+    Livewire::test(ListTreatments::class)
+        ->assertTableBulkActionDoesNotExist('delete');
 });
