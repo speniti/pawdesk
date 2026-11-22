@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Enums\InpsMode;
+use App\Services\Forfettario\TaxConfiguration;
 use Database\Factories\TenantFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -20,6 +22,11 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property array{
  *     slot_duration_minutes?: int,
  *     buffer_minutes?: int,
+ *     tax_coefficient?: float,
+ *     tax_rate?: float,
+ *     inps_mode?: string,
+ *     inps_fixed_amount?: int,
+ *     inps_percentage?: float,
  *     privacy_business_name?: string,
  *     privacy_owner_name?: string,
  *     privacy_vat_number?: string,
@@ -47,6 +54,41 @@ class Tenant extends Model
     public function customers(): HasMany
     {
         return $this->hasMany(Customer::class);
+    }
+
+    /**
+     * Forfettario tax parameters, or null while the fiscal section is
+     * incomplete (no defaults are assumed: estimates must be opt-in).
+     */
+    public function forfettarioTaxConfiguration(): ?TaxConfiguration
+    {
+        $settings = $this->settings;
+        $coefficient = $settings['tax_coefficient'] ?? null;
+        $rate = $settings['tax_rate'] ?? null;
+        $inpsMode = InpsMode::tryFrom($settings['inps_mode'] ?? '');
+
+        if ($coefficient === null || $rate === null || $inpsMode === null) {
+            return null;
+        }
+
+        $fixedAmount = $settings['inps_fixed_amount'] ?? null;
+        $percentage = $settings['inps_percentage'] ?? null;
+
+        if ($inpsMode === InpsMode::Fixed && $fixedAmount === null) {
+            return null;
+        }
+
+        if ($inpsMode === InpsMode::Percentage && $percentage === null) {
+            return null;
+        }
+
+        return new TaxConfiguration(
+            coefficientPercent: (float) $coefficient,
+            substituteTaxRatePercent: (float) $rate,
+            inpsMode: $inpsMode,
+            inpsFixedAnnualCents: $fixedAmount !== null ? (int) round(((float) $fixedAmount) * 100) : null,
+            inpsPercentage: $percentage !== null ? (float) $percentage : null,
+        );
     }
 
     public function hasMailgunConfigured(): bool

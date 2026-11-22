@@ -53,6 +53,11 @@ describe('form rendering', function () {
                 'settings' => [
                     'slot_duration_minutes' => 30,
                     'buffer_minutes' => 15,
+                    'tax_coefficient' => 78,
+                    'tax_rate' => 15,
+                    'inps_mode' => null,
+                    'inps_fixed_amount' => null,
+                    'inps_percentage' => null,
                     'privacy_business_name' => null,
                     'privacy_owner_name' => null,
                     'privacy_vat_number' => null,
@@ -296,5 +301,49 @@ describe('saving privacy owner data', function () {
             ->and($this->tenant->settings['privacy_business_address'])->toBe('Via Roma 1, 00100 Roma (RM)')
             ->and($this->tenant->settings['privacy_contact_email'])->toBe('privacy@saloneace.it')
             ->and($this->tenant->settings['privacy_contact_phone'])->toBe('+39021234567');
+    });
+});
+
+describe('saving fiscal settings', function () {
+    test('can save forfettario tax settings with percentage inps', function () {
+        bootFilamentPanelAs($this->admin, $this->tenant);
+
+        Livewire::test(EditTenantSettings::class)
+            ->fillForm([
+                'settings' => [
+                    'slot_duration_minutes' => 30,
+                    'buffer_minutes' => 15,
+                    'tax_coefficient' => 78,
+                    'tax_rate' => 5,
+                    'inps_mode' => 'percentage',
+                    'inps_fixed_amount' => null,
+                    'inps_percentage' => 26.07,
+                ],
+            ])
+            ->call('save')
+            ->assertNotified();
+
+        $this->tenant->refresh();
+
+        expect($this->tenant->settings['tax_coefficient'])->toBe(78)
+            ->and($this->tenant->settings['tax_rate'])->toBe(5)
+            ->and($this->tenant->settings['inps_mode'])->toBe('percentage')
+            ->and($this->tenant->settings['inps_percentage'])->toBe(26.07);
+    });
+
+    test('fixed annual contribution is required when inps mode is fixed', function () {
+        bootFilamentPanelAs($this->admin, $this->tenant);
+
+        Livewire::test(EditTenantSettings::class)
+            ->fillForm([
+                'settings' => [
+                    'tax_coefficient' => 78,
+                    'tax_rate' => 15,
+                    'inps_mode' => 'fixed',
+                    'inps_fixed_amount' => null,
+                ],
+            ])
+            ->call('save')
+            ->assertHasFormErrors(['settings.inps_fixed_amount']);
     });
 });
