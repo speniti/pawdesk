@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Providers\Filament;
 
+use App\Filament\Pages\Auth\EmailChangeConfirmation;
 use App\Filament\Pages\Auth\Login;
 use App\Filament\Pages\Auth\MagicLinkConfirmation;
 use App\Filament\Pages\Auth\Profile;
@@ -48,6 +49,9 @@ class PawDeskProvider extends PanelProvider
                 return [
                     Route::get('/auth/magic-link/{token}', MagicLinkConfirmation::class)
                         ->name('auth.magic-link.verify')
+                        ->middleware('throttle:10,1'),
+                    Route::get('/auth/email-change/{token}', EmailChangeConfirmation::class)
+                        ->name('auth.email-change.verify')
                         ->middleware('throttle:10,1'),
                     Route::get('/{tenant:slug}/privacy-policy', PrivacyPolicy::class)
                         ->name('privacy-policy'),
