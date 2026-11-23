@@ -21,6 +21,9 @@ class PendingEmailService
 
     public function consume(string $token): ?PendingEmailChange
     {
+        // The pull-then-forget sequence is not atomic: a concurrent confirm of
+        // the same token may leave the stale per-user index behind (harmless —
+        // same semantics as MagicLinkService; the token itself stays consumed).
         $pending = Cache::pull($this->tokenKey($token));
 
         if (! $pending instanceof PendingEmailChange) {
@@ -41,6 +44,8 @@ class PendingEmailService
         $token = Str::random(64);
         $hash = hash('sha256', $token);
 
+        // The two-key replace is not atomic: a concurrent request may orphan
+        // one token entry, which simply expires with its TTL.
         $previousHash = Cache::pull($this->userKey($user->id));
 
         if (is_string($previousHash)) {

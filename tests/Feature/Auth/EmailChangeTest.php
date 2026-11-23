@@ -62,6 +62,24 @@ describe('email change request', function () {
 
         Notification::assertSentTo($this->user, EmailChangeNoticeNotification::class, 1);
         Notification::assertNotSentTo($this->user, EmailChangeConfirmationNotification::class);
+        Notification::assertNotSentTo(
+            Notification::route('mail', 'nuovo@example.com'),
+            EmailChangeNoticeNotification::class,
+        );
+    });
+
+    test('a case-variant of the current address is a normal save', function () {
+        bootFilamentPanelAs($this->user, $this->tenant);
+
+        Livewire::test(Profile::class)
+            ->fillForm(['email' => 'VECCHIO@example.com'])
+            ->call('save')
+            ->assertNotified();
+
+        expect($this->user->refresh()->email)->toBe('vecchio@example.com')
+            ->and(app(PendingEmailService::class)->pendingEmailFor($this->user))->toBeNull();
+
+        Notification::assertNothingSent();
     });
 
     test('still saves the other profile fields and keeps the form on the current email', function () {
@@ -211,10 +229,17 @@ describe('link consumption', function () {
 
         expect($this->user->refresh()->email)->toBe('nuovo@example.com');
 
-        $component->call('confirm')->assertRedirect();
+        // Attack shape: a fresh pending change is issued for the account, then
+        // the stale confirmation page is clicked again — it must not consume
+        // the new pending change nor leak anything beyond the generic failure.
+        app(PendingEmailService::class)->issueChange($this->user, 'terzo@example.com');
+
+        $component->call('confirm')
+            ->assertRedirect()
+            ->assertNotified("Non è stato possibile applicare il cambio dell'email.");
 
         expect($this->user->refresh()->email)->toBe('nuovo@example.com')
-            ->and(app(PendingEmailService::class)->pendingEmailFor($this->user))->toBeNull();
+            ->and(app(PendingEmailService::class)->pendingEmailFor($this->user))->toBe('terzo@example.com');
     });
 
     test('an expired token cannot be consumed', function () {
@@ -238,9 +263,43 @@ describe('link consumption', function () {
 
         Livewire::test(EmailChangeConfirmation::class, ['token' => $token])
             ->call('confirm')
-            ->assertRedirect();
+            ->assertRedirect()
+            ->assertNotified("Non è stato possibile applicare il cambio dell'email.");
 
         expect($this->user->refresh()->email)->toBe('vecchio@example.com')
             ->and(app(PendingEmailService::class)->pendingEmailFor($this->user))->toBeNull();
+    });
+
+    test('a pending change for a deleted user fails generically', function () {
+        $url = app(PendingEmailService::class)->issueChange($this->user, 'nuovo@example.com');
+
+        $component = Livewire::test(EmailChangeConfirmation::class, ['token' => (string) str($url)->after('/auth/email-change/')]);
+
+        $this->user->delete();
+
+        $component->call('confirm')
+            ->assertRedirect()
+            ->assertNotified("Non è stato possibile applicare il cambio dell'email.");
+
+        expect(User::count())->toBe(0);
+    });
+});
+
+describe('notification content', function () {
+    test('the confirmation mail contains the link and never the current address', function () {
+        $url = url('/auth/email-change/'.str()->random(64));
+
+        $rendered = (string) (new EmailChangeConfirmationNotification($url))->toMail($this->user)->render();
+
+        expect($rendered)->toContain($url)
+            ->and($rendered)->not->toContain('vecchio@example.com');
+    });
+
+    test('the notice to the current address pins the new email and the support instruction', function () {
+        $rendered = (string) (new EmailChangeNoticeNotification('nuovo@example.com'))->toMail($this->user)->render();
+
+        expect($rendered)->toContain('nuovo@example.com')
+            ->toContain('contatta il supporto')
+            ->not->toContain(url('/auth/email-change/'));
     });
 });

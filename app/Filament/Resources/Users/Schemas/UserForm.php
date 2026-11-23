@@ -28,7 +28,19 @@ class UserForm
                     ->required()
                     ->maxLength(255)
                     // Global uniqueness is intentional: users authenticate once and may belong to multiple tenants
-                    ->unique(ignoreRecord: true),
+                    ->unique(ignoreRecord: true)
+                    // Passwordless app: the email IS the account identity, so it is
+                    // set once at creation and never edited here (#71). An
+                    // admin-side edit would be an immediate, unverified identity
+                    // change — a stolen admin session could silently move any
+                    // (cross-tenant) user's identity and inherit their
+                    // email_verified_at. Users change their own email through the
+                    // verified magic-link flow on the profile page; an
+                    // admin-initiated verified flow remains possible as a
+                    // follow-up if the capability is ever needed. The disabled
+                    // field is also skipped on dehydration, so a crafted edit
+                    // payload cannot smuggle a new email into the update.
+                    ->disabledOn('edit'),
 
                 Select::make('role')
                     ->label('Ruolo')
