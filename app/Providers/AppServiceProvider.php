@@ -22,6 +22,11 @@ class AppServiceProvider extends ServiceProvider
     {
         Model::preventLazyLoading(! $this->app->isProduction());
 
+        // Named limiter for the magic-link send path: Login::authenticate()
+        // enforces it manually through MagicLinkRateLimit because the target
+        // email lives in the Livewire form state, not in the HTTP request
+        // input, and the manual enforcement does not share counters with this
+        // named registration.
         RateLimiter::for(
             'magic-link-email',
             fn (Request $request): Limit => MagicLinkRateLimit::fromRequest($request),

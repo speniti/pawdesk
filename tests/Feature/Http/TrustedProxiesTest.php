@@ -66,6 +66,8 @@ test('forwarded headers are ignored when the direct peer is not a trusted proxy'
 });
 
 test('forwarded headers are ignored when no proxy is configured', function () {
+    $_ENV['TRUSTED_PROXIES'] = '';
+    $this->refreshApplication();
     defineClientIpRoute();
 
     $this->withServerVariables(['REMOTE_ADDR' => '172.18.0.5']);
@@ -74,3 +76,13 @@ test('forwarded headers are ignored when no proxy is configured', function () {
         ->assertOk()
         ->assertSee('172.18.0.5');
 });
+
+test('a catch-all trusted proxies cidr is rejected at boot with a clear message', function (string $catchAll) {
+    $_ENV['TRUSTED_PROXIES'] = $catchAll;
+
+    expect(fn () => $this->refreshApplication())
+        ->toThrow(RuntimeException::class, 'TRUSTED_PROXIES');
+})->with([
+    '0.0.0.0/0' => ['0.0.0.0/0'],
+    '::/0' => ['::/0'],
+]);

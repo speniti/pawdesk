@@ -10,6 +10,14 @@ use Illuminate\Http\Request;
 /**
  * Rate limit for outgoing magic-link emails, keyed by the target address so
  * that an attacker rotating IPs cannot keep mailing the same victim inbox.
+ *
+ * Residual risk (accepted): an attacker who knows a victim's address can
+ * spend the 5 attempts from rotating IPs and prevent that inbox from
+ * receiving new magic links for up to an hour (the link TTL is 15 minutes,
+ * so up to ~45 minutes past the last valid link's expiry). This is the same
+ * trade-off Laravel accepts with per-username login throttling: without the
+ * per-email cap an unauthenticated attacker can mail-bomb any victim inbox
+ * without limit, which is the strictly worse outcome this limit prevents.
  */
 final class MagicLinkRateLimit
 {
