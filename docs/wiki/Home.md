@@ -14,3 +14,4 @@ Non esistono password: ogni accesso avviene con un link temporaneo inviato via e
 6. [Trattamenti](./06-trattamenti.md) — generati automaticamente al completamento degli appuntamenti.
 7. [Impostazioni](./07-impostazioni.md) — orari di apertura, slot, email (Mailgun), SMS (Vonage), dati privacy.
 8. [Utenti](./08-utenti.md) — operatori del salone, ruoli e link di accesso.
+9. [Sicurezza e dati](./09-sicurezza-e-dati.md) — dove vivono i dati, backup cifrati, ripristino.
