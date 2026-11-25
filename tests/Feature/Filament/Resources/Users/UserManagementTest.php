@@ -34,6 +34,7 @@ test('creating a user from the manage modal sends them a magic link invite', fun
     $createdUser = User::where('email', $newUserData->email)->first();
 
     expect($createdUser)->not->toBeNull()
+        ->and($createdUser->email)->toBe($newUserData->email)
         ->and($createdUser->tenants->pluck('id'))->toContain($this->tenant->id);
 
     Notification::assertSentTo($createdUser, MagicLinkNotification::class);
@@ -55,6 +56,30 @@ test('editing a user from the table modal updates the record', function () {
     expect($targetUser->refresh())
         ->name->toBe('Nome Aggiornato')
         ->role->value->toBe('admin');
+});
+
+test('editing a user cannot change the email', function () {
+    Notification::fake();
+
+    $targetUser = User::factory()->create(['email' => 'originale@example.com']);
+    $targetUser->tenants()->attach($this->tenant);
+    bootFilamentPanelAs($this->admin, $this->tenant);
+
+    // Attack shape: even a crafted edit payload carrying a different email
+    // must never reach the record — the field is not dehydrated on edit.
+    Livewire::test(ManageUsers::class)
+        ->callTableAction('edit', $targetUser, data: [
+            'name' => 'Nome Aggiornato',
+            'email' => 'attaccante@example.com',
+            'role' => 'admin',
+        ])
+        ->assertNotified();
+
+    expect($targetUser->refresh())
+        ->email->toBe('originale@example.com')
+        ->name->toBe('Nome Aggiornato');
+
+    Notification::assertNothingSent();
 });
 
 test('send access link table action sends a magic link email', function () {
