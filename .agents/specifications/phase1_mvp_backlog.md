@@ -261,12 +261,12 @@
 - [ ] `CustomerResource` con lista paginata, ricerca full-text (nome, cognome, email, telefono)
 - [ ] Form creazione/edit con: nome, cognome, email, telefono, indirizzo
 - [ ] Selezione canale preferito (email/whatsapp/sms) via dropdown
-- [ ] Campi GDPR: `gdpr_policy_sent_at` (readonly, aggiornato automaticamente), `marketing_consent_at` (checkbox con timestamp)
+- [ ] Campi GDPR: `gdpr_policy_sent_at` (readonly, aggiornato automaticamente)
 - [ ] Campo preferenze JSON (viewer/editor basilare)
 - [ ] Campo note libere (textarea, max 1000 caratteri)
 - [ ] Validazione email unica per tenant
 - [ ] Colonne list view: nome completo, email, telefono, canale preferito, data creazione
-- [ ] Filtri: canale preferito, consenso marketing, clienti senza appuntamenti
+- [ ] Filtri: canale preferito, clienti senza appuntamenti
 
 **Task**:
 - [ ] Creare `CustomerResource` Filament

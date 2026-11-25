@@ -64,19 +64,13 @@ class CustomerInfolist
                                     ->badge(),
                             ]),
 
-                        Section::make('Privacy e consensi')
+                        Section::make('Privacy')
                             ->icon(Heroicon::OutlinedShieldCheck)
                             ->inlineLabel()
                             ->schema([
                                 IconEntry::make('gdpr_policy_sent_at')
                                     ->label('Informativa privacy')
                                     ->state(static fn (Customer $record) => ! is_null($record->gdpr_policy_sent_at))
-                                    ->alignEnd()
-                                    ->boolean(),
-
-                                IconEntry::make('marketing_consent_at')
-                                    ->label('Consenso marketing')
-                                    ->state(static fn (Customer $record) => ! is_null($record->marketing_consent_at))
                                     ->alignEnd()
                                     ->boolean(),
                             ]),

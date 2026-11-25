@@ -130,3 +130,12 @@ test('customers table preferred channel filter exposes enum options', function (
             return true;
         });
 });
+
+test('customers table has no marketing consent filter', function () {
+    bootFilamentPanelAs($this->admin, $this->tenant);
+
+    $table = Livewire::test(ListCustomers::class)->instance()->getTable();
+
+    expect($table->getFilter('marketing_consent_at', withHidden: true))->toBeNull()
+        ->and(array_keys($table->getFilters(withHidden: true)))->toBe(['preferred_channel', 'without_appointments']);
+});
