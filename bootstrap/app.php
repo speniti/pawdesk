@@ -16,7 +16,7 @@ return Application::configure(basePath: dirname(__DIR__))
         // honored exclusively when the direct peer belongs to one of the
         // configured proxy networks: an empty or unset TRUSTED_PROXIES trusts
         // nothing and keeps single-tenant dev/CI behavior unchanged. The
-        // parsing and the catch-all guard live in TrustedProxyConfig::fromEnv().
+        // parsing and the catch-all guard live in TrustedProxyConfig::fromString().
         $middleware->trustProxies(
             at: TrustedProxyConfig::fromString((string) env('TRUSTED_PROXIES')),
             headers: Request::HEADER_X_FORWARDED_TRAEFIK,
