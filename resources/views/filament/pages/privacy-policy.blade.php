@@ -54,12 +54,7 @@
             <li>
                 <strong>sicurezza dell'animale e contatto in caso di urgenze</strong> (ad esempio il
                 richiamo del proprietario durante la prestazione): base giuridica è il legittimo
-                interesse, art. 6 co. 1 lett. f) GDPR;
-            </li>
-            <li>
-                <strong>invio di comunicazioni promozionali e offerte</strong> relative ai servizi del
-                salone: base giuridica è il consenso, art. 6 co. 1 lett. a) GDPR, revocabile in
-                qualsiasi momento.
+                interesse, art. 6 co. 1 lett. f) GDPR.
             </li>
         </ul>
     </section>
@@ -69,9 +64,7 @@
         <p>
             Il conferimento dei dati indicati alle finalità di cui ai punti 1, 2 e 3 (appuntamenti,
             obblighi legali, sicurezza) è necessario per la fornitura del servizio di tolettatura: in
-            assenza non è possibile gestire la prenotazione né eseguire la prestazione. Il conferimento
-            dei dati per finalità di marketing è facoltativo e il relativo rifiuto non ha alcuna
-            conseguenza sull'erogazione del servizio.
+            assenza non è possibile gestire la prenotazione né eseguire la prestazione.
         </p>
     </section>
 
@@ -85,7 +78,6 @@
         </p>
         <ul class="list-disc pl-5 space-y-1">
             <li>dati contrattuali e di contatto: per la durata del rapporto e per i successivi 10 (dieci) anni, in adempimento agli obblighi fiscali e amministrativi;</li>
-            <li>dati trattati sulla base del consenso per il marketing: fino alla revoca del consenso;</li>
             <li>log delle comunicazioni di servizio: per il tempo necessario a garantire la corretta erogazione del servizio.</li>
         </ul>
     </section>
@@ -107,10 +99,7 @@
         <p>
             Hai il diritto di ottenere, in relazione ai tuoi dati personali: l'accesso (art. 15), la
             rettifica (art. 16), la cancellazione (art. 17), la limitazione del trattamento (art. 18),
-            la portabilità dei dati (art. 20) e l'opposizione al trattamento (art. 21). Hai inoltre il
-            diritto di revocare in qualsiasi momento il consenso, senza tuttavia pregiudicare la
-            liceità del trattamento basato sul consenso prestato prima della revoca (art. 13 co. 2
-            lett. c) e art. 7 co. 3 GDPR).
+            la portabilità dei dati (art. 20) e l'opposizione al trattamento (art. 21).
         </p>
         <p>
             Per esercitare i tuoi diritti puoi scrivere a
@@ -133,6 +122,9 @@
         <p>
             La presente informativa può subire modifiche nel tempo. Ti invitiamo a consultare
             periodicamente questa pagina.
+        </p>
+        <p>
+            Ultimo aggiornamento: <strong>25 novembre 2026</strong>.
         </p>
     </section>
 </div>
