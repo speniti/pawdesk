@@ -17,6 +17,10 @@ services:
       context: .
       target: production
     environment:
+      # environment: batte env_file:, quindi questi due valori vincono anche
+      # se il .env del tab Environment dovesse portare quelli di sviluppo (#73).
+      APP_ENV: "production"
+      APP_DEBUG: "0"
       PHP_OPCACHE_ENABLE: "1"
       # Il server può ignorare depends_on (modalità Stack di Dokploy): all'avvio
       # l'immagine esegue storage:link + migrate --force + optimize da sola.
@@ -28,7 +32,11 @@ services:
       - .env
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-fsS", "http://localhost:8080/up"]
+      # Guardia rilevativa (#73): il container viene marcato unhealthy se il
+      # debug è attivo in produzione. Traefik instrada per label a prescindere
+      # dalla health, quindi su app è diagnostica; per worker e scheduler la
+      # stessa guardia è bloccante (il processo esce prima di partire).
+      test: ["CMD-SHELL", "php artisan app:check-production-config && curl -fsS http://localhost:8080/up"]
       interval: 30s
       timeout: 5s
       retries: 3
@@ -42,9 +50,13 @@ services:
       target: production
     container_name: peniti_worker
     environment:
+      APP_ENV: "production"
+      APP_DEBUG: "0"
       PHP_OPCACHE_ENABLE: "1"
       DB_DATABASE: /var/www/html/storage/app/private/database.sqlite
-    command: php artisan queue:work --tries=3 --backoff=10
+    # Compose splitte il command con shlex (niente shell): `sh -c` serve per
+    # la guardia, `exec` per mantenere i segnali sul processo di queue (#73).
+    command: sh -c 'php artisan app:check-production-config && exec php artisan queue:work --tries=3 --backoff=10'
     env_file:
       - .env
     networks:
@@ -63,9 +75,11 @@ services:
       target: production
     container_name: peniti_scheduler
     environment:
+      APP_ENV: "production"
+      APP_DEBUG: "0"
       PHP_OPCACHE_ENABLE: "1"
       DB_DATABASE: /var/www/html/storage/app/private/database.sqlite
-    command: php artisan schedule:work
+    command: sh -c 'php artisan app:check-production-config && exec php artisan schedule:work'
     env_file:
       - .env
     networks:
