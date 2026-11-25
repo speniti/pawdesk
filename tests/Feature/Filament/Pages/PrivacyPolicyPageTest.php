@@ -27,21 +27,27 @@ test('pagina informativa pubblica mostra i dati del salone', function () {
 });
 
 test("l'informativa non promette più finalità di marketing basate sul consenso", function () {
-    // After the marketing consent feature was removed (#77/#91), the policy
-    // must not promise marketing processing or a consent-revocation right:
-    // both would be inaccurate transparency under art. 13 GDPR.
+    // The policy must never promise marketing processing or a consent
+    // revocation right, whatever the feature state behind the scenes:
+    // both would be inaccurate transparency under art. 13 GDPR. The
+    // marketing consent feature removal itself is tracked in #77/#91.
     $tenant = Tenant::factory()->create(['slug' => 'salone-privacy']);
 
     get('/salone-privacy/privacy-policy')
         ->assertOk()
-        ->assertDontSee('comunicazioni promozionali')
-        ->assertDontSee('marketing è facoltativo')
-        ->assertDontSee('fino alla revoca del consenso')
-        ->assertDontSee('revocare in qualsiasi momento il consenso')
+        // The *Text variants match stripped, whitespace-collapsed text, so
+        // a re-wrap of the same sentence cannot evade the pin.
+        ->assertDontSeeText('comunicazioni promozionali')
+        ->assertDontSeeText('marketing è facoltativo')
+        ->assertDontSeeText('fino alla revoca del consenso')
+        ->assertDontSeeText('revocare in qualsiasi momento il consenso')
         // Version anchor for accountability: every substantive revision
         // updates this date (and this pin together with it).
-        ->assertSee('Ultimo aggiornamento')
-        ->assertSee('25 novembre 2026');
+        ->assertSeeText('Ultimo aggiornamento')
+        ->assertSeeText('25 novembre 2026')
+        // Fallback §7 for tenants without privacy contact settings, which
+        // this tenant exercises by using the bare factory defaults.
+        ->assertSeeText('al contatto del titolare sopra indicato');
 });
 
 test('pagina informativa non richiede autenticazione', function () {
