@@ -7,6 +7,8 @@ use App\Filament\Resources\Treatments\Pages\ListTreatments;
 use App\Filament\Resources\Treatments\Pages\ViewTreatment;
 use App\Filament\Resources\Treatments\TreatmentResource;
 use App\Models\Appointment;
+use App\Models\Customer;
+use App\Models\Pet;
 use App\Models\Tenant;
 use App\Models\Treatment;
 use App\Models\User;
@@ -114,4 +116,91 @@ test('treatment list shows most recent appointment first', function () {
 
     Livewire::test(ListTreatments::class)
         ->assertCanSeeTableRecords([$newest, $middle, $oldest], inOrder: true);
+});
+
+test('treatments table exposes the configured filters scoped to the tenant', function () {
+    $foreignTenant = Tenant::factory()->create();
+    Customer::factory()->for($foreignTenant)->create(['last_name' => 'RossiDiAltroTenant']);
+    Pet::factory()->for($foreignTenant)->create(['name' => 'GattoDiUnAltroTenant']);
+    Customer::factory()->for($this->tenant)->create(['last_name' => 'BianchiLocale']);
+
+    bootFilamentPanelAs($this->admin, $this->tenant);
+
+    // Preloaded relationship filters render every option inline, so this
+    // pins the tenant scope end-to-end: dropping the modifyQueryUsing
+    // closure leaks foreign customers/pets into the dropdown and fails the
+    // two assertDontSee (#93 posture).
+    Livewire::test(ListTreatments::class)
+        ->assertTableFilterExists('periodo')
+        ->assertTableFilterExists('visible_to_customer')
+        ->assertTableFilterExists('cliente')
+        ->assertTableFilterExists('animale')
+        ->assertSee('BianchiLocale')
+        ->assertDontSee('RossiDiAltroTenant')
+        ->assertDontSee('GattoDiUnAltroTenant');
+});
+
+test('the period filter narrows treatments to the appointment date range', function () {
+    bootFilamentPanelAs($this->admin, $this->tenant);
+
+    $inRange = Treatment::factory()->forAppointment(
+        Appointment::factory()->forTenant($this->tenant)->create(['start_time' => '2026-06-10 09:00:00']),
+    )->create(['final_price' => 1000]);
+    $outOfRange = Treatment::factory()->forAppointment(
+        Appointment::factory()->forTenant($this->tenant)->create(['start_time' => '2026-12-20 09:00:00']),
+    )->create(['final_price' => 2000]);
+
+    Livewire::test(ListTreatments::class)
+        ->filterTable('periodo', data: ['dal' => '2026-06-01', 'al' => '2026-06-30'])
+        ->assertSee('Dal 01/06/2026')
+        ->assertSee('Al 30/06/2026')
+        ->assertCanSeeTableRecords([$inRange])
+        ->assertCanNotSeeTableRecords([$outOfRange]);
+});
+
+test('the period filter accepts a single bound', function (array $data, string $outOfRangeDate) {
+    bootFilamentPanelAs($this->admin, $this->tenant);
+
+    $inRange = Treatment::factory()->forAppointment(
+        Appointment::factory()->forTenant($this->tenant)->create(['start_time' => '2026-06-10 09:00:00']),
+    )->create();
+    $outOfRange = Treatment::factory()->forAppointment(
+        Appointment::factory()->forTenant($this->tenant)->create(['start_time' => $outOfRangeDate]),
+    )->create();
+
+    Livewire::test(ListTreatments::class)
+        ->filterTable('periodo', data: $data)
+        ->assertCanSeeTableRecords([$inRange])
+        ->assertCanNotSeeTableRecords([$outOfRange]);
+})->with([
+    'solo dal' => [['dal' => '2026-06-01'], '2026-05-15 09:00:00'],
+    'solo al' => [['al' => '2026-06-30'], '2026-12-20 09:00:00'],
+]);
+
+test('the customer filter narrows treatments to the selected customer', function () {
+    bootFilamentPanelAs($this->admin, $this->tenant);
+
+    $otherCustomer = Customer::factory()->for($this->tenant)->create();
+    $otherPet = Pet::factory()->for($this->tenant)->for($otherCustomer)->create();
+    $otherTreatment = Treatment::factory()->forAppointment(
+        Appointment::factory()->create(['customer_id' => $otherCustomer->id, 'pet_id' => $otherPet->id]),
+    )->create(['final_price' => 2000]);
+
+    Livewire::test(ListTreatments::class)
+        ->filterTable('cliente', data: ['value' => $this->treatment->customer_id])
+        ->assertCanSeeTableRecords([$this->treatment])
+        ->assertCanNotSeeTableRecords([$otherTreatment]);
+});
+
+test('the visibility filter narrows treatments to the selected visibility', function () {
+    bootFilamentPanelAs($this->admin, $this->tenant);
+
+    $hidden = Treatment::factory()->forAppointment(
+        Appointment::factory()->forTenant($this->tenant)->create(),
+    )->create(['visible_to_customer' => false]);
+
+    Livewire::test(ListTreatments::class)
+        ->filterTable('visible_to_customer', data: ['value' => true])
+        ->assertCanSeeTableRecords([$this->treatment])
+        ->assertCanNotSeeTableRecords([$hidden]);
 });
