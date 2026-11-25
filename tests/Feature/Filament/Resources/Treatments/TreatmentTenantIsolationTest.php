@@ -89,3 +89,15 @@ test('treatments table registers no bulk delete action', function () {
     Livewire::test(ListTreatments::class)
         ->assertTableBulkActionDoesNotExist('delete');
 });
+
+test('a forged cross-tenant filter value matches no treatments', function () {
+    bootFilamentPanelAs($this->admin, $this->tenant);
+
+    // The cliente dropdown only offers current-tenant customers (pinned in
+    // TreatmentManagementTest). Even a crafted value carrying a foreign id
+    // matches nothing: the applied relationship filter keeps the tenant
+    // scope inside its whereHas, so the table empties instead of leaking.
+    Livewire::test(ListTreatments::class)
+        ->filterTable('cliente', data: ['value' => $this->foreignTreatment->customer_id])
+        ->assertCanNotSeeTableRecords([$this->treatment]);
+});

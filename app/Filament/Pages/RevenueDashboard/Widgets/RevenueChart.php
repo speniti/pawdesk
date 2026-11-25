@@ -12,6 +12,13 @@ use Filament\Widgets\ChartWidget;
 
 class RevenueChart extends ChartWidget
 {
+    /**
+     * Header widgets live on a 2-column grid; the base Widget span of 1
+     * would half the chart's width (#98). Full span stacks it under the
+     * full-width stats overview.
+     */
+    protected int|string|array $columnSpan = 'full';
+
     protected ?string $heading = 'Fatturato mensile';
 
     protected ?string $pollingInterval = null;

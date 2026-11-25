@@ -20,14 +20,19 @@ use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Illuminate\Support\Number;
+use UnitEnum;
 
 class RevenueDashboard extends Page
 {
+    // Admin bookkeeping surfaces live in the Gestione group (#99), after
+    // Utenti (sort 10).
+    protected static string|UnitEnum|null $navigationGroup = 'Gestione';
+
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedChartBar;
 
     protected static ?string $navigationLabel = 'Fatturato e tasse';
 
-    protected static ?int $navigationSort = 10;
+    protected static ?int $navigationSort = 20;
 
     protected static ?string $title = 'Fatturato e tasse';
 
