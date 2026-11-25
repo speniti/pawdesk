@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use Illuminate\Http\Middleware\TrustProxies;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 use function Pest\Laravel\get;
@@ -11,15 +13,26 @@ function defineClientIpRoute(): void
     Route::get('/_testing/client-ip', fn () => response((string) request()->ip()));
 }
 
-afterEach(function () {
-    unset($_ENV['TRUSTED_PROXIES']);
+function actAsProxyConfiguration(array $proxies): void
+{
+    // Configure the middleware exactly as the bootstrap closure does with
+    // TrustedProxyConfig::fromEnv() and HEADER_X_FORWARDED_TRAEFIK on a real
+    // boot. The closure itself is wired via afterResolving(HttpKernel::class)
+    // and in a test process fires only once (Livewire resolves the contract
+    // one-shot), so refreshApplication() cannot re-run it deterministically:
+    // the parsing and the catch-all guard are covered by the
+    // TrustedProxyConfig unit tests instead.
+    TrustProxies::flushState();
+    TrustProxies::at($proxies);
+    TrustProxies::withHeaders(Request::HEADER_X_FORWARDED_TRAEFIK);
+}
 
-    $this->refreshApplication();
+beforeEach(function () {
+    TrustProxies::flushState();
 });
 
 test('a forwarded client ip is used when the request comes from a trusted proxy cidr', function () {
-    $_ENV['TRUSTED_PROXIES'] = '172.18.0.0/16';
-    $this->refreshApplication();
+    actAsProxyConfiguration(['172.18.0.0/16']);
     defineClientIpRoute();
 
     $this->withServerVariables(['REMOTE_ADDR' => '172.18.0.5']);
@@ -30,8 +43,7 @@ test('a forwarded client ip is used when the request comes from a trusted proxy 
 });
 
 test('each cidr in a comma-separated TRUSTED_PROXIES list is honored', function () {
-    $_ENV['TRUSTED_PROXIES'] = ' 172.18.0.0/16 , 10.0.0.0/8 ';
-    $this->refreshApplication();
+    actAsProxyConfiguration(['172.18.0.0/16', '10.0.0.0/8']);
     defineClientIpRoute();
 
     $this->withServerVariables(['REMOTE_ADDR' => '10.42.0.7']);
@@ -42,8 +54,7 @@ test('each cidr in a comma-separated TRUSTED_PROXIES list is honored', function 
 });
 
 test('the whole proxy chain forwarded by traefik is walked back to the real client', function () {
-    $_ENV['TRUSTED_PROXIES'] = '172.18.0.0/16';
-    $this->refreshApplication();
+    actAsProxyConfiguration(['172.18.0.0/16']);
     defineClientIpRoute();
 
     $this->withServerVariables(['REMOTE_ADDR' => '172.18.0.5']);
@@ -54,8 +65,7 @@ test('the whole proxy chain forwarded by traefik is walked back to the real clie
 });
 
 test('forwarded headers are ignored when the direct peer is not a trusted proxy', function () {
-    $_ENV['TRUSTED_PROXIES'] = '172.18.0.0/16';
-    $this->refreshApplication();
+    actAsProxyConfiguration(['172.18.0.0/16']);
     defineClientIpRoute();
 
     $this->withServerVariables(['REMOTE_ADDR' => '198.51.100.7']);
@@ -66,8 +76,7 @@ test('forwarded headers are ignored when the direct peer is not a trusted proxy'
 });
 
 test('forwarded headers are ignored when no proxy is configured', function () {
-    $_ENV['TRUSTED_PROXIES'] = '';
-    $this->refreshApplication();
+    actAsProxyConfiguration([]);
     defineClientIpRoute();
 
     $this->withServerVariables(['REMOTE_ADDR' => '172.18.0.5']);
@@ -76,13 +85,3 @@ test('forwarded headers are ignored when no proxy is configured', function () {
         ->assertOk()
         ->assertSee('172.18.0.5');
 });
-
-test('a catch-all trusted proxies cidr is rejected at boot with a clear message', function (string $catchAll) {
-    $_ENV['TRUSTED_PROXIES'] = $catchAll;
-
-    expect(fn () => $this->refreshApplication())
-        ->toThrow(RuntimeException::class, 'TRUSTED_PROXIES');
-})->with([
-    '0.0.0.0/0' => ['0.0.0.0/0'],
-    '::/0' => ['::/0'],
-]);
