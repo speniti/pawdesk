@@ -43,3 +43,25 @@ test('admin sees the modal actions on the manage users page', function () {
         ->assertTableActionVisible('sendAccessLink', $this->targetUser)
         ->assertTableActionVisible('delete', $this->targetUser);
 });
+
+test('only admins can bulk delete users', function () {
+    bootFilamentPanelAs($this->admin, $this->tenant);
+
+    expect($this->admin->can('deleteAny', User::class))->toBeTrue()
+        ->and($this->staff->can('deleteAny', User::class))->toBeFalse();
+});
+
+test('admin cannot delete themselves', function () {
+    bootFilamentPanelAs($this->admin, $this->tenant);
+
+    expect($this->admin->can('delete', $this->admin))->toBeFalse();
+});
+
+test('admin cannot delete a user who does not belong to the current tenant', function () {
+    $outsider = User::factory()->create();
+    $outsider->tenants()->attach(Tenant::factory()->create());
+
+    bootFilamentPanelAs($this->admin, $this->tenant);
+
+    expect($this->admin->can('delete', $outsider))->toBeFalse();
+});
