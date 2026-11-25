@@ -26,6 +26,24 @@ test('pagina informativa pubblica mostra i dati del salone', function () {
         ->assertSee('Titolare del trattamento');
 });
 
+test("l'informativa non promette più finalità di marketing basate sul consenso", function () {
+    // After the marketing consent feature was removed (#77/#91), the policy
+    // must not promise marketing processing or a consent-revocation right:
+    // both would be inaccurate transparency under art. 13 GDPR.
+    $tenant = Tenant::factory()->create(['slug' => 'salone-privacy']);
+
+    get('/salone-privacy/privacy-policy')
+        ->assertOk()
+        ->assertDontSee('comunicazioni promozionali')
+        ->assertDontSee('marketing è facoltativo')
+        ->assertDontSee('fino alla revoca del consenso')
+        ->assertDontSee('revocare in qualsiasi momento il consenso')
+        // Version anchor for accountability: every substantive revision
+        // updates this date (and this pin together with it).
+        ->assertSee('Ultimo aggiornamento')
+        ->assertSee('25 novembre 2026');
+});
+
 test('pagina informativa non richiede autenticazione', function () {
     $tenant = Tenant::factory()->create(['slug' => 'salone-aperto']);
 
