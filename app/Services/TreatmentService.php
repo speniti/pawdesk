@@ -42,6 +42,25 @@ class TreatmentService
     }
 
     /**
+     * Recompute the existing treatment's totals from the current pivot, onto
+     * the same columns generateFromAppointment uses. No-op when no treatment
+     * exists yet.
+     *
+     * Only safe immediately after the sync that created the treatment within
+     * the same operation (#80): staff edits always win, so it must never run
+     * for an appointment completed earlier.
+     */
+    public function refreshTotals(Appointment $appointment): void
+    {
+        $totals = $this->pivotTotals($appointment);
+
+        $appointment->treatment()->update([
+            'actual_duration_minutes' => $totals['total_duration'],
+            'final_price' => $totals['total_price'],
+        ]);
+    }
+
+    /**
      * @return array{total_price: int, total_duration: int}
      */
     private function pivotTotals(Appointment $appointment): array
