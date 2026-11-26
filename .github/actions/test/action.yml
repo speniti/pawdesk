@@ -9,6 +9,7 @@ runs:
       uses: ./.github/actions/setup
       with:
         php-version: '8.5'
+        coverage: pcov
 
     - name: Composer Install
       run: composer install -q --no-interaction --optimize-autoloader --no-progress
@@ -21,5 +22,5 @@ runs:
       shell: bash
 
     - name: Run Pest
-      run: vendor/bin/pest --ci
+      run: vendor/bin/pest --ci --coverage --min=1
       shell: bash
