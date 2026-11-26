@@ -56,8 +56,9 @@ it('does not throw when vonage accepts the message', function () {
     $tenant = Mockery::mock(Tenant::class);
     assert($tenant instanceof Tenant);
 
+    // Throwable, non VonageSmsException: qualunque throw deve fallire il test.
     expect(fn () => $sender->send($tenant, '+393331234567', 'Test message', 'PawDesk'))
-        ->not->toThrow(VonageSmsException::class);
+        ->not->toThrow(Throwable::class);
 });
 
 it('accepts a null sender id and falls back to the shared pool', function () {
@@ -69,7 +70,7 @@ it('accepts a null sender id and falls back to the shared pool', function () {
     assert($tenant instanceof Tenant);
 
     expect(fn () => $sender->send($tenant, '+393331234567', 'Test message', null))
-        ->not->toThrow(VonageSmsException::class);
+        ->not->toThrow(Throwable::class);
 });
 
 it('throws a VonageSmsException when vonage rejects the message', function () {

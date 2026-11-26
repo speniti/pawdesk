@@ -23,7 +23,8 @@ runs:
 
     # Copertura misurata al primo run con pcov: 95.3% (#83). La soglia a 92
     # lascia ~3 punti di margine anti-fluttuazione tra ambienti e mura
-    # contro le regressioni; alzarla è una decisione consapevole.
+    # contro le regressioni; alzarla è una decisione consapevole. Il bump
+    # di memoria è load-bearing: il default CLI a 128M OOM in locale (#85).
     - name: Run Pest
       run: php -d memory_limit=512M vendor/bin/pest --ci --coverage --min=92
       shell: bash
