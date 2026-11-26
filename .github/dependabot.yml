@@ -13,6 +13,13 @@ updates:
 
   - package-ecosystem: npm
     directory: /
+    # Dev deps raggruppate in UNA PR (major incluse): i major accoppiati
+    # (stylelint + stylelint-config-standard, typescript + typescript-eslint)
+    # non possono viaggiare separati senza rompere la risoluzione peer
+    # (#123/#128/#127).
+    groups:
+      npm-dev:
+        dependency-type: development
     schedule:
       interval: weekly
 
