@@ -30,5 +30,11 @@ updates:
 
   - package-ecosystem: github-actions
     directory: /
+    # Le action di CI si validano da sole sulla PR che le tocca (CI rossa =
+    # bump problematico): raggrupparle evita una PR separata per ogni major.
+    groups:
+      gh-actions:
+        patterns:
+          - '*'
     schedule:
       interval: weekly
