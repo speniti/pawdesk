@@ -849,7 +849,7 @@ test('a failing services sync rolls back the created appointment', function () {
 
     // Sabotage the pivot insert so the sync fails after the create has run.
     DB::connection()->beforeExecuting(function (string $query): void {
-        if (str_starts_with(ltrim($query), 'insert') && str_contains($query, 'appointment_service')) {
+        if (str_starts_with(mb_ltrim($query), 'insert') && str_contains($query, 'appointment_service')) {
             throw new RuntimeException('Simulated pivot sync failure.');
         }
     });
@@ -885,4 +885,48 @@ test('a failing services sync rolls back the created appointment', function () {
     expect(Appointment::count())->toBe(0)
         ->and(Treatment::count())->toBe(0)
         ->and(DB::table('appointment_service')->count())->toBe(0);
+});
+
+test('creating an appointment directly as completed syncs the treatment totals', function () {
+    $customer = Customer::factory()->create(['tenant_id' => $this->tenant->id]);
+    $pet = Pet::factory()->create(['customer_id' => $customer->id, 'tenant_id' => $this->tenant->id]);
+    $service = Service::factory()->create([
+        'tenant_id' => $this->tenant->id,
+        'base_price' => 3500,
+        'duration_minutes' => 60,
+    ]);
+
+    bootFilamentPanelAs($this->admin, $this->tenant);
+
+    $component = Livewire::test(AppointmentCalendar::class);
+    $widget = $component->instance();
+    assert($widget instanceof AppointmentCalendar);
+
+    // Calling save() directly bypasses the form's state-machine rule: this
+    // is exactly the non-form path that can land on Completed (#80).
+    $save = Closure::bind(
+        fn (AppointmentCalendar $calendar, array $data, string $model) => $calendar->save($data, $model),
+        null,
+        AppointmentCalendar::class,
+    );
+
+    $appointment = $save($widget, [
+        'customer_id' => $customer->id,
+        'pet_id' => $pet->id,
+        'user_id' => $this->admin->id,
+        'status' => AppointmentStatus::Completed->value,
+        'start_time' => now()->addDay()->setTime(10, 0)->toDateTimeString(),
+        'services' => [$service->id],
+    ], Appointment::class);
+
+    // save() is typed Model|false for the generic calendar; this path
+    // returns the created appointment, or it would have failed above.
+    assert($appointment instanceof Appointment);
+
+    expect($appointment->status)->toBe(AppointmentStatus::Completed)
+        ->and($appointment->services)->toHaveCount(1)
+        // The observer generated the treatment before the pivot existed;
+        // the totals must be refreshed from the synced pivot, not stay zero.
+        ->and($appointment->treatment->final_price)->toBe(3500)
+        ->and($appointment->treatment->actual_duration_minutes)->toBe(60);
 });

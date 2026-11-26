@@ -11,6 +11,7 @@ use App\Models\Pet;
 use App\Models\Service;
 use App\Models\Tenant;
 use App\Services\AppointmentPriceCalculator;
+use App\Services\TreatmentService;
 use Carbon\Carbon;
 use Filament\Actions\Action;
 use Filament\Actions\CreateAction;
@@ -232,6 +233,15 @@ class AppointmentCalendar extends Calendar
 
             if ($record instanceof Appointment && $serviceIds) {
                 $this->syncServicesWithPivotData($record, $serviceIds, $pet);
+
+                // If the create landed directly on Completed — the form's
+                // state machine blocks it, but save() does not — the observer
+                // generated the treatment against the empty pivot, so its
+                // totals are zero. The pivot is authoritative now: refresh
+                // within the same transaction (#80).
+                if ($record->status === AppointmentStatus::Completed) {
+                    app(TreatmentService::class)->refreshTotals($record);
+                }
             }
 
             return $record;
@@ -343,6 +353,11 @@ class AppointmentCalendar extends Calendar
 
         $pivotData = AppointmentPriceCalculator::buildPivotData($services, $pet);
         $appointment->services()->sync($pivotData);
+
+        // sync() writes rows without touching the relation cache: drop the
+        // possibly-loaded (and now stale, e.g. empty when the created observer
+        // read it before the sync) collection so later reads re-query. (#80)
+        $appointment->unsetRelation('services');
     }
 
     private function transitionStatus(Appointment $record, AppointmentStatus $nextStatus): void

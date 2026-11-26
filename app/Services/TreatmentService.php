@@ -19,8 +19,11 @@ class TreatmentService
      * - If a caller updates the appointment outside a transaction and the update
      *   fails after generation, an orphan treatment may remain; it is reused as-is
      *   by the next completion attempt (idempotency).
-     * - An appointment created directly as completed gets zero totals, because the
-     *   services pivot is synced after the create; staff can fix them in the edit form.
+     * - A creation path that lands directly on Completed and syncs the services
+     *   pivot afterwards still gets zero totals unless it calls refreshTotals()
+     *   after the sync: the calendar widget does exactly that, inside its
+     *   transaction (#80). Outside the widget, follow the seeder pattern instead:
+     *   create with another status, sync, then update to Completed.
      */
     public function generateFromAppointment(Appointment $appointment): Treatment
     {
