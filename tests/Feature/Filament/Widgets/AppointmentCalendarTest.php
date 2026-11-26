@@ -16,6 +16,7 @@ use App\Notifications\AppointmentConfirmedNotification;
 use App\Services\AppointmentPriceCalculator;
 use Filament\Forms\Components\Select;
 use Filament\Support\Exceptions\Halt;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
 use Livewire\Livewire;
 
@@ -833,4 +834,55 @@ test('transition status action re-verifies against the persisted record', functi
     $transitionStatus($component, $appointment, AppointmentStatus::Confirmed);
 
     expect($appointment->refresh()->status)->toBe(AppointmentStatus::Cancelled);
+});
+
+test('a failing services sync rolls back the created appointment', function () {
+    $customer = Customer::factory()->create(['tenant_id' => $this->tenant->id]);
+    $pet = Pet::factory()->create(['customer_id' => $customer->id, 'tenant_id' => $this->tenant->id]);
+    $service = Service::factory()->create([
+        'tenant_id' => $this->tenant->id,
+        'base_price' => 3500,
+        'duration_minutes' => 60,
+    ]);
+
+    bootFilamentPanelAs($this->admin, $this->tenant);
+
+    // Sabotage the pivot insert so the sync fails after the create has run.
+    DB::connection()->beforeExecuting(function (string $query): void {
+        if (str_starts_with(ltrim($query), 'insert') && str_contains($query, 'appointment_service')) {
+            throw new RuntimeException('Simulated pivot sync failure.');
+        }
+    });
+
+    $component = Livewire::test(AppointmentCalendar::class);
+    $widget = $component->instance();
+    assert($widget instanceof AppointmentCalendar);
+
+    $save = Closure::bind(
+        fn (AppointmentCalendar $calendar, array $data, string $model) => $calendar->save($data, $model),
+        null,
+        AppointmentCalendar::class,
+    );
+
+    $data = [
+        'customer_id' => $customer->id,
+        'pet_id' => $pet->id,
+        'user_id' => $this->admin->id,
+        'status' => AppointmentStatus::Requested->value,
+        'start_time' => now()->addDay()->setTime(10, 0)->toDateTimeString(),
+        'services' => [$service->id],
+    ];
+
+    try {
+        $save($widget, $data, Appointment::class);
+        $this->fail('The sync failure should propagate out of save().');
+    } catch (RuntimeException) {
+        // Expected.
+    }
+
+    // #80: create and sync are atomic — no appointment left behind without
+    // its services, no half-written pivot, no orphan treatment.
+    expect(Appointment::count())->toBe(0)
+        ->and(Treatment::count())->toBe(0)
+        ->and(DB::table('appointment_service')->count())->toBe(0);
 });

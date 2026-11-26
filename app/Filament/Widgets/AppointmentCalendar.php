@@ -223,13 +223,19 @@ class AppointmentCalendar extends Calendar
             $data['end_time'] = $this->calculateEndTime($data['start_time'], $serviceIds, $pet);
         }
 
-        $record = parent::save($data, $model);
+        // Create and pivot sync share one transaction (#80): the create can
+        // already fire treatment generation through the observer, and a
+        // failed sync must not leave a serviceless appointment behind. Same
+        // shape as the edit path above.
+        return DB::transaction(function () use ($data, $model, $serviceIds, $pet) {
+            $record = parent::save($data, $model);
 
-        if ($record instanceof Appointment && $serviceIds) {
-            $this->syncServicesWithPivotData($record, $serviceIds, $pet);
-        }
+            if ($record instanceof Appointment && $serviceIds) {
+                $this->syncServicesWithPivotData($record, $serviceIds, $pet);
+            }
 
-        return $record;
+            return $record;
+        });
     }
 
     protected function updateRecord(?Model $record, Carbon $start, ?Carbon $end, bool $allDay): void
