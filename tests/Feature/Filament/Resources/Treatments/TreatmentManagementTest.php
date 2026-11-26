@@ -12,6 +12,7 @@ use App\Models\Pet;
 use App\Models\Tenant;
 use App\Models\Treatment;
 use App\Models\User;
+use Filament\Forms\Components\Select;
 use Livewire\Livewire;
 
 use function Pest\Laravel\actingAs;
@@ -123,21 +124,43 @@ test('treatments table exposes the configured filters scoped to the tenant', fun
     Customer::factory()->for($foreignTenant)->create(['last_name' => 'RossiDiAltroTenant']);
     Pet::factory()->for($foreignTenant)->create(['name' => 'GattoDiUnAltroTenant']);
     Customer::factory()->for($this->tenant)->create(['last_name' => 'BianchiLocale']);
+    Pet::factory()->for($this->tenant)->create(['name' => 'CaneLocale']);
 
     bootFilamentPanelAs($this->admin, $this->tenant);
 
-    // Preloaded relationship filters render every option inline, so this
-    // pins the tenant scope end-to-end: dropping the modifyQueryUsing
-    // closure leaks foreign customers/pets into the dropdown and fails the
-    // two assertDontSee (#93 posture).
-    Livewire::test(ListTreatments::class)
+    $component = Livewire::test(ListTreatments::class)
         ->assertTableFilterExists('periodo')
         ->assertTableFilterExists('visible_to_customer')
         ->assertTableFilterExists('cliente')
-        ->assertTableFilterExists('animale')
-        ->assertSee('BianchiLocale')
-        ->assertDontSee('RossiDiAltroTenant')
-        ->assertDontSee('GattoDiUnAltroTenant');
+        ->assertTableFilterExists('animale');
+
+    // Dalla 5.12 i select searchable+preload renderizzano le opzioni come
+    // componente async: non vivono più nell'HTML di pagina, quindi un pin
+    // stringa sul markup sarebbe vacuo (i assertDontSee passerebbero anche
+    // con lo scoping rotto). Il pin cammina nello schema dei filtri e
+    // asserisce sull'ARRAY di opzioni che la dropdown consuma davvero.
+    // L'esito è garantito da DUE livelli indipendenti (auto-tenancy delle
+    // relationship di Filament 5 + modifyQueryUsing esplicito di #93, che
+    // resta come assicurazione contro cambi di default vendor): questo
+    // assert è la sentinella che scatta se ENTRAMBI i livelli vengono meno.
+    $filterOptions = function (string $filterName) use ($component): array {
+        $group = collect($component->instance()->getTableFiltersForm()->getComponents())
+            ->first(fn ($schemaComponent) => str_contains((string) $schemaComponent->getKey(), $filterName));
+
+        $select = collect($group->getChildSchema()->getComponents())
+            ->first(fn ($schemaComponent) => $schemaComponent instanceof Select);
+
+        return array_values($select->getOptions());
+    };
+
+    $cliente = $filterOptions('cliente');
+    $animale = $filterOptions('animale');
+
+    expect(collect($cliente)->contains(fn ($label) => str_contains($label, 'BianchiLocale')))->toBeTrue()
+        ->and(collect($animale)->contains(fn ($label) => str_contains($label, 'CaneLocale')))->toBeTrue()
+        // I marker del tenant esterno NON devono mai comparire come opzioni.
+        ->and(collect($cliente)->some(fn ($label) => str_contains($label, 'RossiDiAltroTenant')))->toBeFalse()
+        ->and(collect($animale)->some(fn ($label) => str_contains($label, 'GattoDiUnAltroTenant')))->toBeFalse();
 });
 
 test('the period filter narrows treatments to the appointment date range', function () {
