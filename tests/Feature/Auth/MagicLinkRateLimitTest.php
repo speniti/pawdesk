@@ -40,7 +40,7 @@ test('magic-link requests are limited per email even when every request comes fr
 
     $page->authenticate();
 
-    Notification::assertSentTo($user, MagicLinkNotification::class, 5);
+    Notification::assertSentToTimes($user, MagicLinkNotification::class, 5);
 });
 
 test('a fresh email is not throttled because another email exhausted its own limit', function () {
@@ -67,8 +67,8 @@ test('a fresh email is not throttled because another email exhausted its own lim
 
     $page->authenticate();
 
-    Notification::assertSentTo($victim, MagicLinkNotification::class, 5);
-    Notification::assertSentTo($other, MagicLinkNotification::class, 1);
+    Notification::assertSentToTimes($victim, MagicLinkNotification::class, 5);
+    Notification::assertSentToTimes($other, MagicLinkNotification::class, 1);
 });
 
 test('the per-email limit outlives the per-ip window on the livewire send path', function () {
@@ -87,7 +87,7 @@ test('the per-email limit outlives the per-ip window on the livewire send path',
 
     $component->call('authenticate');
 
-    Notification::assertSentTo($user, MagicLinkNotification::class, 5);
+    Notification::assertSentToTimes($user, MagicLinkNotification::class, 5);
 });
 
 test('six authenticate attempts from the same ip only send five links and notify the throttle', function () {
@@ -102,7 +102,7 @@ test('six authenticate attempts from the same ip only send five links and notify
         $component->call('authenticate');
     }
 
-    Notification::assertSentTo($user, MagicLinkNotification::class, 5);
+    Notification::assertSentToTimes($user, MagicLinkNotification::class, 5);
 
     FilamentNotification::assertNotified(__('filament-panels::auth/pages/login.notifications.throttled.title'));
 });
@@ -119,7 +119,7 @@ test('the magic-link verification route is throttled to ten requests per minute 
 
 test('a tripped per-email limit on an existing account logs a masked warning', function () {
     Notification::fake();
-    Log::spy();
+    $log = Log::spy();
 
     $user = User::factory()->admin()->create();
 
@@ -137,16 +137,16 @@ test('a tripped per-email limit on an existing account logs a masked warning', f
 
     $page->authenticate();
 
-    Notification::assertSentTo($user, MagicLinkNotification::class, 5);
+    Notification::assertSentToTimes($user, MagicLinkNotification::class, 5);
 
-    Log::shouldHaveReceived('warning')
+    $log->shouldHaveReceived('warning')
         ->once()
         ->with('magic-link-email limiter tripped for existing account', ['email_sha1' => hash('sha1', $user->email)]);
 });
 
 test('a tripped per-email limit on an unknown email logs no warning', function () {
     Notification::fake();
-    Log::spy();
+    $log = Log::spy();
 
     User::factory()->admin()->create();
 
@@ -160,7 +160,7 @@ test('a tripped per-email limit on an unknown email logs no warning', function (
         $page->authenticate();
     }
 
-    Log::shouldNotHaveReceived('warning');
+    $log->shouldNotHaveReceived('warning');
 });
 
 test('an unknown email is throttled identically and never triggers a mail', function () {

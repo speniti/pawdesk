@@ -80,6 +80,9 @@ class Appointment extends Model
         return $this->belongsTo(Tenant::class);
     }
 
+    /**
+     * @return HasOne<Treatment, $this>
+     */
     public function treatment(): HasOne
     {
         return $this->hasOne(Treatment::class);

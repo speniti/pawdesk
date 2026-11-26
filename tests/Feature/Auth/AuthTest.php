@@ -63,7 +63,7 @@ test('login is rate limited after five attempts', function () {
 
     $component->call('authenticate');
 
-    Notification::assertSentTo($user, MagicLinkNotification::class, 5);
+    Notification::assertSentToTimes($user, MagicLinkNotification::class, 5);
 });
 
 test('logout destroys session', function () {

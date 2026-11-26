@@ -158,6 +158,7 @@ test('service sync ignores foreign services without the panel tenancy scope', fu
     bootPanelWithoutImplicitTenancyScope($this->admin, $this->tenant);
 
     $widget = Livewire::test(AppointmentCalendar::class)->instance();
+    assert($widget instanceof AppointmentCalendar);
 
     $syncServices = Closure::bind(
         fn (AppointmentCalendar $calendar, Appointment $appointment, array $serviceIds) => $calendar->syncServicesWithPivotData($appointment, $serviceIds),
@@ -177,6 +178,7 @@ test('end time calculation ignores foreign services without the panel tenancy sc
     bootPanelWithoutImplicitTenancyScope($this->admin, $this->tenant);
 
     $widget = Livewire::test(AppointmentCalendar::class)->instance();
+    assert($widget instanceof AppointmentCalendar);
 
     $calculateEndTime = Closure::bind(
         fn (AppointmentCalendar $calendar, string $startTime, array $serviceIds) => $calendar->calculateEndTime($startTime, $serviceIds, null),
@@ -203,6 +205,7 @@ test('drag and drop update skips foreign appointments', function () {
     bootFilamentPanelAs($this->admin, $this->tenant);
 
     $widget = Livewire::test(AppointmentCalendar::class)->instance();
+    assert($widget instanceof AppointmentCalendar);
 
     $updateRecord = Closure::bind(
         fn (AppointmentCalendar $calendar, $record) => $calendar->updateRecord(
@@ -234,6 +237,7 @@ test('status transitions skip foreign appointments but transition own records', 
     bootFilamentPanelAs($this->admin, $this->tenant);
 
     $widget = Livewire::test(AppointmentCalendar::class)->instance();
+    assert($widget instanceof AppointmentCalendar);
 
     $transitionStatus = Closure::bind(
         fn (AppointmentCalendar $calendar, Appointment $record, AppointmentStatus $nextStatus) => $calendar->transitionStatus($record, $nextStatus),

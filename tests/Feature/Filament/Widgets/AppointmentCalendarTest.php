@@ -698,6 +698,8 @@ test('the save guard halts illegal transitions without writing', function () {
     bootFilamentPanelAs($this->admin, $this->tenant);
 
     $component = Livewire::test(AppointmentCalendar::class);
+    $widget = $component->instance();
+    assert($widget instanceof AppointmentCalendar);
 
     $guard = Closure::bind(
         fn (AppointmentCalendar $calendar, Appointment $record, mixed $status) => $calendar->assertLegalStatusTransition($record, $status),
@@ -706,7 +708,7 @@ test('the save guard halts illegal transitions without writing', function () {
     );
 
     try {
-        $guard($component->instance(), $appointment, AppointmentStatus::Completed->value);
+        $guard($widget, $appointment, AppointmentStatus::Completed->value);
         $this->fail('The guard should have halted the illegal transition.');
     } catch (Halt) {
         // Expected: the save path stops before any write.
@@ -741,6 +743,8 @@ test('the save guard passes unchanged and legal transitions without notifying', 
     bootFilamentPanelAs($this->admin, $this->tenant);
 
     $component = Livewire::test(AppointmentCalendar::class);
+    $widget = $component->instance();
+    assert($widget instanceof AppointmentCalendar);
 
     $guard = Closure::bind(
         fn (AppointmentCalendar $calendar, Appointment $record, mixed $status) => $calendar->assertLegalStatusTransition($record, $status),
@@ -748,9 +752,9 @@ test('the save guard passes unchanged and legal transitions without notifying', 
         AppointmentCalendar::class,
     );
 
-    $guard($component->instance(), $cancelled, AppointmentStatus::Cancelled->value);
-    $guard($component->instance(), $cancelled, AppointmentStatus::Cancelled);
-    $guard($component->instance(), $requested, AppointmentStatus::Confirmed->value);
+    $guard($widget, $cancelled, AppointmentStatus::Cancelled->value);
+    $guard($widget, $cancelled, AppointmentStatus::Cancelled);
+    $guard($widget, $requested, AppointmentStatus::Confirmed->value);
 
     $component->assertNotNotified();
 });
@@ -817,6 +821,8 @@ test('transition status action re-verifies against the persisted record', functi
     ]);
 
     $widget = Livewire::test(AppointmentCalendar::class);
+    $component = $widget->instance();
+    assert($component instanceof AppointmentCalendar);
 
     $transitionStatus = Closure::bind(
         fn (AppointmentCalendar $calendar, Appointment $record, AppointmentStatus $nextStatus) => $calendar->transitionStatus($record, $nextStatus),
@@ -824,7 +830,7 @@ test('transition status action re-verifies against the persisted record', functi
         AppointmentCalendar::class,
     );
 
-    $transitionStatus($widget->instance(), $appointment, AppointmentStatus::Confirmed);
+    $transitionStatus($component, $appointment, AppointmentStatus::Confirmed);
 
     expect($appointment->refresh()->status)->toBe(AppointmentStatus::Cancelled);
 });
