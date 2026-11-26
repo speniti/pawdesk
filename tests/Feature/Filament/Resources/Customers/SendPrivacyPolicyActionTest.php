@@ -14,8 +14,7 @@ beforeEach(function () {
     Mail::fake();
 
     $this->tenant = Tenant::factory()->create();
-    $this->admin = User::factory()->admin()->create();
-    $this->admin->tenants()->attach($this->tenant);
+    $this->admin = User::factory()->admin()->forTenant($this->tenant)->create();
 });
 
 function sendPrivacyPolicy(Customer $customer, User $user, Tenant $tenant)
@@ -33,8 +32,7 @@ test('azione invia l\'informativa e aggiorna gdpr_policy_sent_at', function () {
             'mailgun_domain' => 'example.com',
         ],
     ]);
-    $admin = User::factory()->admin()->create();
-    $admin->tenants()->attach($tenant);
+    $admin = User::factory()->admin()->forTenant($tenant)->create();
     $customer = Customer::factory()->for($tenant)->create(['gdpr_policy_sent_at' => null]);
 
     sendPrivacyPolicy($customer, $admin, $tenant)->assertNotified();
@@ -57,8 +55,7 @@ test('azione non invia e non aggiorna quando il cliente non ha email', function 
             'mailgun_domain' => 'example.com',
         ],
     ]);
-    $admin = User::factory()->admin()->create();
-    $admin->tenants()->attach($tenant);
+    $admin = User::factory()->admin()->forTenant($tenant)->create();
     $customer = Customer::factory()->for($tenant)->create([
         'email' => '',
         'gdpr_policy_sent_at' => null,
@@ -74,8 +71,7 @@ test('azione non invia e non aggiorna quando il cliente non ha email', function 
 
 test('azione non invia quando Mailgun non è configurato per il salone', function () {
     $tenant = Tenant::factory()->create(['notification_settings' => []]);
-    $admin = User::factory()->admin()->create();
-    $admin->tenants()->attach($tenant);
+    $admin = User::factory()->admin()->forTenant($tenant)->create();
     $customer = Customer::factory()->for($tenant)->create(['gdpr_policy_sent_at' => null]);
 
     sendPrivacyPolicy($customer, $admin, $tenant)->assertNotified();
@@ -90,8 +86,7 @@ test('in ambiente locale l\'azione invia anche senza Mailgun configurato', funct
     app()->detectEnvironment(fn () => 'local');
 
     $tenant = Tenant::factory()->create(['notification_settings' => []]);
-    $admin = User::factory()->admin()->create();
-    $admin->tenants()->attach($tenant);
+    $admin = User::factory()->admin()->forTenant($tenant)->create();
     $customer = Customer::factory()->for($tenant)->create(['gdpr_policy_sent_at' => null]);
 
     sendPrivacyPolicy($customer, $admin, $tenant)->assertNotified();

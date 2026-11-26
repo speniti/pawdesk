@@ -12,8 +12,7 @@ use Livewire\Livewire;
 beforeEach(function () {
     $this->tenant = Tenant::factory()->create();
 
-    $this->admin = User::factory()->admin()->create();
-    $this->admin->tenants()->attach($this->tenant);
+    $this->admin = User::factory()->admin()->forTenant($this->tenant)->create();
 });
 
 test('creating a user from the manage modal sends them a magic link invite', function () {
@@ -41,8 +40,7 @@ test('creating a user from the manage modal sends them a magic link invite', fun
 });
 
 test('editing a user from the table modal updates the record', function () {
-    $targetUser = User::factory()->create();
-    $targetUser->tenants()->attach($this->tenant);
+    $targetUser = User::factory()->forTenant($this->tenant)->create();
     bootFilamentPanelAs($this->admin, $this->tenant);
 
     Livewire::test(ManageUsers::class)
@@ -61,8 +59,7 @@ test('editing a user from the table modal updates the record', function () {
 test('editing a user cannot change the email', function () {
     Notification::fake();
 
-    $targetUser = User::factory()->create(['email' => 'originale@example.com']);
-    $targetUser->tenants()->attach($this->tenant);
+    $targetUser = User::factory()->forTenant($this->tenant)->create(['email' => 'originale@example.com']);
     bootFilamentPanelAs($this->admin, $this->tenant);
 
     // Attack shape: even a crafted edit payload carrying a different email
@@ -85,8 +82,7 @@ test('editing a user cannot change the email', function () {
 test('send access link table action sends a magic link email', function () {
     Notification::fake();
 
-    $targetUser = User::factory()->create();
-    $targetUser->tenants()->attach($this->tenant);
+    $targetUser = User::factory()->forTenant($this->tenant)->create();
     bootFilamentPanelAs($this->admin, $this->tenant);
 
     Livewire::test(ManageUsers::class)
@@ -113,8 +109,7 @@ test('email must be unique', function () {
 });
 
 test('the authenticated user is not listed in the table', function () {
-    $otherUser = User::factory()->create();
-    $otherUser->tenants()->attach($this->tenant);
+    $otherUser = User::factory()->forTenant($this->tenant)->create();
     bootFilamentPanelAs($this->admin, $this->tenant);
 
     Livewire::test(ManageUsers::class)

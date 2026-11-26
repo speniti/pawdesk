@@ -28,15 +28,15 @@ class UserFactory extends Factory
         ];
     }
 
-    public function unverified(): static
-    {
-        return $this->state(fn (array $attributes) => ['email_verified_at' => null]);
-    }
-
     // Membrazione al momento della creazione (#83): sostituisce il pattern
     // ripetuto "create() + ->tenants()->attach($tenant)" diffuso nei test.
     public function forTenant(Tenant $tenant): static
     {
         return $this->afterCreating(fn (User $user) => $user->tenants()->attach($tenant));
+    }
+
+    public function unverified(): static
+    {
+        return $this->state(fn (array $attributes) => ['email_verified_at' => null]);
     }
 }

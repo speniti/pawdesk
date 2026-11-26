@@ -17,8 +17,7 @@ beforeEach(function () {
     Carbon::setTestNow('2026-06-15 10:00');
 
     $this->tenant = Tenant::factory()->create();
-    $this->admin = User::factory()->admin()->create();
-    $this->admin->tenants()->attach($this->tenant);
+    $this->admin = User::factory()->admin()->forTenant($this->tenant)->create();
 });
 
 afterEach(function () {
@@ -117,8 +116,7 @@ it('compares against the same period of the previous year', function () {
 });
 
 it('hides the stats widget from staff', function () {
-    $staff = User::factory()->create();
-    $staff->tenants()->attach($this->tenant);
+    $staff = User::factory()->forTenant($this->tenant)->create();
 
     bootFilamentPanelAs($staff, $this->tenant);
 

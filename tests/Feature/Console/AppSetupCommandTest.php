@@ -75,12 +75,11 @@ test('fails without email', function () {
 test('associates existing user to new tenant without duplication', function () {
     Notification::fake();
 
-    $existingUser = User::factory()->create([
+    $firstTenant = Tenant::factory()->create();
+    $existingUser = User::factory()->forTenant($firstTenant)->create([
         'email' => 'admin@example.com',
         'role' => UserRole::Staff,
     ]);
-    $firstTenant = Tenant::factory()->create();
-    $existingUser->tenants()->attach($firstTenant);
 
     $this->artisan('app:setup', [
         '--tenant' => 'New Tenant',

@@ -12,8 +12,7 @@ use Livewire\Livewire;
 beforeEach(function () {
     $this->tenant = Tenant::factory()->create();
 
-    $this->admin = User::factory()->admin()->create();
-    $this->admin->tenants()->attach($this->tenant);
+    $this->admin = User::factory()->admin()->forTenant($this->tenant)->create();
 });
 
 it('shows only active services by default', function () {

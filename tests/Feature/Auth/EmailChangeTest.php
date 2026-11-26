@@ -48,8 +48,7 @@ beforeEach(function () {
 
     $this->tenant = Tenant::factory()->create();
 
-    $this->user = User::factory()->admin()->create(['email' => 'vecchio@example.com']);
-    $this->user->tenants()->attach($this->tenant);
+    $this->user = User::factory()->admin()->forTenant($this->tenant)->create(['email' => 'vecchio@example.com']);
 });
 
 describe('email change request', function () {

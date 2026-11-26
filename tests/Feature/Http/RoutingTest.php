@@ -11,8 +11,7 @@ test('/ redirects to login when unauthenticated', function () {
 
 test('dashboard responds 200 when authenticated with tenant', function () {
     $tenant = Tenant::factory()->create();
-    $user = User::factory()->create();
-    $user->tenants()->attach($tenant);
+    $user = User::factory()->forTenant($tenant)->create();
 
     $this->actingAs($user);
 

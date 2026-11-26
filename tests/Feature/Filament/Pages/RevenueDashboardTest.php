@@ -11,8 +11,7 @@ use Livewire\Livewire;
 
 beforeEach(function () {
     $this->tenant = Tenant::factory()->create();
-    $this->admin = User::factory()->admin()->create();
-    $this->admin->tenants()->attach($this->tenant);
+    $this->admin = User::factory()->admin()->forTenant($this->tenant)->create();
 });
 
 describe('authorization', function () {
@@ -23,8 +22,7 @@ describe('authorization', function () {
     });
 
     test('staff cannot access the revenue dashboard', function () {
-        $staff = User::factory()->create();
-        $staff->tenants()->attach($this->tenant);
+        $staff = User::factory()->forTenant($this->tenant)->create();
 
         bootFilamentPanelAs($staff, $this->tenant);
 
@@ -33,8 +31,7 @@ describe('authorization', function () {
 
     test('admin from another tenant cannot access the revenue dashboard', function () {
         $otherTenant = Tenant::factory()->create();
-        $otherAdmin = User::factory()->admin()->create();
-        $otherAdmin->tenants()->attach($otherTenant);
+        $otherAdmin = User::factory()->admin()->forTenant($otherTenant)->create();
 
         bootFilamentPanelAs($otherAdmin, $this->tenant);
 
