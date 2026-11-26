@@ -14,5 +14,5 @@ test('phpstan analyses the tests directory with the pest type binding plugin', f
     expect($neon)->toBeString();
 
     expect(preg_match('/^\s+- tests\/$/m', $neon))->toBe(1)
-        ->and(mb_substr_count($neon, 'pestphp/pest-plugin-phpstan/extension.neon'))->toBe(1);
+        ->and(preg_match_all('/^\s*-\s+vendor\/pestphp\/pest-plugin-phpstan\/extension\.neon\s*$/m', $neon))->toBe(1);
 });

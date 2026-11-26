@@ -20,7 +20,8 @@ parameters:
             path: tests
         # Il test del bootstrap confronta il middleware col valore RAW
         # dell'ambiente: qui env() è voluto — siamo in un test, il problema
-        # della config:cache non è in gioco (#83).
+        # della config:cache non è in gioco (#83). identifier, non message:
+        # robusto a future riformulazioni del testo larastan.
         -
-            message: '#^Called .env. outside of the config directory#'
+            identifier: larastan.noEnvCallsOutsideOfConfig
             path: tests/Feature/Http/TrustedProxiesTest.php
