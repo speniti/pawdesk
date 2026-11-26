@@ -132,3 +132,17 @@ jobs:
 
       - name: Run Test Suite
         uses: ./.github/actions/test
+
+  docker:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      # La build reale del target production valida i bump settimanali di
+      # digest che il guard test Pest vede solo textualmente (#112): un base
+      # incompatibile (es. intl) emerge qui e non al deploy. La cache gha
+      # riusa i layer composer/npm tra i run.
+      - name: Build Production Image
+        run: docker buildx build --target production --cache-from type=gha --cache-to type=gha,mode=max --tag pawdesk-ci:${{ github.sha }} .
