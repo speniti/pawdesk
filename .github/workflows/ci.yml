@@ -8,6 +8,12 @@ on:
     branches:
       - main
 
+# Meno privilegi possibile (#130): i job di CI non scrivono nulla. Il blocco
+# esplicito protegge anche se il default del repo (già read-only, verificato
+# via API) dovesse cambiare.
+permissions:
+  contents: read
+
 jobs:
   composer:
     runs-on: ubuntu-latest
