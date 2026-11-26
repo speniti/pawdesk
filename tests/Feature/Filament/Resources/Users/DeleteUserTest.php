@@ -14,13 +14,11 @@ beforeEach(function () {
     $this->tenantA = Tenant::factory()->create();
     $this->tenantB = Tenant::factory()->create();
 
-    $this->admin = User::factory()->admin()->create();
-    $this->admin->tenants()->attach($this->tenantA);
+    $this->admin = User::factory()->admin()->forTenant($this->tenantA)->create();
 });
 
 test('deleting a user who also belongs to another salon detaches them from the current salon only', function () {
-    $sharedUser = User::factory()->create();
-    $sharedUser->tenants()->attach([$this->tenantA->id, $this->tenantB->id]);
+    $sharedUser = User::factory()->forTenant($this->tenantA)->forTenant($this->tenantB)->create();
 
     bootFilamentPanelAs($this->admin, $this->tenantA);
 
@@ -42,8 +40,7 @@ test('deleting a user who also belongs to another salon detaches them from the c
 });
 
 test('deleting a user who only belongs to the current salon deletes the record', function () {
-    $monoTenantUser = User::factory()->create();
-    $monoTenantUser->tenants()->attach($this->tenantA);
+    $monoTenantUser = User::factory()->forTenant($this->tenantA)->create();
 
     bootFilamentPanelAs($this->admin, $this->tenantA);
 
@@ -60,11 +57,9 @@ test('deleting a user who only belongs to the current salon deletes the record',
 });
 
 test('bulk deleting mixed users detaches the shared user and deletes the mono-tenant one', function () {
-    $sharedUser = User::factory()->create();
-    $sharedUser->tenants()->attach([$this->tenantA->id, $this->tenantB->id]);
+    $sharedUser = User::factory()->forTenant($this->tenantA)->forTenant($this->tenantB)->create();
 
-    $monoTenantUser = User::factory()->create();
-    $monoTenantUser->tenants()->attach($this->tenantA);
+    $monoTenantUser = User::factory()->forTenant($this->tenantA)->create();
 
     bootFilamentPanelAs($this->admin, $this->tenantA);
 
@@ -87,8 +82,7 @@ test('bulk deleting mixed users detaches the shared user and deletes the mono-te
 });
 
 test('bulk deleting skips users the admin cannot delete in the current tenant', function () {
-    $sharedUser = User::factory()->create();
-    $sharedUser->tenants()->attach([$this->tenantA->id, $this->tenantB->id]);
+    $sharedUser = User::factory()->forTenant($this->tenantA)->forTenant($this->tenantB)->create();
 
     // Not attached to any tenant: the delete policy denies it, so a crafted
     // bulk selection must not process (and hard-delete) the record.
@@ -116,11 +110,9 @@ test('bulk deleting skips users the admin cannot delete in the current tenant', 
 });
 
 test('the bulk delete confirmation states how many selected users belong to other salons', function () {
-    $sharedUser = User::factory()->create();
-    $sharedUser->tenants()->attach([$this->tenantA->id, $this->tenantB->id]);
+    $sharedUser = User::factory()->forTenant($this->tenantA)->forTenant($this->tenantB)->create();
 
-    $monoTenantUser = User::factory()->create();
-    $monoTenantUser->tenants()->attach($this->tenantA);
+    $monoTenantUser = User::factory()->forTenant($this->tenantA)->create();
 
     bootFilamentPanelAs($this->admin, $this->tenantA);
 
@@ -135,8 +127,7 @@ test('the bulk delete confirmation states how many selected users belong to othe
 });
 
 test('the bulk delete confirmation does not mention other salons when no selected user is shared', function () {
-    $monoTenantUser = User::factory()->create();
-    $monoTenantUser->tenants()->attach($this->tenantA);
+    $monoTenantUser = User::factory()->forTenant($this->tenantA)->create();
 
     bootFilamentPanelAs($this->admin, $this->tenantA);
 
@@ -150,8 +141,7 @@ test('the bulk delete confirmation does not mention other salons when no selecte
 });
 
 test('the delete confirmation warns that a shared user will only be removed from the current salon', function () {
-    $sharedUser = User::factory()->create();
-    $sharedUser->tenants()->attach([$this->tenantA->id, $this->tenantB->id]);
+    $sharedUser = User::factory()->forTenant($this->tenantA)->forTenant($this->tenantB)->create();
 
     bootFilamentPanelAs($this->admin, $this->tenantA);
 
@@ -166,8 +156,7 @@ test('the delete confirmation warns that a shared user will only be removed from
 });
 
 test('the delete confirmation does not warn about other salons for a mono-tenant user', function () {
-    $monoTenantUser = User::factory()->create();
-    $monoTenantUser->tenants()->attach($this->tenantA);
+    $monoTenantUser = User::factory()->forTenant($this->tenantA)->create();
 
     bootFilamentPanelAs($this->admin, $this->tenantA);
 

@@ -9,6 +9,7 @@ runs:
       uses: ./.github/actions/setup
       with:
         php-version: '8.5'
+        coverage: pcov
 
     - name: Composer Install
       run: composer install -q --no-interaction --optimize-autoloader --no-progress
@@ -20,6 +21,10 @@ runs:
         php artisan key:generate
       shell: bash
 
+    # Copertura misurata al primo run con pcov: 95.3% (#83). La soglia a 92
+    # lascia ~3 punti di margine anti-fluttuazione tra ambienti e mura
+    # contro le regressioni; alzarla è una decisione consapevole. Il bump
+    # di memoria è load-bearing: il default CLI a 128M OOM in locale (#85).
     - name: Run Pest
-      run: vendor/bin/pest --ci
+      run: php -d memory_limit=512M vendor/bin/pest --ci --coverage --min=92
       shell: bash

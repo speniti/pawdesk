@@ -65,8 +65,7 @@ describe('confirmation page', function () {
 describe('link consumption', function () {
     test('logs in a user with a tenant and redirects to the tenant dashboard', function () {
         $tenant = Tenant::factory()->create();
-        $user = User::factory()->admin()->create();
-        $user->tenants()->attach($tenant);
+        $user = User::factory()->admin()->forTenant($tenant)->create();
         $url = app(MagicLinkService::class)->issueLink($user);
 
         Livewire::test(MagicLinkConfirmation::class, ['token' => (string) str($url)->after('/auth/magic-link/')])

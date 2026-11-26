@@ -6,7 +6,6 @@ use App\Enums\NotificationStatus;
 use App\Enums\PreferredChannel;
 use App\Models\Appointment;
 use App\Models\Customer;
-use App\Models\NotificationLog;
 use App\Models\Tenant;
 use App\Notifications\AppointmentConfirmedNotification;
 use App\Notifications\Channels\TenantVonageChannel;
@@ -22,8 +21,7 @@ test('log is created as pending when notification is dispatched', function () {
     $notification = new AppointmentConfirmedNotification($appointment);
     $log = $notification->createLog($customer);
 
-    expect($log)->toBeInstanceOf(NotificationLog::class)
-        ->and($log->status)->toBe(NotificationStatus::Pending)
+    expect($log->status)->toBe(NotificationStatus::Pending)
         ->and($log->appointment_id)->toBe($appointment->id)
         ->and($log->customer_id)->toBe($customer->id)
         ->and($log->type)->toBe('appointment_confirmed')

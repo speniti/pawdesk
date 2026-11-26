@@ -53,7 +53,7 @@ test('is idempotent — running twice creates no duplicates and sends one link',
     $tenant = Tenant::first();
     expect($tenant->users()->count())->toBe(1);
 
-    Notification::assertSentTo(User::first(), MagicLinkNotification::class, 1);
+    Notification::assertSentToTimes(User::first(), MagicLinkNotification::class, 1);
 });
 
 test('generates slug from tenant name when slug is not provided', function () {
@@ -75,12 +75,11 @@ test('fails without email', function () {
 test('associates existing user to new tenant without duplication', function () {
     Notification::fake();
 
-    $existingUser = User::factory()->create([
+    $firstTenant = Tenant::factory()->create();
+    $existingUser = User::factory()->forTenant($firstTenant)->create([
         'email' => 'admin@example.com',
         'role' => UserRole::Staff,
     ]);
-    $firstTenant = Tenant::factory()->create();
-    $existingUser->tenants()->attach($firstTenant);
 
     $this->artisan('app:setup', [
         '--tenant' => 'New Tenant',

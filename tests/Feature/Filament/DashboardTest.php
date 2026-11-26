@@ -11,8 +11,7 @@ use Livewire\Livewire;
 beforeEach(function () {
     $this->tenant = Tenant::factory()->create();
 
-    $this->admin = User::factory()->admin()->create();
-    $this->admin->tenants()->attach($this->tenant);
+    $this->admin = User::factory()->admin()->forTenant($this->tenant)->create();
 });
 
 test('dashboard is accessible after login and shows all widgets', function () {

@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Enums\ServiceCategory;
 use App\Enums\ServiceStatus;
 use App\Filament\Resources\Services\Pages\EditService;
 use App\Filament\Resources\Services\Pages\ViewService;
@@ -12,8 +13,7 @@ use Livewire\Livewire;
 
 beforeEach(function () {
     $this->tenant = Tenant::factory()->create();
-    $this->admin = User::factory()->admin()->create();
-    $this->admin->tenants()->attach($this->tenant);
+    $this->admin = User::factory()->admin()->forTenant($this->tenant)->create();
 });
 
 test('can read a service', function () {
@@ -91,11 +91,15 @@ test('can archive a service instead of deleting it', function () {
 
     bootFilamentPanelAs($this->admin, $this->tenant);
 
+    // Docblock: larastan non modella il cast enum degli attributi (#83).
+    /** @var ServiceCategory $category */
+    $category = $service->category;
+
     Livewire::test(EditService::class, ['record' => $service->id])
         ->fillForm([
             'name' => $service->name,
             'description' => $service->description,
-            'category' => $service->category->value,
+            'category' => $category->value,
             'duration_minutes' => $service->duration_minutes,
             'base_price' => $service->base_price / 100,
             'status' => 'archived',
@@ -116,8 +120,12 @@ test('can archive a service instead of deleting it', function () {
         'status' => 'active',
     ]);
 
+    // Docblock: larastan non modella il cast enum degli attributi (#83).
+    /** @var ServiceStatus $status */
+    $status = $service->refresh()->status;
+
     expect(Service::find($service->id))->not->toBeNull()
-        ->and($service->refresh()->status->value)->toBe('archived');
+        ->and($status->value)->toBe('archived');
 });
 
 test('can delete a service', function () {

@@ -9,8 +9,7 @@ test('User canAccessTenant checks tenant association', function () {
     $tenant1 = Tenant::factory()->create();
     $tenant2 = Tenant::factory()->create();
 
-    $user = User::factory()->create();
-    $user->tenants()->attach($tenant1);
+    $user = User::factory()->forTenant($tenant1)->create();
 
     expect($user->canAccessTenant($tenant1))->toBeTrue()
         ->and($user->canAccessTenant($tenant2))->toBeFalse();

@@ -14,8 +14,7 @@ beforeEach(function () {
     Carbon::setTestNow('2026-06-15 10:00');
 
     $this->tenant = Tenant::factory()->create();
-    $this->admin = User::factory()->admin()->create();
-    $this->admin->tenants()->attach($this->tenant);
+    $this->admin = User::factory()->admin()->forTenant($this->tenant)->create();
 });
 
 afterEach(function () {

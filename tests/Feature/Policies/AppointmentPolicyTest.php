@@ -11,11 +11,9 @@ use function Pest\Laravel\actingAs;
 beforeEach(function () {
     $this->tenant = Tenant::factory()->create();
 
-    $this->admin = User::factory()->admin()->create();
-    $this->admin->tenants()->attach($this->tenant);
+    $this->admin = User::factory()->admin()->forTenant($this->tenant)->create();
 
-    $this->staff = User::factory()->create();
-    $this->staff->tenants()->attach($this->tenant);
+    $this->staff = User::factory()->forTenant($this->tenant)->create();
 
     $this->appointment = Appointment::factory()->forTenant($this->tenant)->create();
 });

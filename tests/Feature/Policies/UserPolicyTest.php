@@ -12,14 +12,11 @@ use function Pest\Laravel\actingAs;
 beforeEach(function () {
     $this->tenant = Tenant::factory()->create();
 
-    $this->admin = User::factory()->admin()->create();
-    $this->admin->tenants()->attach($this->tenant);
+    $this->admin = User::factory()->admin()->forTenant($this->tenant)->create();
 
-    $this->staff = User::factory()->create();
-    $this->staff->tenants()->attach($this->tenant);
+    $this->staff = User::factory()->forTenant($this->tenant)->create();
 
-    $targetUser = User::factory()->create();
-    $targetUser->tenants()->attach($this->tenant);
+    $targetUser = User::factory()->forTenant($this->tenant)->create();
     $this->targetUser = $targetUser;
 });
 
@@ -58,8 +55,7 @@ test('admin cannot delete themselves', function () {
 });
 
 test('admin cannot delete a user who does not belong to the current tenant', function () {
-    $outsider = User::factory()->create();
-    $outsider->tenants()->attach(Tenant::factory()->create());
+    $outsider = User::factory()->forTenant(Tenant::factory()->create())->create();
 
     bootFilamentPanelAs($this->admin, $this->tenant);
 

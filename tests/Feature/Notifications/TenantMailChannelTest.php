@@ -122,7 +122,6 @@ test('from address is applied when configured on tenant', function () {
 
     // Verify toMail produces a message with the correct from
     $message = $notification->toMail($customer);
-    expect($message)->toBeInstanceOf(Illuminate\Notifications\Messages\MailMessage::class);
 
     // Channel send — with Mail::fake() the actual send is intercepted
     $channel = app(TenantMailChannel::class);

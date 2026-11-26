@@ -48,8 +48,7 @@ beforeEach(function () {
 
     $this->tenant = Tenant::factory()->create();
 
-    $this->user = User::factory()->admin()->create(['email' => 'vecchio@example.com']);
-    $this->user->tenants()->attach($this->tenant);
+    $this->user = User::factory()->admin()->forTenant($this->tenant)->create(['email' => 'vecchio@example.com']);
 });
 
 describe('email change request', function () {
@@ -60,7 +59,7 @@ describe('email change request', function () {
             ->and($this->user->refresh()->email)->toBe('vecchio@example.com')
             ->and((string) str($url)->after('/auth/email-change/'))->toHaveLength(64);
 
-        Notification::assertSentTo($this->user, EmailChangeNoticeNotification::class, 1);
+        Notification::assertSentToTimes($this->user, EmailChangeNoticeNotification::class, 1);
         Notification::assertNotSentTo($this->user, EmailChangeConfirmationNotification::class);
         Notification::assertNotSentTo(
             Notification::route('mail', 'nuovo@example.com'),

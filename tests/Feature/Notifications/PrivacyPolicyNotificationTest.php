@@ -40,8 +40,7 @@ test('log creato come pending senza appuntamento associato', function () {
     $notification = new PrivacyPolicyNotification($tenant);
     $log = $notification->createLog($customer);
 
-    expect($log)->toBeInstanceOf(NotificationLog::class)
-        ->and($log->status)->toBe(NotificationStatus::Pending)
+    expect($log->status)->toBe(NotificationStatus::Pending)
         ->and($log->appointment_id)->toBeNull()
         ->and($log->customer_id)->toBe($customer->id)
         ->and($log->tenant_id)->toBe($tenant->id)

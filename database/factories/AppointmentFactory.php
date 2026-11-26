@@ -31,7 +31,10 @@ class AppointmentFactory extends Factory
     {
         return [
             'customer_id' => Customer::factory(),
-            'pet_id' => Pet::factory(),
+            // Il pet appartiene al cliente dell'appuntamento (#83): due
+            // factory Customer separate producevano appuntamenti con un
+            // cliente e un pet figlio di un altro.
+            'pet_id' => fn (array $attributes) => Pet::factory()->for(Customer::find($attributes['customer_id'])),
             'status' => AppointmentStatus::Requested->value,
             'start_time' => now()->addDays(fake()->numberBetween(1, 30)),
             'end_time' => fn (array $attributes) => Carbon::parse($attributes['start_time'])->addHours(2),
@@ -44,7 +47,9 @@ class AppointmentFactory extends Factory
         return $this->state(fn (array $attributes) => [
             'tenant_id' => $tenant->id,
             'customer_id' => Customer::factory()->for($tenant),
-            'pet_id' => Pet::factory()->for($tenant)->for(Customer::factory()->for($tenant)),
+            // Stesso cliente del customer_id: anche lo state creava due
+            // clienti diversi per la stessa riga (#83).
+            'pet_id' => fn (array $attributes) => Pet::factory()->for($tenant)->for(Customer::find($attributes['customer_id'])),
         ]);
     }
 }

@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Exceptions\VonageSmsException;
 use App\Models\Tenant;
 use App\Services\VonageSmsSender;
+use Mockery\MockInterface;
 use Vonage\Client as VonageClient;
 use Vonage\SMS\Collection;
 use Vonage\SMS\Message\SMS;
@@ -27,7 +28,7 @@ function vonageResponse(array $messages): Collection
     return new Collection(['messages' => $messages]);
 }
 
-function vonageClientMock(Collection $response): VonageClient
+function vonageClientMock(Collection $response): VonageClient&MockInterface
 {
     $sms = Mockery::mock();
     $sms->shouldReceive('send')
@@ -36,6 +37,8 @@ function vonageClientMock(Collection $response): VonageClient
 
     $client = Mockery::mock(VonageClient::class);
     $client->shouldReceive('sms')->andReturn($sms);
+
+    assert($client instanceof VonageClient);
 
     return $client;
 }
@@ -50,9 +53,12 @@ it('does not throw when vonage accepts the message', function () {
 
     $sender = senderWithClient($client);
 
-    $sender->send(Mockery::mock(Tenant::class), '+393331234567', 'Test message', 'PawDesk');
+    $tenant = Mockery::mock(Tenant::class);
+    assert($tenant instanceof Tenant);
 
-    expect(true)->toBeTrue();
+    // Throwable, non VonageSmsException: qualunque throw deve fallire il test.
+    expect(fn () => $sender->send($tenant, '+393331234567', 'Test message', 'PawDesk'))
+        ->not->toThrow(Throwable::class);
 });
 
 it('accepts a null sender id and falls back to the shared pool', function () {
@@ -60,9 +66,11 @@ it('accepts a null sender id and falls back to the shared pool', function () {
 
     $sender = senderWithClient($client);
 
-    $sender->send(Mockery::mock(Tenant::class), '+393331234567', 'Test message', null);
+    $tenant = Mockery::mock(Tenant::class);
+    assert($tenant instanceof Tenant);
 
-    expect(true)->toBeTrue();
+    expect(fn () => $sender->send($tenant, '+393331234567', 'Test message', null))
+        ->not->toThrow(Throwable::class);
 });
 
 it('throws a VonageSmsException when vonage rejects the message', function () {
@@ -72,5 +80,8 @@ it('throws a VonageSmsException when vonage rejects the message', function () {
 
     $sender = senderWithClient($client);
 
-    $sender->send(Mockery::mock(Tenant::class), '+393331234567', 'Test message', 'PawDesk');
+    $tenant = Mockery::mock(Tenant::class);
+    assert($tenant instanceof Tenant);
+
+    $sender->send($tenant, '+393331234567', 'Test message', 'PawDesk');
 })->throws(VonageSmsException::class, 'Throttled');

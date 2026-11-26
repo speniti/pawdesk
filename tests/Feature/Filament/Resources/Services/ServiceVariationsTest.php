@@ -9,8 +9,7 @@ use Livewire\Livewire;
 
 beforeEach(function () {
     $this->tenant = Tenant::factory()->create();
-    $this->admin = User::factory()->admin()->create();
-    $this->admin->tenants()->attach($this->tenant);
+    $this->admin = User::factory()->admin()->forTenant($this->tenant)->create();
 });
 
 test('can save variations matrix', function () {
@@ -35,16 +34,21 @@ test('can save variations matrix', function () {
     $service = Service::where('name', 'Full Grooming Package')->first();
 
     expect($service)->not->toBeNull()
-        ->and($service->variations)->toBeArray()
-        ->and($service->variations)->toHaveCount(2)
-        ->and($service->variations[0]['size'])->toBe('toy')
-        ->and($service->variations[0]['coat'])->toBe('short')
-        ->and($service->variations[0]['price'])->toBe(2500)    // Stored in cents
-        ->and($service->variations[0]['duration_minutes'])->toBe(45)
-        ->and($service->variations[1]['size'])->toBe('small')
-        ->and($service->variations[1]['coat'])->toBe('long')
-        ->and($service->variations[1]['price'])->toBe(3500)    // Stored in cents
-        ->and($service->variations[1]['duration_minutes'])->toBe(60);
+        ->and($service->variations)->toBeArray();
+
+    // Docblock: larastan non modella il cast array dell'attributo (#83).
+    /** @var list<array<string, mixed>> $variations */
+    $variations = $service->variations;
+
+    expect($variations)->toHaveCount(2)
+        ->and($variations[0]['size'])->toBe('toy')
+        ->and($variations[0]['coat'])->toBe('short')
+        ->and($variations[0]['price'])->toBe(2500)    // Stored in cents
+        ->and($variations[0]['duration_minutes'])->toBe(45)
+        ->and($variations[1]['size'])->toBe('small')
+        ->and($variations[1]['coat'])->toBe('long')
+        ->and($variations[1]['price'])->toBe(3500)    // Stored in cents
+        ->and($variations[1]['duration_minutes'])->toBe(60);
 });
 
 test('rejects duplicate size and coat combinations', function () {

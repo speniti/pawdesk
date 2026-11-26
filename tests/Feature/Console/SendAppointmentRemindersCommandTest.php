@@ -78,7 +78,7 @@ test('second run skips appointments whose reminder was already dispatched', func
     $this->artisan('appointments:send-reminders')->assertSuccessful();
     $this->artisan('appointments:send-reminders')->assertSuccessful();
 
-    Notification::assertSentTo($appointment->customer, AppointmentReminderNotification::class, 1);
+    Notification::assertSentToTimes($appointment->customer, AppointmentReminderNotification::class, 1);
 });
 
 test('sends again a reminder whose previous attempt failed', function () {
