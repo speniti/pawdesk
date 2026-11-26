@@ -14,7 +14,9 @@ class TenantFactory extends Factory
     /** @return array<string, mixed> */
     public function definition(): array
     {
-        $name = fake()->company();
+        // unique(): il pool faker ripete le company e tenants.slug è UNIQUE
+        // — senza questo, i test che creano più tenant sono flaky (#143).
+        $name = fake()->unique()->company();
 
         return [
             'name' => $name,
