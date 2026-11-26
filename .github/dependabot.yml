@@ -1,0 +1,27 @@
+# Aggiornamenti automatici delle dipendenze (#74): PR settimanali (default: lunedì).
+# - composer/npm: bump del lockfile, si affiancano ai bump guidati da
+#   composer audit / npm audit in CI
+# - docker: aggiorna tag e digest delle immagini base del Dockerfile
+# - github-actions: bump delle action usate dai workflow (supply chain CI)
+# I compose file restano fuori per scelta (#74): le immagini lì sono dev-only.
+version: 2
+updates:
+  - package-ecosystem: composer
+    directory: /
+    schedule:
+      interval: weekly
+
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+
+  - package-ecosystem: docker
+    directory: /
+    schedule:
+      interval: weekly
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
