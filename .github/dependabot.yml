@@ -8,6 +8,13 @@ version: 2
 updates:
   - package-ecosystem: composer
     directory: /
+    # Minor/patch insieme (rumore ridotto); i major del runtime restano PR
+    # individuali per revisione dedicata.
+    groups:
+      composer-minor-patch:
+        update-types:
+          - version-update:semver-minor
+          - version-update:semver-patch
     schedule:
       interval: weekly
 
@@ -20,6 +27,11 @@ updates:
     groups:
       npm-dev:
         dependency-type: development
+    # typescript-eslint 8.x dichiara peer "typescript <6.1.0" (verificato su
+    # registry): TS 7 rompe npm ci finché non esce una major compatibile.
+    ignore:
+      - dependency-name: typescript
+        versions: ['7.x']
     schedule:
       interval: weekly
 
