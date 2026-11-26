@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Database\Factories;
 
 use App\Enums\UserRole;
+use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -30,5 +31,12 @@ class UserFactory extends Factory
     public function unverified(): static
     {
         return $this->state(fn (array $attributes) => ['email_verified_at' => null]);
+    }
+
+    // Membrazione al momento della creazione (#83): sostituisce il pattern
+    // ripetuto "create() + ->tenants()->attach($tenant)" diffuso nei test.
+    public function forTenant(Tenant $tenant): static
+    {
+        return $this->afterCreating(fn (User $user) => $user->tenants()->attach($tenant));
     }
 }
