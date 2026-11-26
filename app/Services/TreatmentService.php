@@ -68,7 +68,12 @@ class TreatmentService
      */
     private function pivotTotals(Appointment $appointment): array
     {
-        $services = $appointment->loadMissing('services')->services;
+        // Authoritative read (#80): loadMissing() would return whatever the
+        // caller has cached — including the empty collection the created
+        // observer caches before the pivot exists — so totals could silently
+        // stay zero. A relation query reads the pivot from the database
+        // without touching the caller's relation cache.
+        $services = $appointment->services()->get();
 
         return [
             'total_price' => (int) $services->sum(static fn ($service): int => (int) $service->pivot->applied_price),

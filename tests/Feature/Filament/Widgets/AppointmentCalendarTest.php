@@ -19,6 +19,7 @@ use Filament\Support\Exceptions\Halt;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
 use Livewire\Livewire;
+use PHPUnit\Framework\AssertionFailedError;
 
 beforeEach(function () {
     $this->tenant = Tenant::factory()->create();
@@ -848,8 +849,11 @@ test('a failing services sync rolls back the created appointment', function () {
     bootFilamentPanelAs($this->admin, $this->tenant);
 
     // Sabotage the pivot insert so the sync fails after the create has run.
-    DB::connection()->beforeExecuting(function (string $query): void {
+    $hookFired = false;
+    DB::connection()->beforeExecuting(function (string $query) use (&$hookFired): void {
         if (str_starts_with(mb_ltrim($query), 'insert') && str_contains($query, 'appointment_service')) {
+            $hookFired = true;
+
             throw new RuntimeException('Simulated pivot sync failure.');
         }
     });
@@ -876,13 +880,21 @@ test('a failing services sync rolls back the created appointment', function () {
     try {
         $save($widget, $data, Appointment::class);
         $this->fail('The sync failure should propagate out of save().');
-    } catch (RuntimeException) {
-        // Expected.
+    } catch (RuntimeException $exception) {
+        // PHPUnit's AssertionFailedError extends RuntimeException: without
+        // this rethrow the intentional $this->fail() above would be
+        // swallowed and the test would fail later with a wrong message.
+        if ($exception instanceof AssertionFailedError) {
+            throw $exception;
+        }
     }
 
     // #80: create and sync are atomic — no appointment left behind without
-    // its services, no half-written pivot, no orphan treatment.
-    expect(Appointment::count())->toBe(0)
+    // its services, no half-written pivot, no orphan treatment. hookFired
+    // proves the counts are zero because of the rollback, not because
+    // save() never reached the sync.
+    expect($hookFired)->toBeTrue()
+        ->and(Appointment::count())->toBe(0)
         ->and(Treatment::count())->toBe(0)
         ->and(DB::table('appointment_service')->count())->toBe(0);
 });
