@@ -11,6 +11,7 @@ use App\Models\Pet;
 use App\Models\Service;
 use App\Models\Tenant;
 use App\Services\AppointmentPriceCalculator;
+use App\Services\TreatmentService;
 use Carbon\Carbon;
 use Filament\Actions\Action;
 use Filament\Actions\CreateAction;
@@ -223,13 +224,28 @@ class AppointmentCalendar extends Calendar
             $data['end_time'] = $this->calculateEndTime($data['start_time'], $serviceIds, $pet);
         }
 
-        $record = parent::save($data, $model);
+        // Create and pivot sync share one transaction (#80): the create can
+        // already fire treatment generation through the observer, and a
+        // failed sync must not leave a serviceless appointment behind. Same
+        // shape as the edit path above.
+        return DB::transaction(function () use ($data, $model, $serviceIds, $pet) {
+            $record = parent::save($data, $model);
 
-        if ($record instanceof Appointment && $serviceIds) {
-            $this->syncServicesWithPivotData($record, $serviceIds, $pet);
-        }
+            if ($record instanceof Appointment && $serviceIds) {
+                $this->syncServicesWithPivotData($record, $serviceIds, $pet);
 
-        return $record;
+                // If the create landed directly on Completed — the form's
+                // state machine blocks it, but save() does not — the observer
+                // generated the treatment against the empty pivot, so its
+                // totals are zero. The pivot is authoritative now: refresh
+                // within the same transaction (#80).
+                if ($record->status === AppointmentStatus::Completed) {
+                    app(TreatmentService::class)->refreshTotals($record);
+                }
+            }
+
+            return $record;
+        });
     }
 
     protected function updateRecord(?Model $record, Carbon $start, ?Carbon $end, bool $allDay): void
@@ -337,6 +353,11 @@ class AppointmentCalendar extends Calendar
 
         $pivotData = AppointmentPriceCalculator::buildPivotData($services, $pet);
         $appointment->services()->sync($pivotData);
+
+        // sync() writes rows without touching the relation cache: drop the
+        // possibly-loaded (and now stale, e.g. empty when the created observer
+        // read it before the sync) collection so later reads re-query. (#80)
+        $appointment->unsetRelation('services');
     }
 
     private function transitionStatus(Appointment $record, AppointmentStatus $nextStatus): void

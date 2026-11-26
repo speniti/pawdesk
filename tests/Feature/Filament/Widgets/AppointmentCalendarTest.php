@@ -16,8 +16,10 @@ use App\Notifications\AppointmentConfirmedNotification;
 use App\Services\AppointmentPriceCalculator;
 use Filament\Forms\Components\Select;
 use Filament\Support\Exceptions\Halt;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
 use Livewire\Livewire;
+use PHPUnit\Framework\AssertionFailedError;
 
 beforeEach(function () {
     $this->tenant = Tenant::factory()->create();
@@ -833,4 +835,110 @@ test('transition status action re-verifies against the persisted record', functi
     $transitionStatus($component, $appointment, AppointmentStatus::Confirmed);
 
     expect($appointment->refresh()->status)->toBe(AppointmentStatus::Cancelled);
+});
+
+test('a failing services sync rolls back the created appointment', function () {
+    $customer = Customer::factory()->create(['tenant_id' => $this->tenant->id]);
+    $pet = Pet::factory()->create(['customer_id' => $customer->id, 'tenant_id' => $this->tenant->id]);
+    $service = Service::factory()->create([
+        'tenant_id' => $this->tenant->id,
+        'base_price' => 3500,
+        'duration_minutes' => 60,
+    ]);
+
+    bootFilamentPanelAs($this->admin, $this->tenant);
+
+    // Sabotage the pivot insert so the sync fails after the create has run.
+    $hookFired = false;
+    DB::connection()->beforeExecuting(function (string $query) use (&$hookFired): void {
+        if (str_starts_with(mb_ltrim($query), 'insert') && str_contains($query, 'appointment_service')) {
+            $hookFired = true;
+
+            throw new RuntimeException('Simulated pivot sync failure.');
+        }
+    });
+
+    $component = Livewire::test(AppointmentCalendar::class);
+    $widget = $component->instance();
+    assert($widget instanceof AppointmentCalendar);
+
+    $save = Closure::bind(
+        fn (AppointmentCalendar $calendar, array $data, string $model) => $calendar->save($data, $model),
+        null,
+        AppointmentCalendar::class,
+    );
+
+    $data = [
+        'customer_id' => $customer->id,
+        'pet_id' => $pet->id,
+        'user_id' => $this->admin->id,
+        'status' => AppointmentStatus::Requested->value,
+        'start_time' => now()->addDay()->setTime(10, 0)->toDateTimeString(),
+        'services' => [$service->id],
+    ];
+
+    try {
+        $save($widget, $data, Appointment::class);
+        $this->fail('The sync failure should propagate out of save().');
+    } catch (RuntimeException $exception) {
+        // PHPUnit's AssertionFailedError extends RuntimeException: without
+        // this rethrow the intentional $this->fail() above would be
+        // swallowed and the test would fail later with a wrong message.
+        if ($exception instanceof AssertionFailedError) {
+            throw $exception;
+        }
+    }
+
+    // #80: create and sync are atomic — no appointment left behind without
+    // its services, no half-written pivot, no orphan treatment. hookFired
+    // proves the counts are zero because of the rollback, not because
+    // save() never reached the sync.
+    expect($hookFired)->toBeTrue()
+        ->and(Appointment::count())->toBe(0)
+        ->and(Treatment::count())->toBe(0)
+        ->and(DB::table('appointment_service')->count())->toBe(0);
+});
+
+test('creating an appointment directly as completed syncs the treatment totals', function () {
+    $customer = Customer::factory()->create(['tenant_id' => $this->tenant->id]);
+    $pet = Pet::factory()->create(['customer_id' => $customer->id, 'tenant_id' => $this->tenant->id]);
+    $service = Service::factory()->create([
+        'tenant_id' => $this->tenant->id,
+        'base_price' => 3500,
+        'duration_minutes' => 60,
+    ]);
+
+    bootFilamentPanelAs($this->admin, $this->tenant);
+
+    $component = Livewire::test(AppointmentCalendar::class);
+    $widget = $component->instance();
+    assert($widget instanceof AppointmentCalendar);
+
+    // Calling save() directly bypasses the form's state-machine rule: this
+    // is exactly the non-form path that can land on Completed (#80).
+    $save = Closure::bind(
+        fn (AppointmentCalendar $calendar, array $data, string $model) => $calendar->save($data, $model),
+        null,
+        AppointmentCalendar::class,
+    );
+
+    $appointment = $save($widget, [
+        'customer_id' => $customer->id,
+        'pet_id' => $pet->id,
+        'user_id' => $this->admin->id,
+        'status' => AppointmentStatus::Completed->value,
+        'start_time' => now()->addDay()->setTime(10, 0)->toDateTimeString(),
+        'services' => [$service->id],
+    ], Appointment::class);
+
+    // save() is typed Model|false for the generic calendar; this path
+    // returns the created appointment, or it would have failed above.
+    assert($appointment instanceof Appointment);
+
+    expect($appointment->status)->toBe(AppointmentStatus::Completed)
+        ->and($appointment->services)->toHaveCount(1)
+        // The observer generated the treatment before the pivot existed;
+        // the totals must be refreshed from the synced pivot, not stay zero.
+        ->and($appointment->treatment->final_price)->toBe(3500)
+        ->and($appointment->treatment->actual_duration_minutes)->toBe(60);
 });

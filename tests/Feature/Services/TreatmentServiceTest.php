@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Enums\AppointmentStatus;
 use App\Models\Appointment;
 use App\Models\Service;
 use App\Models\Treatment;
@@ -91,4 +92,64 @@ test('generateFromAppointment does not overwrite an existing treatment', functio
         ->actual_duration_minutes->toBe(999)
         ->final_price->toBe(9999)
         ->notes->toBe('note modificate dallo staff');
+});
+
+test('refreshTotals fills the totals after the services pivot is synced', function () {
+    // Scenario #80: the appointment landed on Completed before any service
+    // existed, so the observer generated the treatment with zero totals.
+    $appointment = Appointment::factory()->create(['status' => AppointmentStatus::Completed]);
+    expect($appointment->treatment->final_price)->toBe(0);
+
+    $service = Service::factory()->create([
+        'tenant_id' => $appointment->tenant_id,
+        'base_price' => 3500,
+        'duration_minutes' => 60,
+    ]);
+    attachServices($appointment, $service);
+
+    (new TreatmentService)->refreshTotals($appointment);
+
+    expect($appointment->refresh()->treatment)
+        ->actual_duration_minutes->toBe(60)
+        ->final_price->toBe(3500);
+});
+
+test('refreshTotals updates only the totals and keeps the staff fields', function () {
+    // Requested: no observer generation, so the factory treatment is the only one.
+    $appointment = Appointment::factory()->create();
+    $service = Service::factory()->create([
+        'tenant_id' => $appointment->tenant_id,
+        'base_price' => 3500,
+        'duration_minutes' => 60,
+    ]);
+
+    $treatment = Treatment::factory()->forAppointment($appointment)->create([
+        'actual_duration_minutes' => 999,
+        'final_price' => 9999,
+        'notes' => 'note modificate dallo staff',
+        'visible_to_customer' => false,
+    ]);
+    attachServices($appointment, $service);
+
+    (new TreatmentService)->refreshTotals($appointment);
+
+    expect($treatment->refresh())
+        ->actual_duration_minutes->toBe(60)
+        ->final_price->toBe(3500)
+        ->notes->toBe('note modificate dallo staff')
+        ->visible_to_customer->toBeFalse();
+});
+
+test('refreshTotals does nothing when no treatment exists yet', function () {
+    $appointment = Appointment::factory()->create();
+    $service = Service::factory()->create([
+        'tenant_id' => $appointment->tenant_id,
+        'base_price' => 3500,
+        'duration_minutes' => 60,
+    ]);
+    attachServices($appointment, $service);
+
+    (new TreatmentService)->refreshTotals($appointment);
+
+    expect(Treatment::count())->toBe(0);
 });
