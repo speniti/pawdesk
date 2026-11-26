@@ -30,6 +30,7 @@
         "nunomaduro/collision": "^8",
         "pestphp/pest": "^5",
         "pestphp/pest-plugin-laravel": "^5",
+        "pestphp/pest-plugin-phpstan": "^5.3",
         "symfony/yaml": "^8.1"
     },
     "autoload": {

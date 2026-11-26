@@ -1,7 +1,26 @@
 includes:
     - vendor/larastan/larastan/extension.neon
     - vendor/nesbot/carbon/extension.neon
+    # Binding ufficiale Pest→PHPStan (#83): risolve $this nei closure dei
+    # test come il TestCase reale e capisce le higher-order expectations.
+    # Richiede pest ^5 (bump in #148).
+    - vendor/pestphp/pest-plugin-phpstan/extension.neon
 parameters:
     level: 5
     paths:
         - app/
+        - tests/
+    ignoreErrors:
+        # L'API di testing Livewire (authenticate, fetchEvents, getMountedAction,
+        # getTable, getSchema, getTableFiltersForm) vive su TestableLivewire, ma
+        # Livewire::test() è tipata come Component: gap di stub vendor, nessun
+        # fix locale possibile (#83).
+        -
+            message: '#^Call to an undefined method Livewire\\Component::(authenticate|fetchEvents|getMountedAction|getTable|getSchema|getTableFiltersForm)\(\)\.$#'
+            path: tests
+        # Il test del bootstrap confronta il middleware col valore RAW
+        # dell'ambiente: qui env() è voluto — siamo in un test, il problema
+        # della config:cache non è in gioco (#83).
+        -
+            message: '#^Called .env. outside of the config directory#'
+            path: tests/Feature/Http/TrustedProxiesTest.php
