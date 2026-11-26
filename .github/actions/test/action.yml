@@ -21,6 +21,9 @@ runs:
         php artisan key:generate
       shell: bash
 
+    # Copertura misurata al primo run con pcov: 95.3% (#83). La soglia a 92
+    # lascia ~3 punti di margine anti-fluttuazione tra ambienti e mura
+    # contro le regressioni; alzarla è una decisione consapevole.
     - name: Run Pest
-      run: vendor/bin/pest --ci --coverage --min=1
+      run: vendor/bin/pest --ci --coverage --min=92
       shell: bash
