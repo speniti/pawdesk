@@ -10,14 +10,48 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 
 /**
- * Issues and consumes single-use confirmation tokens for email changes, in
- * the same style as the login magic links: a 64-character random token whose
- * sha256 hash is stored in the cache for a short TTL. Only one pending change
- * exists per user; issuing a new one replaces the previous.
+ * Issues and consumes single-use tokens for email changes, in the same style
+ * as the login magic links: a 64-character random token whose sha256 hash is
+ * stored in the cache for a short TTL. Only one pending change exists per
+ * user; issuing a new one replaces the previous.
+ *
+ * Every request produces two tokens (#95): the confirmation token sent to
+ * the NEW address and the cancellation token sent to the CURRENT one, so the
+ * legitimate owner can undo a change they did not request. Cancelling kills
+ * the confirmation token and confirming kills the cancellation token; a
+ * replacement request invalidates both previous tokens.
  */
 class PendingEmailService
 {
     public const int TTL_MINUTES = 15;
+
+    public function cancelByToken(string $token): bool
+    {
+        $hash = hash('sha256', $token);
+        $userId = Cache::pull($this->cancelKeyFromHash($hash));
+
+        if (! is_int($userId)) {
+            return false;
+        }
+
+        $userKey = $this->userKey($userId);
+        $confirmHash = Cache::get($userKey);
+        $pending = is_string($confirmHash)
+            ? Cache::get($this->tokenKeyFromHash($confirmHash))
+            : null;
+
+        // A link only ever cancels the change it accompanied. If the current
+        // pending change (if any) was issued later, its cancel hash differs:
+        // this link is stale, the newer request stays untouched.
+        if (! $pending instanceof PendingEmailChange || $pending->cancelHash !== $hash) {
+            return false;
+        }
+
+        Cache::forget($userKey);
+        Cache::forget($this->tokenKeyFromHash($confirmHash));
+
+        return true;
+    }
 
     public function consume(string $token): ?PendingEmailChange
     {
@@ -36,28 +70,50 @@ class PendingEmailService
             Cache::forget($userKey);
         }
 
+        // The change is applied: its cancellation link must die with it.
+        Cache::forget($this->cancelKeyFromHash($pending->cancelHash));
+
         return $pending;
     }
 
-    public function issueChange(User $user, string $newEmail): string
+    public function isCancelValid(string $token): bool
+    {
+        return Cache::has($this->cancelKey($token));
+    }
+
+    public function issueChange(User $user, string $newEmail): PendingEmailLinks
     {
         $token = Str::random(64);
+        $cancelToken = Str::random(64);
         $hash = hash('sha256', $token);
+        $cancelHash = hash('sha256', $cancelToken);
 
-        // The two-key replace is not atomic: a concurrent request may orphan
+        // The multi-key replace is not atomic: a concurrent request may orphan
         // one token entry, which simply expires with its TTL.
         $previousHash = Cache::pull($this->userKey($user->id));
 
         if (is_string($previousHash)) {
+            $previous = Cache::get($this->tokenKeyFromHash($previousHash));
+
+            if ($previous instanceof PendingEmailChange) {
+                Cache::forget($this->cancelKeyFromHash($previous->cancelHash));
+            }
+
             Cache::forget($this->tokenKeyFromHash($previousHash));
         }
 
         $expiresAt = now()->addMinutes(self::TTL_MINUTES);
 
-        Cache::put($this->tokenKeyFromHash($hash), new PendingEmailChange($user->id, $newEmail), $expiresAt);
+        Cache::put($this->tokenKeyFromHash($hash), new PendingEmailChange($user->id, $newEmail, $cancelHash), $expiresAt);
         Cache::put($this->userKey($user->id), $hash, $expiresAt);
+        Cache::put($this->cancelKeyFromHash($cancelHash), $user->id, $expiresAt);
 
-        return route(Filament::getDefaultPanel()->generateRouteName('auth.email-change.verify'), $token);
+        $panel = Filament::getDefaultPanel();
+
+        return new PendingEmailLinks(
+            confirmUrl: route($panel->generateRouteName('auth.email-change.verify'), $token),
+            cancelUrl: route($panel->generateRouteName('auth.email-change.cancel'), $cancelToken),
+        );
     }
 
     public function isValid(string $token): bool
@@ -79,6 +135,16 @@ class PendingEmailService
         $pending = Cache::get($this->tokenKeyFromHash($hash));
 
         return $pending instanceof PendingEmailChange ? $pending->email : null;
+    }
+
+    private function cancelKey(string $token): string
+    {
+        return $this->cancelKeyFromHash(hash('sha256', $token));
+    }
+
+    private function cancelKeyFromHash(string $hash): string
+    {
+        return 'pending-email:cancel:'.$hash;
     }
 
     private function tokenKey(string $token): string

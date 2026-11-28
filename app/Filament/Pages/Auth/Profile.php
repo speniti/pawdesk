@@ -109,16 +109,16 @@ class Profile extends EditProfile
 
     private function requestEmailChange(User $user, string $newEmail): void
     {
-        $url = app(PendingEmailService::class)->issueChange($user, $newEmail);
+        $links = app(PendingEmailService::class)->issueChange($user, $newEmail);
 
         // Dispatched after the (optional) save transaction commits, so SMTP
         // latency never holds the transaction open. Without an active
         // transaction (the panel default) the callbacks run immediately.
-        DB::afterCommit(function () use ($newEmail, $url, $user): void {
+        DB::afterCommit(function () use ($links, $newEmail, $user): void {
             Notification::route('mail', $newEmail)
-                ->notify(new EmailChangeConfirmationNotification($url));
+                ->notify(new EmailChangeConfirmationNotification($links->confirmUrl));
 
-            $user->notify(new EmailChangeNoticeNotification($newEmail));
+            $user->notify(new EmailChangeNoticeNotification($newEmail, $links->cancelUrl));
         });
 
         $this->emailChangeRequested = true;
