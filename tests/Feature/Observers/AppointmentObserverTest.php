@@ -31,6 +31,8 @@ test('creating an appointment directly as completed never notifies', function ()
         'customer_id' => $customer->id,
         'tenant_id' => $customer->tenant_id,
         'status' => AppointmentStatus::Completed->value,
+        // Backfill of a past visit: the scenario the decision is about.
+        'start_time' => now()->subDays(3),
     ]);
 
     // Decision recorded in #152: the completed notification thanks the

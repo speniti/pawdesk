@@ -18,6 +18,11 @@ use Illuminate\Contracts\Events\ShouldHandleEventsAfterCommit;
  * appointment that arrives already Completed — backfill of past visits, data
  * fixes — must stay silent, so there is deliberately no created() handler;
  * AppointmentObserverTest pins this contract.
+ *
+ * Note for a future created() handler: during created the model's changes
+ * array is never synced, so wasChanged() is false for every attribute while
+ * isDirty() is true — neither tells a backfill apart from an update. The
+ * no-notification contract lives in the guard test, not in model state.
  */
 class AppointmentObserver implements ShouldHandleEventsAfterCommit
 {
