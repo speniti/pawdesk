@@ -67,3 +67,22 @@ test('staff cannot update or delete services of another tenant', function () {
         ->and($this->staff->can('update', $foreignService))->toBeFalse()
         ->and($this->staff->can('delete', $foreignService))->toBeFalse();
 });
+
+test('a non-member gains no abilities on another tenant panel', function (User $outsider) {
+    actingAs($outsider);
+    bootFilamentPanel($this->tenant);
+
+    // The outsider has the right role but no membership in the booted
+    // tenant: the policy must deny every ability on its own (#92), not
+    // lean on the panel middleware having already kept them out.
+    expect($outsider->can('viewAny', Service::class))->toBeFalse()
+        ->and($outsider->can('create', Service::class))->toBeFalse()
+        ->and($outsider->can('view', $this->service))->toBeFalse()
+        ->and($outsider->can('update', $this->service))->toBeFalse()
+        ->and($outsider->can('delete', $this->service))->toBeFalse()
+        ->and($outsider->can('restore', $this->service))->toBeFalse()
+        ->and($outsider->can('forceDelete', $this->service))->toBeFalse();
+})->with([
+    'admin outsider' => fn () => User::factory()->admin()->forTenant(Tenant::factory()->create())->create(),
+    'staff outsider' => fn () => User::factory()->forTenant(Tenant::factory()->create())->create(),
+]);

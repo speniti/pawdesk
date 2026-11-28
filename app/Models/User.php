@@ -27,6 +27,9 @@ class User extends Authenticatable implements FilamentUser, HasTenants
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable;
 
+    /** @var array<int|string, bool> */
+    private array $tenantAccessCache = [];
+
     public function appointments(): HasMany
     {
         return $this->hasMany(Appointment::class);
@@ -39,7 +42,12 @@ class User extends Authenticatable implements FilamentUser, HasTenants
 
     public function canAccessTenant(Model $tenant): bool
     {
-        return $this->tenants()->whereKey($tenant)->exists();
+        // Policies call this on every ability check and Filament authorizes
+        // table actions per row: memoize per instance so the membership
+        // query runs once per user+tenant pair per request however many
+        // checks hit it (#92).
+        return $this->tenantAccessCache[$tenant->getKey()]
+            ??= $this->tenants()->whereKey($tenant)->exists();
     }
 
     public function getTenants(Panel $panel): Collection

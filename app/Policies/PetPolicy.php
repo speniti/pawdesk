@@ -14,36 +14,36 @@ class PetPolicy
 
     public function create(User $user): bool
     {
-        return $this->isStaffOrAdmin($user);
+        return $this->isStaffOrAdmin($user) && $this->isMemberOfCurrentTenant($user);
     }
 
     public function delete(User $user, Pet $pet): bool
     {
-        return $this->isStaffOrAdmin($user) && $this->belongsToCurrentTenant($pet);
+        return $this->isStaffOrAdmin($user) && $this->belongsToCurrentTenant($user, $pet);
     }
 
     public function forceDelete(User $user, Pet $pet): bool
     {
-        return $this->isStaffOrAdmin($user) && $this->belongsToCurrentTenant($pet);
+        return $this->isStaffOrAdmin($user) && $this->belongsToCurrentTenant($user, $pet);
     }
 
     public function restore(User $user, Pet $pet): bool
     {
-        return $this->isStaffOrAdmin($user) && $this->belongsToCurrentTenant($pet);
+        return $this->isStaffOrAdmin($user) && $this->belongsToCurrentTenant($user, $pet);
     }
 
     public function update(User $user, Pet $pet): bool
     {
-        return $this->isStaffOrAdmin($user) && $this->belongsToCurrentTenant($pet);
+        return $this->isStaffOrAdmin($user) && $this->belongsToCurrentTenant($user, $pet);
     }
 
     public function view(User $user, Pet $pet): bool
     {
-        return $this->isStaffOrAdmin($user) && $this->belongsToCurrentTenant($pet);
+        return $this->isStaffOrAdmin($user) && $this->belongsToCurrentTenant($user, $pet);
     }
 
     public function viewAny(User $user): bool
     {
-        return $this->isStaffOrAdmin($user);
+        return $this->isStaffOrAdmin($user) && $this->isMemberOfCurrentTenant($user);
     }
 }

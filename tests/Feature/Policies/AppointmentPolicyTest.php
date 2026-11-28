@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Models\Appointment;
 use App\Models\Tenant;
 use App\Models\User;
+use Illuminate\Support\Facades\DB;
 
 use function Pest\Laravel\actingAs;
 
@@ -55,6 +56,45 @@ test('users cannot act on appointments of another tenant', function (User $user)
     'staff' => fn () => test()->staff,
 ]);
 
+test('a non-member gains no abilities on another tenant panel', function (User $outsider) {
+    actingAs($outsider);
+    bootFilamentPanel($this->tenant);
+
+    // The outsider has the right role but no membership in the booted
+    // tenant: the policy must deny every ability on its own (#92), not
+    // lean on the panel middleware having already kept them out.
+    expect($outsider->can('viewAny', Appointment::class))->toBeFalse()
+        ->and($outsider->can('create', Appointment::class))->toBeFalse()
+        ->and($outsider->can('view', $this->appointment))->toBeFalse()
+        ->and($outsider->can('update', $this->appointment))->toBeFalse()
+        ->and($outsider->can('delete', $this->appointment))->toBeFalse()
+        ->and($outsider->can('restore', $this->appointment))->toBeFalse()
+        ->and($outsider->can('forceDelete', $this->appointment))->toBeFalse();
+})->with([
+    'admin outsider' => fn () => User::factory()->admin()->forTenant(Tenant::factory()->create())->create(),
+    'staff outsider' => fn () => User::factory()->forTenant(Tenant::factory()->create())->create(),
+]);
+
+test('membership is memoized across repeated policy checks', function () {
+    actingAs($this->staff);
+    bootFilamentPanel($this->tenant);
+
+    // Prime the per-user memo: exactly one pivot query, then every
+    // further check on the same user+tenant pair resolves in memory —
+    // Filament authorizes table actions per row, so the membership
+    // check must not multiply with the record count (#92).
+    expect($this->staff->can('view', $this->appointment))->toBeTrue();
+
+    DB::flushQueryLog();
+    DB::enableQueryLog();
+
+    expect($this->staff->can('update', $this->appointment))->toBeTrue()
+        ->and($this->staff->can('delete', $this->appointment))->toBeTrue()
+        ->and($this->staff->can('viewAny', Appointment::class))->toBeTrue();
+
+    expect(DB::getQueryLog())->toBeEmpty();
+});
+
 test('record abilities fail closed without a booted tenant', function () {
     actingAs($this->staff);
 
@@ -66,16 +106,16 @@ test('record abilities fail closed without a booted tenant', function () {
         ->and($this->staff->can('delete', $this->appointment))->toBeFalse();
 });
 
-test('user without a tenant keeps role-only abilities but gains no record access', function () {
+test('user without a tenant gains no abilities without a booted tenant', function () {
     $tenantless = User::factory()->create();
 
     actingAs($tenantless);
 
-    // viewAny and create intentionally check the role only: a tenant-less
-    // user cannot reach any tenant panel, so there is no list to render nor
-    // a tenant to create into. This pins the current boundary of the policy.
-    expect($tenantless->can('viewAny', Appointment::class))->toBeTrue()
-        ->and($tenantless->can('create', Appointment::class))->toBeTrue();
+    // With membership verification (#92) the role-only abilities deny
+    // without a booted tenant too: no tenant context means no membership
+    // to prove, exactly like the panel-not-booted case.
+    expect($tenantless->can('viewAny', Appointment::class))->toBeFalse()
+        ->and($tenantless->can('create', Appointment::class))->toBeFalse();
 
     // Every record-level ability requires the record to belong to the
     // current tenant, and without a booted tenant there is none.
