@@ -57,16 +57,19 @@ test('staff cannot update treatments of another tenant', function () {
         ->and($this->staff->can('update', $otherTreatment))->toBeFalse();
 });
 
-test('a non-member gains no treatment abilities on another tenant panel', function () {
-    $outsider = User::factory()->forTenant(Tenant::factory()->create())->create();
-
+test('a non-member gains no treatment abilities on another tenant panel', function (User $outsider) {
     actingAs($outsider);
     bootFilamentPanel($this->tenant);
 
     // The outsider has the right role but no membership in the booted
     // tenant: the policy must deny every ability on its own (#92), not
     // lean on the panel middleware having already kept them out.
+    // Create/delete/restore/forceDelete are hard-denied by design and are
+    // pinned separately.
     expect($outsider->can('viewAny', Treatment::class))->toBeFalse()
         ->and($outsider->can('view', $this->treatment))->toBeFalse()
         ->and($outsider->can('update', $this->treatment))->toBeFalse();
-});
+})->with([
+    'admin outsider' => fn () => User::factory()->admin()->forTenant(Tenant::factory()->create())->create(),
+    'staff outsider' => fn () => User::factory()->forTenant(Tenant::factory()->create())->create(),
+]);

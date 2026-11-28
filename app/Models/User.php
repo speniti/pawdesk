@@ -45,7 +45,11 @@ class User extends Authenticatable implements FilamentUser, HasTenants
         // Policies call this on every ability check and Filament authorizes
         // table actions per row: memoize per instance so the membership
         // query runs once per user+tenant pair per request however many
-        // checks hit it (#92).
+        // checks hit it (#92). The memo deliberately freezes the answer for
+        // this instance's lifetime — a membership added or revoked
+        // mid-request takes effect on the next request, not mid-flight;
+        // code that changes memberships for this instance within the same
+        // request must not rely on a check made before the change.
         return $this->tenantAccessCache[$tenant->getKey()]
             ??= $this->tenants()->whereKey($tenant)->exists();
     }

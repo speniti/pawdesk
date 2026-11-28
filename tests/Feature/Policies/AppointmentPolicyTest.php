@@ -92,7 +92,11 @@ test('membership is memoized across repeated policy checks', function () {
         ->and($this->staff->can('delete', $this->appointment))->toBeTrue()
         ->and($this->staff->can('viewAny', Appointment::class))->toBeTrue();
 
+    // Any query here is a failure by design: the pin is intentionally
+    // strict so even an innocent lazy-load added to a policy path trips it.
     expect(DB::getQueryLog())->toBeEmpty();
+
+    DB::disableQueryLog();
 });
 
 test('record abilities fail closed without a booted tenant', function () {
