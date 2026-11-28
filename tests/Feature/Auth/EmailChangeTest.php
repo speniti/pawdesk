@@ -7,6 +7,7 @@ use App\Filament\Pages\Auth\EmailChangeConfirmation;
 use App\Filament\Pages\Auth\Profile;
 use App\Models\Tenant;
 use App\Models\User;
+use App\Notifications\EmailChangeAppliedNotification;
 use App\Notifications\EmailChangeConfirmationNotification;
 use App\Notifications\EmailChangeNoticeNotification;
 use App\Services\PendingEmailService;
@@ -283,6 +284,46 @@ describe('link consumption', function () {
 
         expect(User::count())->toBe(0);
     });
+
+    test('applying the change notifies the old address that it went through', function () {
+        $links = app(PendingEmailService::class)->issueChange($this->user, 'nuovo@example.com');
+
+        Livewire::test(EmailChangeConfirmation::class, ['token' => (string) str($links->confirmUrl)->after('/auth/email-change/')])
+            ->call('confirm')
+            ->assertRedirect('/login');
+
+        expect($this->user->refresh()->email)->toBe('nuovo@example.com');
+
+        Notification::assertSentTo(
+            Notification::route('mail', 'vecchio@example.com'),
+            EmailChangeAppliedNotification::class,
+            function (EmailChangeAppliedNotification $notification): bool {
+                expect($notification->newEmail)->toBe('nuovo@example.com');
+
+                return true;
+            },
+        );
+
+        Notification::assertNotSentTo($this->user, EmailChangeAppliedNotification::class);
+    });
+
+    test('a rejected change notifies no one', function () {
+        $links = app(PendingEmailService::class)->issueChange($this->user, 'contesa@example.com');
+
+        User::factory()->create(['email' => 'contesa@example.com']);
+
+        Livewire::test(EmailChangeConfirmation::class, ['token' => (string) str($links->confirmUrl)->after('/auth/email-change/')])
+            ->call('confirm')
+            ->assertRedirect()
+            ->assertNotified("Non è stato possibile applicare il cambio dell'email.");
+
+        Notification::assertNotSentTo(
+            Notification::route('mail', 'vecchio@example.com'),
+            EmailChangeAppliedNotification::class,
+        );
+
+        expect($this->user->refresh()->email)->toBe('vecchio@example.com');
+    });
 });
 
 describe('notification content', function () {
@@ -306,6 +347,13 @@ describe('notification content', function () {
             // Literal segment with the trailing slash: url() strips it, and
             // the stripped form is a legitimate prefix of the cancel URL.
             ->not->toContain('/auth/email-change/');
+    });
+
+    test('the applied mail pins the new address and the support instruction', function () {
+        $rendered = (string) (new EmailChangeAppliedNotification('nuovo@example.com'))->toMail($this->user)->render();
+
+        expect($rendered)->toContain('nuovo@example.com')
+            ->toContain('contatta il supporto');
     });
 });
 

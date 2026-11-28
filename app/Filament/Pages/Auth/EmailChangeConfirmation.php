@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Filament\Pages\Auth;
 
 use App\Models\User;
+use App\Notifications\EmailChangeAppliedNotification;
 use App\Services\PendingEmailChange;
 use App\Services\PendingEmailService;
 use Filament\Actions\Action;
@@ -15,6 +16,7 @@ use Filament\Schemas\Components\Actions;
 use Filament\Schemas\Schema;
 use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Database\UniqueConstraintViolationException;
+use Illuminate\Support\Facades\Notification as MailNotification;
 
 /**
  * Public confirmation page for email changes, mirroring the login magic
@@ -110,6 +112,10 @@ class EmailChangeConfirmation extends SimplePage
             return false;
         }
 
+        // The address the change moves away from: it must be captured before
+        // the save, it stops receiving account email as of now (#95).
+        $previousEmail = $user->email;
+
         try {
             // Possession of the new address was just proven by the confirmed
             // link, so the new email is verified as of now.
@@ -121,6 +127,10 @@ class EmailChangeConfirmation extends SimplePage
             // Fail closed on the uniqueness race.
             return false;
         }
+
+        // Last-chance signal to the old mailbox: the change went through.
+        MailNotification::route('mail', $previousEmail)
+            ->notify(new EmailChangeAppliedNotification($pending->email));
 
         return true;
     }
