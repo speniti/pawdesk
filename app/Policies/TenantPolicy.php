@@ -14,7 +14,9 @@ class TenantPolicy
 
     public function update(User $user, Tenant $tenant): bool
     {
+        // The actor and the subject coincide here: canAccessTenant keeps a
+        // single membership implementation and shares its memo (#92).
         return $this->isAdmin($user)
-            && $user->tenants()->whereKey($tenant)->exists();
+            && $user->canAccessTenant($tenant);
     }
 }

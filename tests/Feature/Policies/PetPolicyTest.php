@@ -76,3 +76,22 @@ test('staff cannot update or delete pets of another tenant', function () {
         ->and($this->staff->can('update', $foreignPet))->toBeFalse()
         ->and($this->staff->can('delete', $foreignPet))->toBeFalse();
 });
+
+test('a non-member gains no abilities on another tenant panel', function (User $outsider) {
+    actingAs($outsider);
+    bootFilamentPanel($this->tenant);
+
+    // The outsider has the right role but no membership in the booted
+    // tenant: the policy must deny every ability on its own (#92), not
+    // lean on the panel middleware having already kept them out.
+    expect($outsider->can('viewAny', Pet::class))->toBeFalse()
+        ->and($outsider->can('create', Pet::class))->toBeFalse()
+        ->and($outsider->can('view', $this->pet))->toBeFalse()
+        ->and($outsider->can('update', $this->pet))->toBeFalse()
+        ->and($outsider->can('delete', $this->pet))->toBeFalse()
+        ->and($outsider->can('restore', $this->pet))->toBeFalse()
+        ->and($outsider->can('forceDelete', $this->pet))->toBeFalse();
+})->with([
+    'admin outsider' => fn () => User::factory()->admin()->forTenant(Tenant::factory()->create())->create(),
+    'staff outsider' => fn () => User::factory()->forTenant(Tenant::factory()->create())->create(),
+]);

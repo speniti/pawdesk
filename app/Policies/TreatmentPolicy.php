@@ -42,16 +42,16 @@ class TreatmentPolicy
 
     public function update(User $user, Treatment $treatment): bool
     {
-        return $this->isStaffOrAdmin($user) && $this->belongsToCurrentTenant($treatment);
+        return $this->isStaffOrAdmin($user) && $this->belongsToCurrentTenant($user, $treatment);
     }
 
     public function view(User $user, Treatment $treatment): bool
     {
-        return $this->isStaffOrAdmin($user) && $this->belongsToCurrentTenant($treatment);
+        return $this->isStaffOrAdmin($user) && $this->belongsToCurrentTenant($user, $treatment);
     }
 
     public function viewAny(User $user): bool
     {
-        return $this->isStaffOrAdmin($user);
+        return $this->isStaffOrAdmin($user) && $this->isMemberOfCurrentTenant($user);
     }
 }

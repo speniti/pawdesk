@@ -67,3 +67,22 @@ test('staff cannot update or delete customers of another tenant', function () {
         ->and($this->staff->can('update', $foreignCustomer))->toBeFalse()
         ->and($this->staff->can('delete', $foreignCustomer))->toBeFalse();
 });
+
+test('a non-member gains no abilities on another tenant panel', function (User $outsider) {
+    actingAs($outsider);
+    bootFilamentPanel($this->tenant);
+
+    // The outsider has the right role but no membership in the booted
+    // tenant: the policy must deny every ability on its own (#92), not
+    // lean on the panel middleware having already kept them out.
+    expect($outsider->can('viewAny', Customer::class))->toBeFalse()
+        ->and($outsider->can('create', Customer::class))->toBeFalse()
+        ->and($outsider->can('view', $this->customer))->toBeFalse()
+        ->and($outsider->can('update', $this->customer))->toBeFalse()
+        ->and($outsider->can('delete', $this->customer))->toBeFalse()
+        ->and($outsider->can('restore', $this->customer))->toBeFalse()
+        ->and($outsider->can('forceDelete', $this->customer))->toBeFalse();
+})->with([
+    'admin outsider' => fn () => User::factory()->admin()->forTenant(Tenant::factory()->create())->create(),
+    'staff outsider' => fn () => User::factory()->forTenant(Tenant::factory()->create())->create(),
+]);

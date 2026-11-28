@@ -12,19 +12,39 @@ use Illuminate\Database\Eloquent\Model;
 /** @phpstan-type TenantScopedModel Model&object{tenant_id: int} */
 trait InteractsWithRoles
 {
-    /** @param  TenantScopedModel $model */
-    protected function belongsToCurrentTenant(Model $model): bool
+    /**
+     * Membership in the booted tenant is checked alongside the record's
+     * tenant_id (#92): panel middleware already keeps non-members out, but
+     * the policy must not depend on being reached through it — a future
+     * entrypoint (custom route, command with a booted panel, API) gets the
+     * same answer with the middleware absent.
+     *
+     * @param  TenantScopedModel  $model
+     */
+    protected function belongsToCurrentTenant(User $user, Model $model): bool
     {
         if (! $tenant = Filament::getTenant()) {
             return false;
         }
 
-        return $model->tenant_id === $tenant->getKey();
+        return $user->canAccessTenant($tenant)
+            && $model->tenant_id === $tenant->getKey();
     }
 
     protected function isAdmin(User $user): bool
     {
         return $user->role === UserRole::Admin;
+    }
+
+    /**
+     * The role-only counterpart for abilities without a record: same
+     * membership requirement (#92), same reasoning.
+     */
+    protected function isMemberOfCurrentTenant(User $user): bool
+    {
+        $tenant = Filament::getTenant();
+
+        return $tenant !== null && $user->canAccessTenant($tenant);
     }
 
     protected function isStaffOrAdmin(User $user): bool

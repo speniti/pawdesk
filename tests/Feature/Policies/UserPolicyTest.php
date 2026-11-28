@@ -61,3 +61,22 @@ test('admin cannot delete a user who does not belong to the current tenant', fun
 
     expect($this->admin->can('delete', $outsider))->toBeFalse();
 });
+
+test('a non-member admin gains no abilities on another tenant panel', function () {
+    $outsider = User::factory()->admin()->forTenant(Tenant::factory()->create())->create();
+
+    actingAs($outsider);
+    bootFilamentPanel($this->tenant);
+
+    // The outsider has the admin role but no membership in the booted
+    // tenant: the policy must deny every ability on its own (#92), not
+    // lean on the panel middleware having already kept them out.
+    expect($outsider->can('viewAny', User::class))->toBeFalse()
+        ->and($outsider->can('create', User::class))->toBeFalse()
+        ->and($outsider->can('deleteAny', User::class))->toBeFalse()
+        ->and($outsider->can('view', $this->targetUser))->toBeFalse()
+        ->and($outsider->can('update', $this->targetUser))->toBeFalse()
+        ->and($outsider->can('delete', $this->targetUser))->toBeFalse()
+        ->and($outsider->can('restore', $this->targetUser))->toBeFalse()
+        ->and($outsider->can('forceDelete', $this->targetUser))->toBeFalse();
+});

@@ -14,36 +14,36 @@ class AppointmentPolicy
 
     public function create(User $user): bool
     {
-        return $this->isStaffOrAdmin($user);
+        return $this->isStaffOrAdmin($user) && $this->isMemberOfCurrentTenant($user);
     }
 
     public function delete(User $user, Appointment $appointment): bool
     {
-        return $this->isStaffOrAdmin($user) && $this->belongsToCurrentTenant($appointment);
+        return $this->isStaffOrAdmin($user) && $this->belongsToCurrentTenant($user, $appointment);
     }
 
     public function forceDelete(User $user, Appointment $appointment): bool
     {
-        return $this->isStaffOrAdmin($user) && $this->belongsToCurrentTenant($appointment);
+        return $this->isStaffOrAdmin($user) && $this->belongsToCurrentTenant($user, $appointment);
     }
 
     public function restore(User $user, Appointment $appointment): bool
     {
-        return $this->isStaffOrAdmin($user) && $this->belongsToCurrentTenant($appointment);
+        return $this->isStaffOrAdmin($user) && $this->belongsToCurrentTenant($user, $appointment);
     }
 
     public function update(User $user, Appointment $appointment): bool
     {
-        return $this->isStaffOrAdmin($user) && $this->belongsToCurrentTenant($appointment);
+        return $this->isStaffOrAdmin($user) && $this->belongsToCurrentTenant($user, $appointment);
     }
 
     public function view(User $user, Appointment $appointment): bool
     {
-        return $this->isStaffOrAdmin($user) && $this->belongsToCurrentTenant($appointment);
+        return $this->isStaffOrAdmin($user) && $this->belongsToCurrentTenant($user, $appointment);
     }
 
     public function viewAny(User $user): bool
     {
-        return $this->isStaffOrAdmin($user);
+        return $this->isStaffOrAdmin($user) && $this->isMemberOfCurrentTenant($user);
     }
 }

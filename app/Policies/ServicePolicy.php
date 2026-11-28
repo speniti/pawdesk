@@ -14,36 +14,36 @@ class ServicePolicy
 
     public function create(User $user): bool
     {
-        return $this->isStaffOrAdmin($user);
+        return $this->isStaffOrAdmin($user) && $this->isMemberOfCurrentTenant($user);
     }
 
     public function delete(User $user, Service $service): bool
     {
-        return $this->isStaffOrAdmin($user) && $this->belongsToCurrentTenant($service);
+        return $this->isStaffOrAdmin($user) && $this->belongsToCurrentTenant($user, $service);
     }
 
     public function forceDelete(User $user, Service $service): bool
     {
-        return $this->isStaffOrAdmin($user) && $this->belongsToCurrentTenant($service);
+        return $this->isStaffOrAdmin($user) && $this->belongsToCurrentTenant($user, $service);
     }
 
     public function restore(User $user, Service $service): bool
     {
-        return $this->isStaffOrAdmin($user) && $this->belongsToCurrentTenant($service);
+        return $this->isStaffOrAdmin($user) && $this->belongsToCurrentTenant($user, $service);
     }
 
     public function update(User $user, Service $service): bool
     {
-        return $this->isStaffOrAdmin($user) && $this->belongsToCurrentTenant($service);
+        return $this->isStaffOrAdmin($user) && $this->belongsToCurrentTenant($user, $service);
     }
 
     public function view(User $user, Service $service): bool
     {
-        return $this->isStaffOrAdmin($user) && $this->belongsToCurrentTenant($service);
+        return $this->isStaffOrAdmin($user) && $this->belongsToCurrentTenant($user, $service);
     }
 
     public function viewAny(User $user): bool
     {
-        return $this->isStaffOrAdmin($user);
+        return $this->isStaffOrAdmin($user) && $this->isMemberOfCurrentTenant($user);
     }
 }
