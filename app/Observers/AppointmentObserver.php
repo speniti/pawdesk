@@ -12,6 +12,13 @@ use App\Notifications\AppointmentConfirmedNotification;
 use App\Notifications\BaseAppointmentNotification;
 use Illuminate\Contracts\Events\ShouldHandleEventsAfterCommit;
 
+/**
+ * Notifications are transition-only by decision (#152): the customer is told
+ * about a completed appointment because the visit just happened. An
+ * appointment that arrives already Completed — backfill of past visits, data
+ * fixes — must stay silent, so there is deliberately no created() handler;
+ * AppointmentObserverTest pins this contract.
+ */
 class AppointmentObserver implements ShouldHandleEventsAfterCommit
 {
     public function updated(Appointment $appointment): void

@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Enums\AppointmentStatus;
 use App\Models\Appointment;
 use App\Models\Customer;
+use App\Models\NotificationLog;
 use App\Notifications\AppointmentCancelledNotification;
 use App\Notifications\AppointmentCompletedNotification;
 use App\Notifications\AppointmentConfirmedNotification;
@@ -21,6 +22,24 @@ test('creation sends no notification', function () {
     ]);
 
     Notification::assertNothingSent();
+});
+
+test('creating an appointment directly as completed never notifies', function () {
+    $customer = Customer::factory()->create();
+
+    Appointment::factory()->create([
+        'customer_id' => $customer->id,
+        'tenant_id' => $customer->tenant_id,
+        'status' => AppointmentStatus::Completed->value,
+    ]);
+
+    // Decision recorded in #152: the completed notification thanks the
+    // customer for a visit that just happened, so a backfilled appointment
+    // — created directly as Completed — must stay silent. NotificationLog
+    // is pinned too because createLog bypasses the Notification facade.
+    Notification::assertNothingSent();
+
+    expect(NotificationLog::count())->toBe(0);
 });
 
 test('status change to Confirmed sends AppointmentConfirmedNotification', function () {
