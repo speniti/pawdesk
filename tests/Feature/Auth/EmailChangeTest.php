@@ -403,6 +403,11 @@ describe('cancel link', function () {
     });
 
     test('a cancel link cannot cancel a newer request', function () {
+        // This pins the first defence line: issueChange() forgets the
+        // superseded cancel key. The second line — cancelByToken()'s
+        // cancelHash binding — covers the non-atomic replace race and is
+        // not reachable from any serialized sequence, so it cannot be
+        // mutation-verified black-box without writing cache state directly.
         $first = app(PendingEmailService::class)->issueChange($this->user, 'primo@example.com');
         $second = app(PendingEmailService::class)->issueChange($this->user, 'secondo@example.com');
 
@@ -415,14 +420,17 @@ describe('cancel link', function () {
 
     test('confirming the change kills the cancel link', function () {
         $links = app(PendingEmailService::class)->issueChange($this->user, 'nuovo@example.com');
+        $cancelToken = (string) str($links->cancelUrl)->after('/auth/email-change-cancel/');
 
         Livewire::test(EmailChangeConfirmation::class, ['token' => (string) str($links->confirmUrl)->after('/auth/email-change/')])
             ->call('confirm');
 
         expect($this->user->refresh()->email)->toBe('nuovo@example.com')
-            ->and(app(PendingEmailService::class)->cancelByToken(
-                (string) str($links->cancelUrl)->after('/auth/email-change-cancel/'),
-            ))->toBeFalse();
+            // The cancel PAGE must also stop offering the button: with only
+            // cancelByToken false, a confirmed change would still render a
+            // working-looking cancellation page to the owner.
+            ->and(app(PendingEmailService::class)->isCancelValid($cancelToken))->toBeFalse()
+            ->and(app(PendingEmailService::class)->cancelByToken($cancelToken))->toBeFalse();
     });
 
     test('an unknown cancel link fails generically', function () {

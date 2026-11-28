@@ -27,6 +27,12 @@ class PendingEmailService
 
     public function cancelByToken(string $token): bool
     {
+        // Like every multi-key operation here, this is not atomic: a cancel
+        // racing a concurrent confirm of the same change can make BOTH
+        // report success (both pulls land before either forget). Blast
+        // radius is cancel-only — no escalation — and the applied
+        // notification is the compensating signal that the change went
+        // through. Do not treat a true return as "the change did not apply".
         $hash = hash('sha256', $token);
         $userId = Cache::pull($this->cancelKeyFromHash($hash));
 
@@ -42,7 +48,10 @@ class PendingEmailService
 
         // A link only ever cancels the change it accompanied. If the current
         // pending change (if any) was issued later, its cancel hash differs:
-        // this link is stale, the newer request stays untouched.
+        // this link is stale, the newer request stays untouched. Note this
+        // is the race backstop, not the primary guard — issueChange() also
+        // forgets the superseded cancel key, so every serialized sequence
+        // fails before reaching this comparison.
         if (! $pending instanceof PendingEmailChange || $pending->cancelHash !== $hash) {
             return false;
         }
